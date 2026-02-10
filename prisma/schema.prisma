@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+  enable_experimental_decimal = true
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  FEMALE
+  MALE
+}
+
+enum AuctionStatus {
+  DRAFT      // Draft mode
+  ACTIVE     // Active auction
+  SOLD       // Sold
+  EXPIRED    // Expired
+  CANCELLED  // Cancelled
+}
+
+enum PaymentStatus {
+  PENDING_ON_SITE  // Payment at venue
+  COMPLETED        // Payment completed
+  NO_SHOW          // User did not show up
+  CANCELLED        // Cancelled
+}
+
+// ------------------------------------------------------
+// MODELS
+// ------------------------------------------------------
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  phone          String   @unique
+  fullName       String
+  gender         Gender?
+  hashedPassword String
+  role           Role     @default(USER)
+  isVerified     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  
+  // Relations
+  reservations   Reservation[]
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+model Auction {
+  id          Int      @id @default(autoincrement())
+  title       String   
+  description String?  
+  
+  // --- Pricing Config ---
+  startPrice       Decimal @db.Decimal(10, 2)
+  floorPrice       Decimal @db.Decimal(10, 2)
+  currentPrice     Decimal @db.Decimal(10, 2)
+  
+  // --- Timing Config ---
+  startTime        DateTime
+  endTime          DateTime
+  
+  dropIntervalMins Int     @default(60) 
+  dropAmount       Decimal @db.Decimal(10, 2)
+
+  // --- TURBO MODE ---
+  turboEnabled     Boolean @default(false)
+  turboTriggerMins Int     @default(120)
+  turboDropAmount  Decimal @db.Decimal(10, 2)
+  turboIntervalMins Int    @default(5)
+
+  status        AuctionStatus @default(DRAFT)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  reservation   Reservation?
+
+  @@index([status])
+  @@index([endTime])
+  @@map("auctions")
+}
+
+model Reservation {
+  id            Int      @id @default(autoincrement())
+  
+  // Relation Fields
+  auctionId     Int      @unique
+  userId        Int
+  
+  // Price Locking
+  lockedPrice   Decimal  @db.Decimal(10, 2)
+  bookingCode   String   @unique
+  
+  status        PaymentStatus @default(PENDING_ON_SITE)
+  reservedAt    DateTime      @default(now())
+  
+  // Relations
+  auction       Auction @relation(fields: [auctionId], references: [id])
+  user          User    @relation(fields: [userId], references: [id])
+
+  @@map("reservations")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}

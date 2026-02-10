@@ -1,0 +1,27 @@
+from pydantic import BaseModel
+from datetime import datetime
+from decimal import Decimal
+from typing import Optional
+
+
+class AuctionBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_price: Decimal
+    floor_price: Decimal
+    start_time: datetime
+    end_time: datetime
+    drop_interval_mins: Optional[int] = 60
+    drop_amount: Optional[Decimal] = None
+
+
+class AuctionCreate(AuctionBase):
+    pass
+
+
+class AuctionResponse(AuctionBase):
+    id: int
+    status: str
+
+    class Config:
+        from_attributes = True
