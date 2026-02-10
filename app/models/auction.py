@@ -22,6 +22,8 @@ class AuctionCreate(AuctionBase):
 class AuctionResponse(AuctionBase):
     id: int
     status: str
+    computedPrice: Optional[Decimal] = None
+    priceDetails: Optional[dict] = None
 
     class Config:
         from_attributes = True

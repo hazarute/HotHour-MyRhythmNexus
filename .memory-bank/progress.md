@@ -12,14 +12,14 @@
 ## Faz 2: Çekirdek İş Mantığı (Backend)
 - [X] Kullanıcı Yönetimi (Auth, Register, Login) - (Temel yapı kuruldu)
 - [X] Kullanıcı modeli: `gender` alanı eklendi
-- [ ] Açık Artırma (Auction) CRUD işlemleri (Admin)
-- [ ] Fiyat Hesaplama Motoru (Servis mantığı)
-- [ ] Açık Artırma Listeleme ve Detay API'leri (Public)
-
-### Mevcut Durum
-- `POST /api/v1/auctions` (Admin create) ve `GET /api/v1/auctions` (listeleme) eklendi.
-- **Tamamlandı:** Modeller, Servisler, Admin Role Check, Async Test Altyapısı (Clean).
-- **Sırada:** Auction Validasyon kuralları ve Turbo modu entegrasyonu.
+- [X] Açık Artırma (Auction) CRUD işlemleri (Admin)
+- [X] Fiyat Hesaplama Motoru (Servis mantığı)
+- [X] Açık Artırma Listeleme ve Detay API'leri (Public)
+ - [X] Fiyat Hesaplama motoru `auction_service` ile entegre edildi
+ - [X] `GET /api/v1/auctions/?include_computed=true` endpoint desteği eklendi
+ - [X] Entegrasyon testi: `tests/test_auctions_computed.py` eklendi
+ - [X] CI workflow eklendi: `.github/workflows/ci.yml`
+ - [X] Test shim: `app/core/db.py` içinde test-ortamı için fake Prisma (env kontrollü)
 
 ## Faz 3: Rezervasyon Sistemi
 - [ ] "Hemen Kap" (Booking) mantığı ve Race Condition yönetimi

@@ -43,6 +43,12 @@
     prisma generate
     ```
 
+## CI ve Test Notları
+
+- Proje için basit bir GitHub Actions workflow eklendi: `.github/workflows/ci.yml` (testleri çalıştırır).
+- Lokal test çalıştırma sırasında Prisma client yüklü değilse repo içinde test-ortamı için bir "fake Prisma" shim (
+    `app/core/db.py`) bulunur. Bu shim pytest ortamında otomatik devreye girer; prod ortamında gerçek `prisma.Prisma` kullanılmalıdır.
+
 ## Konfigürasyon Kuralları
 *   **Decimal Tipi:** Prisma Python Client'ta `enable_experimental_decimal` özelliği aktif edilmelidir.
 *   **Encoding:** Windows ortamında `schema.prisma` dosyasında ASCII dışı karakterlerden (emojiler, Türkçe karakterler) kaçınılmalı veya encoding doğru ayarlanmalıdır.
