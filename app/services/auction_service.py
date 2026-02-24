@@ -1,9 +1,15 @@
 from app.core.db import db
 from app.services.price_service import price_service
+from app.utils.validators import auction_validator, ValidationError
 
 
 class AuctionService:
     async def create_auction(self, data: dict):
+        # Validate auction data before creation
+        is_valid, error_msg = auction_validator.validate_auction_create(data)
+        if not is_valid:
+            raise ValidationError(error_msg)
+        
         # Map incoming keys to Prisma model fields
         drop_amount = data.get("drop_amount")
         turbo_drop = data.get("turbo_drop_amount", drop_amount if drop_amount is not None else "0.00")

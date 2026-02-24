@@ -24,6 +24,16 @@
     *   `404 Not Found`: Kaynak yok
     *   `409 Conflict`: Çakışma (örn: zaten satılmış seans)
 
+## Validasyon Deseni (Validation Pattern)
+*   **Utility Katmanı:** `app/utils/validators.py` içinde `Validator` sınıfları oluşturulmalı.
+*   **Statik Metodlar:** Validasyon metodları `@staticmethod` olarak yazılmalı (testlenmesi kolay).
+*   **Custom Exception:** `ValidationError` istisnası kaldırılmalı ve 400 cevabı verilmeli.
+*   **Entegrasyon:** Servis katmanı (`create_auction`) validasyon çağrısı yapıp exception'ı raise etmeli.
+*   **Error Handling:** API endpoint'leri `try-except` ile `ValidationError`'ı yakalamalı ve HTTPException 400 vermelidir.
+*   **Test Stratejisi:**
+    - **Unit:** `tests/test_validators.py` - İş mantığını test et
+    - **Integration:** `tests/test_*_integration.py` - API endpoint'lerini test et
+
 ## Commit Mesajları
 *   Türkçe veya İngilizce olabilir, ancak tutarlı olmalı.
 *   Format: `TÜR: Açıklama`

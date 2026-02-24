@@ -13,6 +13,10 @@ class AuctionBase(BaseModel):
     end_time: datetime
     drop_interval_mins: Optional[int] = 60
     drop_amount: Optional[Decimal] = None
+    turbo_enabled: Optional[bool] = False
+    turbo_trigger_mins: Optional[int] = 120
+    turbo_drop_amount: Optional[Decimal] = None
+    turbo_interval_mins: Optional[int] = 5
 
 
 class AuctionCreate(AuctionBase):

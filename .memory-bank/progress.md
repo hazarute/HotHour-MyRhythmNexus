@@ -20,6 +20,17 @@
  - [X] Entegrasyon testi: `tests/test_auctions_computed.py` eklendi
  - [X] CI workflow eklendi: `.github/workflows/ci.yml`
  - [X] Test shim: `app/core/db.py` içinde test-ortamı için fake Prisma (env kontrollü)
+ - [X] **Auction Validasyon kuralları** (`app/utils/validators.py`) - AuctionValidator sınıfı
+ - [X] **Unit testleri**: `tests/test_auction_validation.py` (26 test ✓)
+   - Fiyat validasyonları (11 test)
+   - Zaman validasyonları (10 test)
+   - Auction create validasyonları (5 test)
+ - [X] **Integration testleri**: `tests/test_auction_validation_integration.py` (4 test ✓)
+   - Valid auction creation
+   - Price range validation
+   - Turbo mode validation
+ - [X] Pydantic model güncelleme: turbo fields eklendi
+ - [X] API error handling (HTTPException 400)
 
 ## Faz 3: Rezervasyon Sistemi
 - [ ] "Hemen Kap" (Booking) mantığı ve Race Condition yönetimi
