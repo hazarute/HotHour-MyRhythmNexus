@@ -33,42 +33,42 @@ const submitForm = () => {
 <template>
     <div class="space-y-5">
         <div>
-            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Create Auction</p>
-            <h3 class="text-2xl font-bold text-white">New Session Setup</h3>
-            <p class="text-slate-400 text-sm mt-1">Configure timeline, pricing, and turbo behavior for this session.</p>
+            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Oturum Oluþtur</p>
+            <h3 class="text-2xl font-bold text-white">Yeni Oturum Kurulumu</h3>
+            <p class="text-slate-400 text-sm mt-1">Bu oturum için zaman çizelgesi, fiyatlandýrma ve turbo davranýþýný yapýlandýrýn.</p>
         </div>
 
         <form @submit.prevent="submitForm" class="space-y-5">
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
-                <h4 class="text-white font-semibold">Basic Info</h4>
+                <h4 class="text-white font-semibold">Temel Bilgiler</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Title</label>
+                        <label class="block text-sm font-medium text-slate-300">Baþlýk</label>
                         <input
                             v-model="form.title"
                             type="text"
                             required
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
-                            placeholder="Ex: Morning Pilates @ 10:00"
+                            placeholder="Örn: Sabah Pilatesi @ 10:00"
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Description</label>
+                        <label class="block text-sm font-medium text-slate-300">Açýklama</label>
                         <input
                             v-model="form.description"
                             type="text"
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
-                            placeholder="Optional details..."
+                            placeholder="Ýsteðe baðlý detaylar..."
                         />
                     </div>
                 </div>
             </div>
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
-                <h4 class="text-white font-semibold">Schedule</h4>
+                <h4 class="text-white font-semibold">Zamanlama</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Start Time</label>
+                        <label class="block text-sm font-medium text-slate-300">Baþlangýç Zamaný</label>
                         <input
                             v-model="form.start_time"
                             type="datetime-local"
@@ -77,7 +77,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">End Time</label>
+                        <label class="block text-sm font-medium text-slate-300">Bitiþ Zamaný</label>
                         <input
                             v-model="form.end_time"
                             type="datetime-local"
@@ -89,10 +89,10 @@ const submitForm = () => {
             </div>
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
-                <h4 class="text-white font-semibold">Pricing Engine</h4>
+                <h4 class="text-white font-semibold">Fiyatlandýrma Motoru</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Start Price (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">Baþlangýç Fiyatý (TL)</label>
                         <input
                             v-model.number="form.start_price"
                             type="number"
@@ -102,7 +102,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Floor Price (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">Taban Fiyat (TL)</label>
                         <input
                             v-model.number="form.floor_price"
                             type="number"
@@ -115,7 +115,7 @@ const submitForm = () => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Drop Interval (Min)</label>
+                        <label class="block text-sm font-medium text-slate-300">Düþüþ Aralýðý (Dk)</label>
                         <input
                             v-model.number="form.drop_interval_mins"
                             type="number"
@@ -125,7 +125,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Drop Amount (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">Düþüþ Miktarý (TL)</label>
                         <input
                             v-model.number="form.drop_amount"
                             type="number"
@@ -140,58 +140,64 @@ const submitForm = () => {
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <h4 class="text-white font-semibold">Turbo Mode</h4>
-                        <p class="text-xs text-slate-400">Accelerate price drops near session end.</p>
+                        <h4 class="text-white font-semibold">Turbo Mod</h4>
+                        <p class="text-xs text-slate-400">Oturum sonuna yaklaþýnca fiyat düþüþünü hýzlandýrýn.</p>
                     </div>
                     <label for="turbo-toggle" class="inline-flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
                         <input
                             v-model="form.turbo_enabled"
                             type="checkbox"
                             id="turbo-toggle"
-                            class="w-5 h-5 rounded bg-dark-bg border-slate-600"
+                            class="w-5 h-5 rounded border-slate-600 text-neon-blue focus:ring-neon-blue bg-dark-bg/60"
                         />
-                        Enable
+                        <span>Aktif</span>
                     </label>
                 </div>
-
-                <div v-if="form.turbo_enabled" class="p-4 border border-neon-magenta/40 rounded-lg bg-neon-magenta/10 space-y-4">
-                    <h5 class="text-neon-magenta font-semibold text-xs uppercase tracking-wider">Turbo Configuration</h5>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="space-y-1">
-                            <label class="block text-xs text-slate-300">Trigger (Mins Before End)</label>
-                            <input
-                                v-model.number="form.turbo_trigger_mins"
-                                type="number"
-                                min="1"
-                                class="w-full bg-dark-bg/70 border border-slate-600 rounded-lg px-2.5 py-2 text-white"
-                            />
-                        </div>
-                        <div class="space-y-1">
-                            <label class="block text-xs text-slate-300">Turbo Interval (Min)</label>
-                            <input
-                                v-model.number="form.turbo_interval_mins"
-                                type="number"
-                                min="1"
-                                class="w-full bg-dark-bg/70 border border-slate-600 rounded-lg px-2.5 py-2 text-white"
-                            />
-                        </div>
-                        <div class="space-y-1">
-                            <label class="block text-xs text-slate-300">Turbo Drop Amount (TL)</label>
-                            <input
-                                v-model.number="form.turbo_drop_amount"
-                                type="number"
-                                min="1"
-                                class="w-full bg-dark-bg/70 border border-slate-600 rounded-lg px-2.5 py-2 text-white"
-                            />
-                        </div>
+            
+                <div v-if="form.turbo_enabled" class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-700/50">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-300">Tetikleyici (Son X Dk)</label>
+                        <input
+                            v-model.number="form.turbo_trigger_mins"
+                            type="number"
+                            min="1"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-300">Turbo Aralýðý (Dk)</label>
+                        <input
+                            v-model.number="form.turbo_interval_mins"
+                            type="number"
+                            min="1"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-300">Turbo Miktarý (TL)</label>
+                        <input
+                            v-model.number="form.turbo_drop_amount"
+                            type="number"
+                            min="1"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
+                        />
                     </div>
                 </div>
             </div>
 
-            <button type="submit" :disabled="loading" class="w-full hh-btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed">
-                <span v-if="loading">Creating...</span>
-                <span v-else>Create Auction Session</span>
-            </button>
+            <div class="flex justify-end pt-4">
+                <button
+                    type="submit"
+                    :disabled="loading"
+                    class="bg-gradient-to-r from-neon-blue to-primary hover:to-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-neon-blue/20 transform transition hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span v-if="loading" class="flex items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Oluþturuluyor...
+                    </span>
+                    <span v-else>Oturumu Baþlat</span>
+                </button>
+            </div>
         </form>
     </div>
 </template>

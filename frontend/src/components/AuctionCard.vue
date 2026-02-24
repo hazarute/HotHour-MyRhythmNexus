@@ -26,8 +26,8 @@ const bgImage = computed(() => {
     return props.auction.imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzQLXU7vvnTRdJ4MV4keULwtXLs9kob4G3VxrcVseAk9_7W6-DUBymCB389nrrP0dv4LJqbZPibtOIZqpJ9yCQvNBLY2ztMD3KkVCkR2XvJwaIwzi2eB_wRlZzNGkSJZmZLPEdMRxfXvNFb72QNivwO4mePlhNA9dhZkAvHkb21evrbK53XO7qPWYyZzgh8VkDCIxPYOC96choIVf7SgvFPtKGfXOPTBZNDR33gdq4vd0kJIgRgGyLwK64lz8TKvGQh8Zi878Q65k'
 })
 
-const studioName = computed(() => props.auction.studioName || 'Zenith Studio') // Mock data if missing
-const distance = computed(() => '1.2km away') // Mock data
+const studioName = computed(() => props.auction.studioName || 'Zenith Stüdyo') // Mock data if missing
+const distance = computed(() => '1.2km uzakta') // Mock data
 const originalPrice = computed(() => (props.auction.currentPrice || 0) * 1.5) // Mock logic
 </script>
 
@@ -64,8 +64,8 @@ const originalPrice = computed(() => (props.auction.currentPrice || 0) * 1.5) //
         </div>
 
         <div class="flex items-center gap-2 my-4">
-            <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Intermediate</span>
-            <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">60 Min</span>
+            <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Orta Seviye</span>
+            <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">60 Dk</span>
         </div>
 
         <div class="mt-auto pt-4 border-t border-white/5">
@@ -78,7 +78,7 @@ const originalPrice = computed(() => (props.auction.currentPrice || 0) * 1.5) //
                     </span>
                 </div>
                 <div class="text-right">
-                    <p class="text-neon-orange text-xs font-mono">Price drops soon</p>
+                    <p class="text-neon-orange text-xs font-mono">Fiyat düþüyor</p>
                 </div>
             </div>
 
