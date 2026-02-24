@@ -190,7 +190,7 @@ class BookingService:
         reservations = await db.reservation.find_many(
             where={"userId": user_id},
             include={"auction": True},
-            order={"createdAt": "desc"}
+            order={"reservedAt": "desc"}
         )
         
         return [
@@ -217,7 +217,7 @@ class BookingService:
                 "user": True,
                 "auction": True
             },
-            order={"createdAt": "desc"}
+            order={"reservedAt": "desc"}
         )
         
         return [
@@ -230,7 +230,7 @@ class BookingService:
                 "locked_price": str(res.lockedPrice),
                 "booking_code": res.bookingCode,
                 "status": getattr(res, 'status', 'CONFIRMED'),
-                "created_at": res.createdAt.isoformat() if res.createdAt else None,
+                "created_at": res.reservedAt.isoformat() if res.reservedAt else None,
             }
             for res in reservations
         ]

@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
 
 // Using Vite environment variables (import.meta.env)
-// If VITE_API_URL is not set, default to localhost:8000
-const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// If VITE_API_URL is not set, default to 127.0.0.1:8000
+const SOCKET_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 class SocketService {
   constructor() {

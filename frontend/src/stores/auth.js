@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', () => {
         loading.value = true
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
             
             // NOTE: Using JSON body for this specific endpoint implementation
             const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
@@ -59,7 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function fetchUserProfile(accessToken) {
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
             // Endpoint is currently under the auth router prefix
             const response = await fetch(`${baseUrl}/api/v1/auth/me`, {
                 headers: {

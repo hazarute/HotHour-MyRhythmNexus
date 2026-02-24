@@ -71,6 +71,17 @@ graph TD
 * **Composition API:** Tüm bileşenlerde `<script setup>` syntax'ı kullanılır.
 * **Tailwind v4:** Stil yönetimi CSS değişkenleri ve utility class'lar üzerinden sağlanır. `@tailwindcss/postcss` plugin'i ile çalışır.
 
+### 7. Lokal Geliştirme İletişim Deseni (Host + CORS)
+
+* Frontend API hedefi `VITE_API_URL` ile yönetilir; lokal ortamda `http://127.0.0.1:8000` standardı benimsenmiştir.
+* Backend CORS izinleri `.env` içindeki `BACKEND_CORS_ORIGINS` JSON listesi ile kontrol edilir.
+* Bu desen, preflight (`OPTIONS`) hatalarını ve `localhost`/`127.0.0.1` çözümleme tutarsızlıklarını önlemek için zorunlu kabul edilir.
+
+### 8. Reservation Zaman Alanı Deseni
+
+* `Reservation` modelinde iş zamanı alanı `reservedAt`'tir; sorgu sıralaması (`orderBy`) ve API mappinglerinde bu alan kullanılmalıdır.
+* `createdAt` alanı Reservation modelinde bulunmadığı için bu alana göre sıralama Prisma seviyesinde hata üretir.
+
 ## Klasör Yapısı (Full-Stack Dağılımı)
 
 ```text

@@ -76,10 +76,12 @@
   - Registered in `app/main.py`
   - Current user authentication via JWT token
   - Ownership verification (users can only book/view own reservations)
-- [ ] **Integration Tests** (Delayed):
-  - Event loop debugging needed for full TestClient integration
-  - Core logic verified manually and via code review
-  - Manual testing recommended for immediate verification
+  - Runtime hotfix: Reservation list sıralaması `createdAt` yerine `reservedAt` ile düzeltildi (`/my/all` 500 hatası giderildi)
+- [X] **Integration Tests** (Completed):
+  - Event loop/TestClient timeout sorunu giderildi (`app/core/db.py` test ortamı algılama + fake Prisma genişletmesi)
+  - `tests/test_booking_integration.py` placeholder kaldırıldı, gerçek API entegrasyon testleri eklendi
+  - Booking success (`201`) ve duplicate booking conflict (`409`) senaryoları doğrulandı
+  - Test sonuçları: `47 passed, 0 skipped` (pytest `tests/`)
 
 ## Faz 4: Gerçek Zamanlı Özellikler (Real-time)
 - [X] Socket.io entegrasyonu (`app/core/socket.py` - AsyncServer, room-based)
@@ -150,7 +152,16 @@
 - [X] **Booking Flow UI:** Integration of "Instant Book" button with `booking_service`.
 - [X] **Success Modal:** Booking confirmation display with `booking_code`.
 - [X] **My Reservations UI:** User profile page to view their bookings.
-- [ ] **E2E Testing:** Verify full user journey (Login -> View -> Book).
+- [X] **E2E Testing:** Verify full user journey (Login -> View -> Book).
+  - `tests/test_e2e_flow.py` eklendi (admin login → auction create → user login → auction list view → reservation book)
+  - Doğrulama: `pytest tests/test_e2e_flow.py -q` başarılı
 - [X] **Production Build Check:** Ensure `npm run build` passes with no errors.
-- [ ] **Real-time Sync Test:** Verify that price updates and Turbo mode triggers propagate instantly to multiple connected clients simultaneously.
+- [X] **Real-time Sync Test:** Verify that price updates and Turbo mode triggers propagate instantly to multiple connected clients simultaneously.
+  - `tests/test_realtime_sync.py` eklendi
+  - İki Socket.IO istemcisinin aynı auction room'a subscribe olduğu senaryoda `price_update` ve `turbo_triggered` event yayılımı doğrulandı
+  - Gereken bağımlılık kalıcı eklendi: `aiohttp>=3.10.0` (`requirements.txt`)
+- [X] **Local Runtime Stability Fixes:**
+  - Frontend API hedefi `127.0.0.1:8000` olarak standardize edildi (`frontend/.env`, `auth.js`, `auction.js`, `socket.js`)
+  - Backend CORS preflight (`OPTIONS /api/v1/auth/login`) 400 hatası düzeltildi (`BACKEND_CORS_ORIGINS`)
+  - Manuel doğrulama: Admin login + auction create + my reservations endpoint çağrıları başarılı
 - [ ] **Full Cycle Simulation:** Manually test the entire flow: Admin creates auction -> User sees it live -> User waits for Turbo -> User clicks "Hemen Kap" -> Admin sees the reservation code in the panel.

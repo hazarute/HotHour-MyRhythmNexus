@@ -14,6 +14,7 @@ Proje, API-First yaklaşımıyla tasarlanmış olup, backend ve frontend bileşe
 | **Security** | Auth & Şifreleme | Python-Jose, Bcrypt | JWT tabanlı kimlik doğrulama, Password Hashing |
 | **Config** | Çevresel Değişkenler | Pydantic Settings | `.env` tabanlı konfigürasyon yönetimi |
 | **Real-time** | WebSocket Engine | Socket.io | Backend: `AsyncServer`, Frontend: `socket.io-client` (Aktif) |
+| **Testing** | Async Client Transport | aiohttp | `aiohttp>=3.10.0` (Socket.io `AsyncClient` entegrasyon testleri için gerekli) |
 | **Frontend** | Core Framework | Vue.js | Vue 3 (Composition API) |
 | **Frontend** | Build Tool | Vite | Hızlı modül değişimi (HMR) ve derleme |
 | **Frontend** | Styling | Tailwind CSS | v4.2+ (PostCSS integration: `@tailwindcss/postcss`) |
@@ -68,8 +69,14 @@ Proje iki ana dizinden (veya ayrı depolardan) oluşur: `backend` ve `frontend`.
 2.  **Geliştirme Sunucusunu Başlatma:**
     ```bash
     npm run dev
-    # Genellikle http://localhost:5173 adresinde ayağa kalkar
+    # Genellikle http://127.0.0.1:5173 adresinde ayağa kalkar
     ```
+
+3. **Frontend API URL (Önerilen):**
+   `frontend/.env` içinde backend adresini sabitleyin:
+   ```env
+   VITE_API_URL=http://127.0.0.1:8000
+   ```
 
 ## CI ve Test Notları
 
@@ -80,7 +87,8 @@ Proje iki ana dizinden (veya ayrı depolardan) oluşur: `backend` ve `frontend`.
 * **Decimal Tipi:** Prisma Python Client'ta `enable_experimental_decimal` özelliği aktif edilmelidir. Frontend tarafında bu veriler string veya float olarak karşılanıp doğru şekilde (virgülden sonra 2 hane) formatlanmalıdır.
 * **Encoding:** Windows ortamında `schema.prisma` dosyasında ASCII dışı karakterlerden (emojiler, Türkçe karakterler) kaçınılmalı veya encoding doğru ayarlanmalıdır.
 * **Authentication:** `SECRET_KEY` mutlaka `.env` dosyasından okunmalı, hardcode edilmemelidir.
-* **CORS:** Backend `main.py` dosyasında, frontend geliştirme sunucusunun (örn: `http://localhost:5173`) CORS listesine eklendiğinden emin olunmalıdır.
+* **CORS:** Backend `.env` içinde `BACKEND_CORS_ORIGINS` geçerli JSON liste formatında verilmelidir (örn: `http://127.0.0.1:5173`).
+* **Host Tutarlılığı:** Bu projede lokal geliştirmede `localhost` yerine `127.0.0.1` kullanımı tercih edilir (frontend-backend bağlantı kararlılığı için).
 
 ## Veri Modeli Notları (Prisma)
 * User tablosu `email` ve `phone` alanlarını unique tutar.

@@ -123,7 +123,7 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
             const payload = {
                 auction_id: auctionId,
                 user_id: authStore.user.id
