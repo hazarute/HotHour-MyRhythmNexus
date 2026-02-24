@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HotHour Public Auction Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#256af4",
+                        "neon-blue": "#00f0ff",
+                        "neon-magenta": "#ff00ff",
+                        "neon-orange": "#ffaa00",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#101622", // Deep charcoal/black
+                        "surface-dark": "#1a1f2e",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    boxShadow: {
+                        'neon-blue': '0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3)',
+                        'neon-magenta': '0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(26, 31, 46, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(37, 106, 244, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen overflow-x-hidden selection:bg-neon-blue selection:text-black">
+<div class="flex flex-col min-h-screen">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 w-full border-b border-white/10 bg-background-dark/80 backdrop-blur-md">
+<div class="px-6 md:px-12 py-4 flex items-center justify-between">
+<div class="flex items-center gap-10">
+<a class="flex items-center gap-3 group" href="#">
+<div class="size-8 text-primary group-hover:text-neon-blue transition-colors duration-300">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C12.9543 4 4 7.25611 4 11.2727C4 14.0109 8.16144 16.3957 14.31 17.6364C8.16144 18.877 4 21.2618 4 24C4 26.7382 8.16144 29.123 14.31 30.3636C8.16144 31.6043 4 33.9891 4 36.7273C4 40.7439 12.9543 44 24 44C35.0457 44 44 40.7439 44 36.7273C44 33.9891 39.8386 31.6043 33.69 30.3636C39.8386 29.123 44 26.7382 44 24C44 21.2618 39.8386 18.877 33.69 17.6364C39.8386 16.3957 44 14.0109 44 11.2727C44 7.25611 35.0457 4 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight text-white">HotHour</span>
+</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium text-neon-blue drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]" href="#">Arena</a>
+<a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">My Bookings</a>
+<a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">Studios</a>
+<a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">How it Works</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center relative group">
+<span class="absolute left-3 text-slate-500 material-symbols-outlined text-lg">search</span>
+<input class="bg-surface-dark border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-primary w-64 transition-all" placeholder="Search studios..." type="text"/>
+</div>
+<button class="bg-surface-dark hover:bg-surface-dark/80 text-white text-sm font-bold py-2 px-6 rounded-full border border-white/10 transition-colors">
+                        Sign In
+                    </button>
+<button class="bg-primary hover:bg-blue-600 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/40">
+                        Join Free
+                    </button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center w-full">
+<!-- Hero Section -->
+<section class="w-full relative px-6 md:px-12 py-16 overflow-hidden">
+<!-- Background Gradient/Image -->
+<div class="absolute inset-0 z-0 opacity-40 bg-[url('https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&amp;w=2070&amp;auto=format&amp;fit=crop')] bg-cover bg-center" data-alt="Dark abstract futuristic gym atmosphere with neon lights"></div>
+<div class="absolute inset-0 z-0 bg-gradient-to-r from-background-dark via-background-dark/95 to-transparent"></div>
+<div class="absolute inset-0 z-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+<div class="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
+<div class="max-w-2xl">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-6">
+<span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
+                            Live Auction Arena
+                        </div>
+<h1 class="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight mb-6">
+                            Sweat for Less. <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary text-glow">Bid for the Burn.</span>
+</h1>
+<p class="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
+                            Experience high-end Pilates at dynamic prices. The clock is ticking, the price is dropping. Grab your spot before it's gone.
+                        </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-neon-blue transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">gavel</span>
+                                View Live Auctions
+                            </button>
+<button class="bg-transparent hover:bg-white/5 text-white border border-white/20 font-bold py-3 px-8 rounded-lg transition-colors">
+                                Learn More
+                            </button>
+</div>
+</div>
+<!-- Hero Stats/Visual -->
+<div class="hidden md:flex flex-col gap-4 w-80">
+<div class="glass-card p-6 rounded-xl border-l-4 border-neon-magenta">
+<div class="flex justify-between items-start mb-2">
+<span class="text-slate-400 text-xs uppercase tracking-wider">Active Bidders</span>
+<span class="material-symbols-outlined text-neon-magenta">groups</span>
+</div>
+<div class="text-3xl font-bold text-white">1,248</div>
+<div class="text-xs text-green-400 flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">trending_up</span> +12% this hour
+                            </div>
+</div>
+<div class="glass-card p-6 rounded-xl border-l-4 border-neon-orange">
+<div class="flex justify-between items-start mb-2">
+<span class="text-slate-400 text-xs uppercase tracking-wider">Avg. Savings</span>
+<span class="material-symbols-outlined text-neon-orange">savings</span>
+</div>
+<div class="text-3xl font-bold text-white">45%</div>
+<div class="text-xs text-slate-400 mt-1">
+                                vs standard studio rates
+                            </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Filters -->
+<section class="w-full border-y border-white/5 bg-surface-dark/50 backdrop-blur-sm sticky top-[73px] z-40">
+<div class="max-w-7xl mx-auto px-6 md:px-12 py-3 overflow-x-auto">
+<div class="flex gap-3 min-w-max">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-lg">apps</span>
+                            All Classes
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 text-sm font-medium transition-all">
+<span class="material-symbols-outlined text-lg">self_improvement</span>
+                            Reformer
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 text-sm font-medium transition-all">
+<span class="material-symbols-outlined text-lg">spa</span>
+                            Mat Pilates
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 text-sm font-medium transition-all">
+<span class="material-symbols-outlined text-lg">whatshot</span>
+                            Hot Pilates
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-slate-300 text-sm font-medium transition-all ml-auto">
+<span class="material-symbols-outlined text-lg">tune</span>
+                            Filters
+                        </button>
+</div>
+</div>
+</section>
+<!-- Auction Grid -->
+<section class="w-full max-w-7xl mx-auto px-6 md:px-12 py-12">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-2xl font-bold text-white flex items-center gap-3">
+<span class="w-2 h-8 bg-neon-magenta rounded-full"></span>
+                        Live Auctions
+                    </h2>
+<span class="text-slate-500 text-sm">Showing 8 active auctions</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-blue/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 02:14
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Pilates reformer studio interior" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzQLXU7vvnTRdJ4MV4keULwtXLs9kob4G3VxrcVseAk9_7W6-DUBymCB389nrrP0dv4LJqbZPibtOIZqpJ9yCQvNBLY2ztMD3KkVCkR2XvJwaIwzi2eB_wRlZzNGkSJZmZLPEdMRxfXvNFb72QNivwO4mePlhNA9dhZkAvHkb21evrbK53XO7qPWYyZzgh8VkDCIxPYOC96choIVf7SgvFPtKGfXOPTBZNDR33gdq4vd0kJIgRgGyLwK64lz8TKvGQh8Zi878Q65k');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<!-- Glowing line separator -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-blue to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">Reformer Flow</h3>
+<p class="text-slate-400 text-xs">Zenith Studio • 1.2km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Intermediate</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">60 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$45.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $22<span class="text-sm font-normal text-slate-400">.50</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 12s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-blue hover:shadow-neon-blue text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-magenta/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 00:45
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Intense workout session dark lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2fBT2CAN00I1Wnlz-cdfu_IkVkSrER9el2V2whXQgLTJW-_sJLbpv8ZKUlAsP23ZL9fbtxjLi9Jyn0e9tk2OTgAoUpck0t2j33tTml3EfVAG2pQaHBUmSf5H4C5B-Sejgp7DHC-MVsQc5O1xAXqbNheJVGsK0D_hFcMFuGyAC3NU1gHE3QMHz0HJcvwfgMetgxpAPCwsvP3jPWDpuqHAnvWHa3ded21NXFF0fEaNdTkrFzyZqu4ghksjUdGb9hQ_mh9hYosZ5q38');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-magenta to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-neon-magenta transition-colors">Power Pilates</h3>
+<p class="text-slate-400 text-xs">Core House • 0.5km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Advanced</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">45 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$38.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $15<span class="text-sm font-normal text-slate-400">.00</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 3s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-magenta hover:shadow-neon-magenta text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-blue/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 05:30
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Woman doing yoga stretch" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAyDoWe7Vzoc6wiUlsEBkBHetPeHZLDs0QsuVUd9kHZFhld-CxEAWZaIm3A-xKqYqoBEVTRMmwXdu8FYTVkRK7qnV37_mosWuCNRgsjZd20oz_uD7J-OD1iBp0-F6RJFJWlYLx2FRYYgHm0_VUQsfsy3RCm-c0wbcNDF6LGP-H082vIM4EeyUNHDJZSRxcOMDeHFlm99JN72tSCNyWfygwYV2pqPi4L0oYISW6BbGC2M4D9sxLt0ueWfKBZmfiKmODMEjMIutrS1eI');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-blue to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">Morning Stretch</h3>
+<p class="text-slate-400 text-xs">Luna Space • 3.0km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">All Levels</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">50 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$30.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $18<span class="text-sm font-normal text-slate-400">.75</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 45s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-blue hover:shadow-neon-blue text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-magenta/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 01:12
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Gym weights and equipment" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFCWLm60fOOOaOvM-cdpRTetSuWHmmiTku3-wMWX76hkHvv1oEfQn5YN0iNRzGoGzSWfqmFmPuDr8ZuUPchSBZD9fa-DVkkYfPz4f3proKsFRUDkoxr5aq1aHqr65CR70tML8a7foWODiipEkbRAeiv_eksOO-sYxhFN48iFbj9V8kU4-nxMo2lf4Ap13n9UpkmKZSk4CrCSdxVc-9orxAvYvUCa8uDfQQLjhZtevaxr5E5G-kY5pY2RMIrN34S40XIyXjxhqBUrg');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-magenta to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-neon-magenta transition-colors">Sculpt &amp; Tone</h3>
+<p class="text-slate-400 text-xs">Iron Body • 0.8km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Beginner</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">55 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$40.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $28<span class="text-sm font-normal text-slate-400">.00</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 08s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-magenta hover:shadow-neon-magenta text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-blue/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 03:45
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Dark pilates studio detail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBS0kfFJb_obnCHpOd0tB4UxfVyGG7myK489zByFtyqdYrP4PkfRWuE-TPTdCxfPjCVLgItD3AiPH1S6as9xc0zD03dWhq-fU_PrCGejwTVXHLkVUj_NDKxVyu-ycydaaA_Q1ZfW-gKx9PRsM1J21iV0ckzKZGW7n1rOSaPWZzrs14bdJhoZUj1Kxvx4mrKaM4I792FAF3D83nB8qLJvvyltKbfjtNU1w7jKxw1rmvH56fa-ezGrQElvYnsYqIxJ9vngwSFXPSTjq0');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-blue to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">Core Control</h3>
+<p class="text-slate-400 text-xs">Pilates Plus • 1.5km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">Intermediate</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">45 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$42.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $25<span class="text-sm font-normal text-slate-400">.50</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 30s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-blue hover:shadow-neon-blue text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="glass-card rounded-2xl overflow-hidden group hover:border-neon-magenta/50 transition-all duration-300 relative flex flex-col">
+<div class="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-neon-orange border border-neon-orange/30 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm animate-pulse">timer</span> 00:30
+                        </div>
+<div class="h-48 w-full bg-cover bg-center relative group-hover:scale-105 transition-transform duration-500" data-alt="Woman exercising in gym" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDS9h7aJw-WJgL8Taexh0z7qa75UgBM2JLrFhFKQxXy9i1U7dNY48p8e_gKwcFcL6QLNB9u7UqkW5r68DhdK45oMvrFXingB6djQoNx2YZZZKrtHGFk8l_89PAj-JhQVKb7Ga3U3k1afQIyVyOmXKx9CENho8yEV-prlD8XGQR5lFt8UZbdhrYADSpzoRQ9O28atFHmthbZSS_noRpx6OCIdPZrQvag16u8YxBQcz9aHvgFce7M3lXmOUEbT5JrDc0NHBacO6O_tbU');">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow relative">
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-neon-magenta to-transparent opacity-50"></div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h3 class="text-white font-bold text-lg leading-tight group-hover:text-neon-magenta transition-colors">Barre Fusion</h3>
+<p class="text-slate-400 text-xs">The Studio • 2.2km away</p>
+</div>
+<div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-white text-lg">bookmark</span>
+</div>
+</div>
+<div class="flex items-center gap-2 my-4">
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">All Levels</span>
+<span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-slate-300 uppercase tracking-wide">60 Min</span>
+</div>
+<div class="mt-auto pt-4 border-t border-white/5">
+<div class="flex justify-between items-end mb-4">
+<div class="flex flex-col">
+<span class="text-slate-500 text-xs line-through">$35.00</span>
+<span class="text-white font-bold text-2xl flex items-center gap-1">
+                                            $12<span class="text-sm font-normal text-slate-400">.00</span>
+<span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+</span>
+</div>
+<div class="text-right">
+<p class="text-neon-orange text-xs font-mono">Price drops in 5s</p>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg bg-primary hover:bg-neon-magenta hover:shadow-neon-magenta text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+<span>Hemen Kap</span>
+<span class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 flex justify-center">
+<button class="flex items-center gap-2 text-white font-medium hover:text-primary transition-colors">
+<span class="material-symbols-outlined animate-spin">refresh</span>
+                        Load More Auctions
+                    </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-dark border-t border-white/5 pt-16 pb-8">
+<div class="max-w-7xl mx-auto px-6 md:px-12">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+<div class="col-span-1 md:col-span-2">
+<a class="flex items-center gap-2 mb-6" href="#">
+<div class="size-6 text-primary">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 4C12.9543 4 4 7.25611 4 11.2727C4 14.0109 8.16144 16.3957 14.31 17.6364C8.16144 18.877 4 21.2618 4 24C4 26.7382 8.16144 29.123 14.31 30.3636C8.16144 31.6043 4 33.9891 4 36.7273C4 40.7439 12.9543 44 24 44C35.0457 44 44 40.7439 44 36.7273C44 33.9891 39.8386 31.6043 33.69 30.3636C39.8386 29.123 44 26.7382 44 24C44 21.2618 39.8386 18.877 33.69 17.6364C39.8386 16.3957 44 14.0109 44 11.2727C44 7.25611 35.0457 4 24 4Z" fill="currentColor"></path>
+</svg>
+</div>
+<span class="text-xl font-bold tracking-tight text-white">HotHour</span>
+</a>
+<p class="text-slate-400 max-w-sm">
+                            The first dynamic pricing marketplace for boutique fitness studios. Fill your classes, maximize revenue, and let users bid for the burn.
+                        </p>
+</div>
+<div>
+<h4 class="text-white font-bold mb-4">Marketplace</h4>
+<ul class="space-y-3">
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Live Auctions</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Studios</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">How it Works</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Pricing</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white font-bold mb-4">Support</h4>
+<ul class="space-y-3">
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Help Center</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">For Studios</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+<li><a class="text-slate-400 hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-slate-500 text-sm">© 2024 HotHour Inc. All rights reserved.</p>
+<div class="flex gap-4">
+<a class="text-slate-500 hover:text-white transition-colors" href="#"><i class="fab fa-twitter"></i></a>
+<a class="text-slate-500 hover:text-white transition-colors" href="#"><i class="fab fa-instagram"></i></a>
+<a class="text-slate-500 hover:text-white transition-colors" href="#"><i class="fab fa-linkedin"></i></a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

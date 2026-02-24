@@ -1,26 +1,36 @@
 # Proje Özeti (Project Brief)
 
 ## Genel Bakış
-**HotHour**, Pilates stüdyoları ve randevu bazlı işletmeler için geliştirilmiş bir **Dinamik Hollanda Açık Artırması (Dutch Auction)** ve **Gelir Yönetimi (Yield Management)** platformudur.
+**HotHour**, pilates stüdyoları için dinamik Hollanda açık artırması modeliyle boş seansları gelir fırsatına çeviren bir platformdur. Sistem çekirdeği (backend, fiyat motoru, rezervasyon, gerçek zamanlı event altyapısı) çalışır durumdadır.
 
-Temel hedef, "dolu olması gereken ama boş kalan" (dead inventory) seansları, oyunlaştırılmış bir fiyatlandırma modeliyle kullanıcıya sunarak gelire dönüştürmektir. Kullanıcılar, zamanla fiyatı düşen bir seansı "başkası kapmadan" en uygun fiyata yakalamaya çalışır.
+Bu yeniden planlama ile ana hedef, mevcut çalışan fonksiyonları bozmadan tüm frontend görsel arayüzünü `Referans Görseller/` klasöründeki tasarım diliyle yeniden hizalamaktır.
 
 ## Temel Hedefler
-1.  **Atıl Kapasiteyi Nakde Çevirmek:** Boş kalan seansların maliyetini çıkarmak ve ek gelir sağlamak.
-2.  **FOMO Yaratmak:** Fiyatın düşmesi ve "tek" olması, kullanıcıda kaçırma korkusu yaratarak satış hızını artırır.
-3.  **Ödeme Bariyerini Kaldırmak:** Kredi kartsız, "Rezervasyon Yap & Yerinde Ödeme" modeli ile güven sorununu aşmak.
-4.  **Operasyonel Yükü Azaltmak:** Otomatik fiyatlandırma ve rezervasyon yönetimi.
+1. **UI Tutarlılığı:** Home, rezervasyonlar, admin ekranları ve giriş ekranı arasında tek bir görsel dil oluşturmak.
+2. **Referans Sadakati:** Referans görsellerdeki tipografi, kart yapısı, glow/kontrast dengesi ve CTA hiyerarşisini korumak.
+3. **Fonksiyonel Güvenlik:** Yeniden tasarım sürecinde backend API sözleşmeleri ve mevcut iş akışları (login, book, realtime) değiştirilmeyecek.
+4. **Hızlı Yayınlanabilirlik:** Yeniden tasarım MVP’si minimum teknik riskle devreye alınacak.
 
-## Kapsam
-Proje şu an için **HotHour Core** (Backend API, Veritabanı, İş Mantığı) üzerine odaklanmaktadır.
+## Güncel Kapsam
 
 ### Dahil Olanlar
-*   Kullanıcı ve Rol Yönetimi (Stüdyo Yöneticisi, Son Kullanıcı)
-*   Açık Artırma Motoru (Fiyat düşürme mantığı, Turbo mod)
-*   Rezervasyon Sistemi (Yarış durumu koruması, Fiyat kilitleme)
-*   Bildirim Altyapısı
-*   Admin Paneli API uçları
+- Kullanıcı ve admin için mevcut akışların görsel yeniden tasarımı
+- Public ekranlar: Home, Auction Detail, My Reservations
+- Admin ekranlar: Login, Dashboard, Auction Create, Reservations
+- Global layout/navigation ve ortak bileşen stili
+- Mevcut API/store/socket entegrasyonunun korunması
 
-### Dahil Olmayanlar (Şimdilik)
-*   Gelişmiş analitik panoları (MVP sonrası)
-*   Online Ödeme Gateway entegrasyonu (MVP'de yerinde ödeme var)
+### Dahil Olmayanlar
+- Yeni ürün özelliği ekleme (ödeme gateway, yeni business rule vb.)
+- Backend domain model değişiklikleri
+- Mevcut kapsam dışı analitik/raporlama modülleri
+
+## Başarı Kriterleri
+- Tüm hedef ekranlar referans diliyle görsel olarak tutarlı olur
+- Mevcut kritik kullanıcı yolculukları bozulmadan çalışır:
+  - Login
+  - Auction görüntüleme
+  - Hemen Kap / rezervasyon oluşturma
+  - My Reservations görüntüleme
+  - Admin’de rezervasyon doğrulama
+- Frontend build ve mevcut temel testler çalışır durumda kalır

@@ -23,6 +23,7 @@ async def register(user_in: UserCreate):
         "email": user.email,
         "full_name": user.fullName,
         "phone": user.phone,
+        "role": user.role,
         "is_verified": user.isVerified,
     }
 
@@ -49,5 +50,6 @@ async def read_users_me(current_user=Depends(get_current_user)):
         "email": current_user.email,
         "full_name": current_user.fullName,
         "phone": current_user.phone,
+        "role": current_user.role,
         "is_verified": current_user.isVerified,
     }

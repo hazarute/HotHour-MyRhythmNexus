@@ -1,32 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import 'tailwindcss';
 
-  color-scheme: dark; /* Force dark mode */
-  color: #e2e8f0;
-  background-color: #0f172a;
+@theme {
+  /* Colors - using hex values directly in theme block works better in v4 without --color- prefix strictly */
+  --color-primary: #256af4;
+  --color-neon-blue: #00f0ff;
+  --color-neon-magenta: #ff00ff;
+  --color-neon-orange: #ffaa00;
+  --color-background-light: #f5f6f8;
+  --color-background-dark: #101622;
+  --color-surface-dark: #1a1f2e;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Fonts */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+
+  /* Shadows - use --shadow- prefix */ 
+  --shadow-neon-blue: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  --shadow-neon-magenta: 0 0 10px rgba(255, 0, 255, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+@utility glass-card {
+  @apply bg-[#1a1f2e]/60 backdrop-blur-md border border-white/10;
 }
-#app {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0;
+
+@utility text-glow {
+  text-shadow: 0 0 10px rgba(37, 106, 244, 0.5);
 }
+
+@layer base {
+  body {
+    @apply bg-background-dark text-slate-100 font-display min-h-screen overflow-x-hidden selection:bg-neon-blue selection:text-black;
+  }
+}
+

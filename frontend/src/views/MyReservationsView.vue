@@ -10,6 +10,15 @@ const reservations = ref([])
 const loading = ref(false)
 const error = ref(null)
 
+const statusLabel = (status) => {
+    if (!status) return 'Pending'
+    return String(status).replaceAll('_', ' ').toLowerCase().replace(/(^|\s)\S/g, (s) => s.toUpperCase())
+}
+
+const isCompleted = (status) => {
+    return ['COMPLETED', 'NO_SHOW', 'CANCELLED'].includes(status)
+}
+
 const fetchMyReservations = async () => {
     loading.value = true
     error.value = null
@@ -58,11 +67,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto py-8 px-4">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-white tracking-tight">My Reservations</h1>
-        <router-link to="/" class="text-neon-blue hover:underline text-sm">Back to Home</router-link>
-    </div>
+    <div class="hh-section max-w-5xl py-8 lg:py-12">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6 mb-8">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">My Reservations</h1>
+                <p class="text-slate-400 text-base mt-2">Your upcoming Pilates sessions and booking history.</p>
+            </div>
+            <router-link to="/" class="hh-btn-ghost text-sm">Back to Arena</router-link>
+        </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center py-20">
@@ -70,58 +82,76 @@ onMounted(() => {
     </div>
     
     <!-- Error State -->
-    <div v-else-if="error" class="bg-red-900/20 border border-red-500 text-red-200 p-4 rounded-lg mb-6 max-w-lg mx-auto text-center">
+    <div v-else-if="error" class="hh-card border-red-500/60 bg-red-900/20 text-red-200 p-4 mb-6 max-w-lg mx-auto text-center">
         {{ error }}
         <button @click="fetchMyReservations" class="block mx-auto mt-2 text-sm underline">Try Again</button>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="reservations.length === 0" class="text-center py-20 bg-card-bg/50 rounded-xl border border-gray-800">
+    <div v-else-if="reservations.length === 0" class="hh-card text-center py-20">
         <div class="text-6xl mb-4 opacity-50">🎫</div>
         <h2 class="text-xl text-gray-300 mb-2">No reservations yet</h2>
         <p class="text-gray-500 mb-6">You haven't booked any sessions yet. Check out what's hot now!</p>
-        <router-link to="/" class="bg-neon-blue text-black font-bold py-2 px-6 rounded hover:bg-blue-400 transition-colors inline-block">
+        <router-link to="/" class="hh-btn-neon">
             View Live Auctions
         </router-link>
     </div>
 
     <!-- Reservations List -->
-    <div v-else class="space-y-4">
+        <div v-else class="space-y-6">
         <div v-for="res in reservations" :key="res.id" 
-             class="bg-card-bg border border-gray-700 rounded-lg p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-neon-blue/50 transition-colors shadow-lg">
+                             class="group relative overflow-hidden rounded-xl bg-card-bg border border-slate-700 hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-glow">
             
-            <!-- Context -->
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-400 uppercase tracking-wider">
-                        {{ res.status }}
-                    </span>
-                    <span class="text-xs text-gray-500">
-                        booked on {{ formatDate(res.reserved_at) }}
-                    </span>
-                </div>
-                
-                <h3 class="text-xl font-bold text-white mb-1 group-hover:text-neon-blue transition-colors">
-                    {{ res.auction_title || 'Unknown Session' }}
-                </h3>
-                
-                <div class="text-sm text-gray-400 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    {{ formatDate(res.auction_start_time) }}
-                </div>
-            </div>
+                        <div class="absolute top-0 left-0 w-1 h-full" :class="isCompleted(res.status) ? 'bg-slate-500' : 'bg-neon-green shadow-[0_0_10px_2px_rgba(54,211,153,0.5)]'"></div>
 
-            <!-- Price & Code -->
-            <div class="text-right w-full md:w-auto bg-gray-900/50 p-3 rounded-lg border border-gray-800 min-w-[140px]">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="flex-1 p-6 flex flex-col justify-between gap-6">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span :class="isCompleted(res.status) ? 'hh-badge-muted' : 'hh-badge-success'">
+                                            {{ statusLabel(res.status) }}
+                                        </span>
+                                        <span class="text-xs text-slate-500">Booked {{ formatDate(res.reserved_at) }}</span>
+                                    </div>
+
+                                    <h3 class="text-xl font-bold text-white mb-1 group-hover:text-neon-blue transition-colors">
+                                        {{ res.auction_title || 'Pilates Session' }}
+                                    </h3>
+
+                                    <div class="text-sm text-slate-400 flex items-center gap-2">
+                                        <span>📍</span>
+                                        <span>Studio Location</span>
+                                    </div>
+                </div>
+
+                                <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4 mt-1 text-sm">
+                                    <div>
+                                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Date & Time</p>
+                                        <p class="font-medium text-slate-200">{{ formatDate(res.auction_start_time) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Locked Price</p>
+                                        <p class="font-medium text-slate-200">₺{{ res.locked_price }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="md:w-[260px] bg-slate-900/60 p-6 flex flex-col items-center justify-center border-y md:border-y-0 md:border-l border-slate-700 relative overflow-hidden">
+                                <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(#36d399 1px, transparent 1px); background-size: 10px 10px;"></div>
                 <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Booking Code</div>
-                <div class="font-mono text-2xl font-bold text-neon-green tracking-widest leading-none mb-2">
+                                <div class="hh-code-text text-3xl font-bold leading-none mb-2" :class="isCompleted(res.status) ? 'text-slate-500 line-through' : 'text-neon-green'">
                     {{ res.booking_code }}
                 </div>
-                <div class="text-sm font-bold text-white border-t border-gray-700 pt-1 mt-1">
-                    Locked: ₺{{ res.locked_price }}
+                                <div class="text-[10px] text-slate-400 text-center max-w-[150px]">
+                                        Show this code at the front desk for check-in
                 </div>
+                            </div>
+
+                            <div class="md:w-[180px] p-3 flex flex-col gap-2">
+                                <div class="h-28 w-full rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"></div>
+                                <button class="hh-btn-ghost w-full text-xs uppercase tracking-wide">View Receipt</button>
+                            </div>
             </div>
-        
         </div>
     </div>
   </div>

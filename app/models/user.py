@@ -23,6 +23,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    role: str
     is_verified: bool
     
     class Config:
