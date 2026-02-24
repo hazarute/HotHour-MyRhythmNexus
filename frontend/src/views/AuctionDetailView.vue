@@ -52,7 +52,7 @@ const handleBook = async () => {
         return
     }
 
-    if (!confirm(`Are you sure you want to book this session for ${auction.value.currentPrice} TL?`)) {
+    if (!confirm(`${auction.value.currentPrice} TL tutarýndaki bu oturumu rezerve etmek istediðinize emin misiniz?`)) {
         return
     }
 
@@ -86,22 +86,22 @@ onUnmounted(() => {
     <!-- Success Modal Overlay -->
     <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                 <div class="hh-glass-card border-2 border-neon-green rounded-2xl p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(0,255,0,0.3)]">
-            <div class="text-6xl mb-4">ðŸŽ‰</div>
-            <h2 class="text-3xl font-bold text-white mb-2">Booking Confirmed!</h2>
-                        <p class="text-slate-300 mb-6">You successfully caught this session.</p>
+            <div class="text-6xl mb-4"></div>
+            <h2 class="text-3xl font-bold text-white mb-2">Rezervasyon Onaylandý!</h2>
+                        <p class="text-slate-300 mb-6">Bu oturumu baþarýyla yakaladýnýz.</p>
             
                         <div class="bg-white/10 p-4 rounded-lg mb-6 border border-white/10">
-                                <div class="text-sm text-slate-400 uppercase tracking-wider mb-1">Your Booking Code</div>
+                                <div class="text-sm text-slate-400 uppercase tracking-wider mb-1">Rezervasyon Kodunuz</div>
                                 <div class="hh-code-text text-4xl font-bold text-neon-green">{{ reservation?.booking_code || 'HOT-XXXX' }}</div>
             </div>
             
                         <div class="text-sm text-slate-400 mb-6">
-                Please show this code at the studio reception.<br>
-                Locked Price: <span class="text-white font-bold">{{ reservation?.locked_price }} TL</span>
+                Lütfen bu kodu stüdyo resepsiyonunda gösterin.<br>
+                Kilitlenen Fiyat: <span class="text-white font-bold">{{ reservation?.locked_price }} TL</span>
             </div>
             
                         <button @click="showSuccessModal = false" class="hh-btn-neon w-full py-3">
-                Close
+                Kapat
             </button>
         </div>
     </div>
@@ -111,17 +111,17 @@ onUnmounted(() => {
             <div class="relative hh-glass-card p-6 md:p-8 rounded-2xl border border-neon-blue/30 shadow-[0_0_30px_rgba(0,243,255,0.15)] overflow-hidden">
         <!-- Turbo Indicator -->
                 <div v-if="auction.turboActive" class="absolute top-0 left-0 w-full bg-neon-orange text-black font-bold text-center py-1.5 animate-pulse">
-            TURBO MODE ACTIVE ðŸ”¥
+            TURBO MOD AKTÝF 
         </div>
         
-                <h2 class="text-slate-400 text-xs md:text-sm tracking-widest uppercase mb-2 mt-4">Current Price</h2>
+                <h2 class="text-slate-400 text-xs md:text-sm tracking-widest uppercase mb-2 mt-4">Güncel Fiyat</h2>
         <PriceTicker :price="auction.currentPrice" :large="true" />
         
                 <div class="mt-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 border-t border-slate-700 pt-4">
             <CountDownTimer :targetTime="auction.nextDropTime" />
             <div class="text-right">
-                                <span class="block text-xs text-slate-500">Starting Price</span>
-                                <span class="text-slate-300 line-through">â‚º{{ auction.startPrice }}</span>
+                                <span class="block text-xs text-slate-500">Baþlangýç Fiyatý</span>
+                                <span class="text-slate-300 line-through">?{{ auction.startPrice }}</span>
             </div>
         </div>
       </div>
@@ -133,17 +133,17 @@ onUnmounted(() => {
       >
         <span v-if="bookingLoading" class="flex items-center justify-center gap-2">
                         <svg class="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            BOOKING...
+            ÝÞLENÝYOR...
         </span>
-        <span v-else-if="auction.status === 'ACTIVE'">âš¡ HEMEN KAP (BOOK NOW)</span>
-        <span v-else>SOLD OUT</span>
+        <span v-else-if="auction.status === 'ACTIVE'"> HEMEN KAP</span>
+        <span v-else>TÜKENDÝ</span>
         
         <!-- Shine Effect -->
         <div class="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/30 to-transparent z-10"></div>
       </button>
       
             <p class="text-xs text-center text-slate-500 mt-2">
-        * Price locks instantly when you click book. Pay at the venue.
+        * "Hemen Kap" butonuna týkladýðýnýzda fiyat anýnda kilitlenir. Ödemeyi tesiste yaparsýnýz.
       </p>
     </div>
 
@@ -152,49 +152,51 @@ onUnmounted(() => {
         <div>
                         <h1 class="text-3xl md:text-4xl font-bold mb-2 text-white">{{ auction.title }}</h1>
                         <div class="flex items-center gap-2 text-neon-blue">
-                                <span class="text-base md:text-lg">Instructed by {{ auction.instructor || 'Studio Instructor' }}</span>
+                                <span class="text-base md:text-lg">Eðitmen: {{ auction.instructor || 'Stüdyo Eðitmeni' }}</span>
             </div>
         </div>
 
                 <div class="hh-card p-5 md:p-6">
-                    <h3 class="font-bold text-slate-200 mb-2">Session Details</h3>
+                    <h3 class="font-bold text-slate-200 mb-2">Oturum Detaylarý</h3>
                     <p class="text-slate-400 leading-relaxed mb-4">
-                        {{ auction.description || 'Join us for an intense session focused on core strength and flexibility. Suitable for all levels.' }}
+                        {{ auction.description || 'Merkez bölge gücü ve esnekliðe odaklanan yoðun bir oturum için bize katýlýn. Her seviyeye uygundur.' }}
                     </p>
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="block text-slate-500">Date</span>
+                            <span class="block text-slate-500">Tarih</span>
                             <span class="text-white">{{ new Date(auction.startTime).toLocaleDateString() }}</span>
                         </div>
                         <div>
-                            <span class="block text-slate-500">Time</span>
+                            <span class="block text-slate-500">Saat</span>
                             <span class="text-white">{{ new Date(auction.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
                         </div>
                         <div>
-                            <span class="block text-slate-500">Status</span>
-                            <span :class="auction.status === 'ACTIVE' ? 'text-neon-green' : 'text-slate-300'">{{ auction.status }}</span>
+                            <span class="block text-slate-500">Durum</span>
+                            <span :class="auction.status === 'ACTIVE' ? 'text-neon-green' : 'text-slate-300'">
+                                {{ auction.status === 'ACTIVE' ? 'AKTÝF' : auction.status }}
+                            </span>
                         </div>
                         <div>
-                            <span class="block text-slate-500">Floor Price</span>
-                            <span class="text-white">â‚º{{ auction.floorPrice || '-' }}</span>
+                            <span class="block text-slate-500">Taban Fiyat</span>
+                            <span class="text-white">?{{ auction.floorPrice || '-' }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="hh-card p-5 border-l-4 border-neon-blue">
-                        <h4 class="font-bold text-neon-blue mb-1">How it works</h4>
+                        <h4 class="font-bold text-neon-blue mb-1">Nasýl Çalýþýr?</h4>
                         <p class="text-sm text-slate-300">
-                                Price drops every few minutes. The longer you wait, the cheaper it gets per person. But wait too long, and someone else might grab it.
+                                Fiyat her birkaç dakikada bir düþer. Ne kadar beklerseniz kiþi baþý fiyat o kadar ucuzlar. Ancak çok beklerseniz baþkasý kapabilir.
                         </p>
                 </div>
 
-                <router-link to="/" class="hh-btn-ghost w-full">Back to Arena</router-link>
+                <router-link to="/" class="hh-btn-ghost w-full">Arenaya Dön</router-link>
         </div>
     </div>
   
     <div v-else class="hh-section text-center py-20">
-        <h2 class="text-2xl text-slate-500">Auction not found</h2>
-        <router-link to="/" class="hh-btn-ghost mt-4">Return Home</router-link>
+        <h2 class="text-2xl text-slate-500">Oturum bulunamadý</h2>
+        <router-link to="/" class="hh-btn-ghost mt-4">Anasayfaya Dön</router-link>
     </div>
 </template>
 

@@ -23,10 +23,10 @@ const handleLogin = async () => {
         router.push('/')
       }
     } else {
-      error.value = 'Login failed. Please check your credentials.'
+      error.value = 'Giriþ baþarýsýz. Lütfen bilgilerinizi kontrol edin.'
     }
   } catch (err) {
-    error.value = err.message || 'An error occurred during login.'
+    error.value = err.message || 'Giriþ sýrasýnda bir hata oluþtu.'
   } finally {
     loading.value = false
   }
@@ -43,25 +43,25 @@ const handleLogin = async () => {
         <div class="hidden lg:block">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-6">
             <span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
-            Studio Control Center
+            Stüdyo Kontrol Merkezi
           </div>
 
           <h1 class="text-5xl font-black text-white leading-tight tracking-tight mb-4">
-            Manage Auctions.
-            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary hh-text-glow">Control Revenue.</span>
+            Oturumlarý Yönet.
+            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary hh-text-glow">Geliri Kontrol Et.</span>
           </h1>
 
           <p class="text-slate-400 text-lg max-w-xl leading-relaxed">
-            Sign in to access the HotHour admin panel, manage live sessions, and verify reservation codes at studio speed.
+            HotHour yönetim paneline eriþmek, canlý oturumlarý yönetmek ve rezervasyon kodlarýný stüdyo hýzýnda doðrulamak için giriþ yapýn.
           </p>
         </div>
 
         <div class="w-full max-w-md lg:ml-auto">
           <div class="hh-glass-card rounded-2xl p-8 border border-white/10 shadow-glow">
             <div class="mb-6">
-              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Admin Access</p>
-              <h2 class="text-3xl font-bold text-white">Sign In</h2>
-              <p class="text-slate-400 mt-2 text-sm">Access the HotHour Control Center</p>
+              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Yönetici Eriþimi</p>
+              <h2 class="text-3xl font-bold text-white">Giriþ Yap</h2>
+              <p class="text-slate-400 mt-2 text-sm">HotHour Kontrol Merkezine Eriþin</p>
             </div>
 
             <form @submit.prevent="handleLogin" class="space-y-5">
@@ -70,7 +70,7 @@ const handleLogin = async () => {
               </div>
 
               <div>
-                <label for="email" class="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
+                <label for="email" class="block text-sm font-medium text-slate-300 mb-1.5">E-posta Adresi</label>
                 <input
                   v-model="email"
                   id="email"
@@ -82,14 +82,14 @@ const handleLogin = async () => {
               </div>
 
               <div>
-                <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+                <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">Þifre</label>
                 <input
                   v-model="password"
                   id="password"
                   type="password"
                   required
                   class="block w-full bg-dark-bg/60 border border-slate-700 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder=""
                 />
               </div>
 
@@ -103,15 +103,15 @@ const handleLogin = async () => {
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing In...
+                  Giriþ Yapýlýyor...
                 </span>
-                <span v-else>Sign In</span>
+                <span v-else>Giriþ Yap</span>
               </button>
             </form>
 
             <div class="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
-              <span>Unauthorized access is prohibited.</span>
-              <router-link to="/" class="text-neon-blue hover:text-white transition-colors">Back to Arena</router-link>
+              <span>Yetkisiz eriþim yasaktýr.</span>
+              <router-link to="/" class="text-neon-blue hover:text-white transition-colors">Arenaya Dön</router-link>
             </div>
           </div>
         </div>

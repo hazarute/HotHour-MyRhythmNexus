@@ -3,7 +3,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
-
 const reservations = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
@@ -23,7 +22,7 @@ const fetchReservations = async () => {
         })
         
         if (!response.ok) {
-            throw new Error('Failed to fetch reservations')
+            throw new Error('Reervasyonlar getirilemedi')
         }
         
         const payload = await response.json()
@@ -58,11 +57,26 @@ const formatDate = (value) => {
     })
 }
 
-const statusClass = (status) => {
-    if (status === 'COMPLETED' || status === 'CONFIRMED') return 'hh-badge-success'
-    if (status === 'PENDING_ON_SITE') return 'hh-badge-live'
-    return 'hh-badge-muted'
+// Stats (Mocked or derived from real data if available)
+const totalReservations = computed(() => reservations.value.length)
+const pendingCheckIns = computed(() => reservations.value.filter(r => r.status === 'PENDING_ON_SITE' || r.status === 'CONFIRMED').length)
+const checkedInToday = computed(() => reservations.value.filter(r => r.status === 'COMPLETED').length) // Assuming COMPLETED means checked in
+
+const getStatusConfig = (status) => {
+    switch(status) {
+        case 'COMPLETED':
+        case 'CHECKED_IN':
+            return { label: 'Giriþ Yapýldý', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
+        case 'PENDING_ON_SITE':
+        case 'CONFIRMED':
+            return { label: 'Bekliyor', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', dot: 'bg-amber-500' }
+        case 'CANCELLED':
+            return { label: 'Ýptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
+        default:
+            return { label: status, class: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300', dot: 'bg-slate-500' }
+    }
 }
+
 
 onMounted(() => {
     fetchReservations()
@@ -70,80 +84,170 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div>
-                <h1 class="text-3xl font-black text-white tracking-tight">Reservations</h1>
-                <p class="text-slate-400 text-sm mt-1">Search by booking code, user, or auction to verify arrivals quickly.</p>
-            </div>
-            <button @click="fetchReservations" class="hh-btn-ghost">Refresh</button>
+  <div class="flex flex-col h-full w-full bg-background-light dark:bg-background-dark overflow-hidden relative">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111811]/80 backdrop-blur-md">
+        <div class="flex flex-col gap-1">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Rezervasyon Yönetimi</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Rezervasyonlarý yönet ve misafir giriþlerini kontrol et.</p>
         </div>
-
-        <div class="relative hh-card p-3">
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search by Booking Code, User or Auction..."
-                class="w-full bg-dark-bg/60 border border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-neon-blue"
-            />
-            <div class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </div>
+        <div class="flex gap-3">
+            <button class="flex items-center gap-2 bg-slate-100 dark:bg-[#232d3f] hover:bg-slate-200 dark:hover:bg-[#344a34] text-slate-900 dark:text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+                <span class="material-symbols-outlined text-[20px]">filter_list</span>
+                Filtrele
+            </button>
+            <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95">
+                <span class="material-symbols-outlined align-middle mr-1 text-[20px]">autorenew</span> Yenile
+            </button>
         </div>
+    </header>
 
-        <div class="hh-card overflow-hidden">
-            <div v-if="loading" class="p-8 text-center text-slate-400">
-                Loading reservations...
+    <!-- Scrollable Content -->
+    <div class="flex-1 overflow-y-auto p-8">
+        <div class="flex flex-col gap-6">
+            
+            <!-- Search Bar -->
+            <div class="relative w-full">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
+                </div>
+                <input 
+                    v-model="searchQuery"
+                    class="w-full bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-600 shadow-sm transition-all outline-none" 
+                    placeholder="Rezervasyon Kodu, Misafir Adý veya Stüdyo ara..." 
+                    type="text"
+                />
             </div>
 
-            <div v-else-if="error" class="p-8 text-center text-red-400">
-                {{ error }}
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Total Reservations -->
+                <div class="bg-white dark:bg-[#1a2230] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 size-24 bg-primary/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div class="p-2 bg-primary/20 rounded-lg text-primary">
+                            <span class="material-symbols-outlined">event_seat</span>
+                        </div>
+                        <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">+12%</span>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Toplam Rezervasyon</p>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ totalReservations }}</h3>
+                    </div>
+                </div>
+
+                <!-- Pending Check-ins -->
+                <div class="bg-white dark:bg-[#1a2230] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 size-24 bg-orange-500/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div class="p-2 bg-orange-500/20 rounded-lg text-orange-500">
+                            <span class="material-symbols-outlined">pending</span>
+                        </div>
+                        <span class="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full">Ýþlem Gerekli</span>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Bekleyen Giriþler</p>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ pendingCheckIns }}</h3>
+                    </div>
+                </div>
+
+                <!-- Checked In Today -->
+                <div class="bg-white dark:bg-[#1a2230] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 size-24 bg-green-500/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div class="p-2 bg-green-500/20 rounded-lg text-green-500">
+                            <span class="material-symbols-outlined">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="relative z-10">
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Bugün Giriþ Yapanlar</p>
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ checkedInToday }}</h3>
+                    </div>
+                </div>
             </div>
 
-            <table v-else class="w-full text-left">
-                <thead class="bg-dark-bg/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700">
-                    <tr>
-                        <th class="px-6 py-4 font-medium">Code</th>
-                        <th class="px-6 py-4 font-medium">Customer</th>
-                        <th class="px-6 py-4 font-medium">Auction</th>
-                        <th class="px-6 py-4 font-medium">Price</th>
-                        <th class="px-6 py-4 font-medium">Date</th>
-                        <th class="px-6 py-4 font-medium">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    <tr v-for="res in filteredReservations" :key="res.id" class="hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4 hh-code-text font-bold text-neon-green">
-                            {{ res.booking_code || '-' }}
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-white">{{ res.user_name || 'Unknown User' }}</div>
-                            <div class="text-xs text-slate-500">ID: {{ res.user_id || '-' }}</div>
-                        </td>
-                        <td class="px-6 py-4 text-slate-300">
-                            {{ res.auction_title || '-' }}
-                        </td>
-                        <td class="px-6 py-4 font-bold text-white">
-                            â‚º{{ res.locked_price ?? '-' }}
-                        </td>
-                        <td class="px-6 py-4 text-slate-400 text-sm">
-                            {{ formatDate(res.reserved_at || res.created_at) }}
-                        </td>
-                        <td class="px-6 py-4">
-                            <span :class="statusClass(res.status)">
-                                {{ res.status || 'UNKNOWN' }}
-                            </span>
-                        </td>
-                    </tr>
-                    <tr v-if="filteredReservations.length === 0">
-                        <td colspan="6" class="px-6 py-8 text-center text-slate-500">
-                            No reservations found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Table Container -->
+            <div class="bg-white dark:bg-[#1a2230] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-background-dark/50 border-b border-slate-200 dark:border-slate-800">
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rezervasyon Kodu</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Misafir Adý</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Oturum Adý</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Giriþ Durumu</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ýþlem</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            
+                            <tr v-if="loading" class="animate-pulse">
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400">Yükleniyor...</td>
+                            </tr>
+                            
+                            <tr v-else-if="filteredReservations.length === 0">
+                                <td colspan="5" class="px-6 py-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
+                                    <span class="material-symbols-outlined text-4xl opacity-50">inbox</span>
+                                    <p>Aramanýzla eþleþen rezervasyon bulunamadý.</p>
+                                </td>
+                            </tr>
+
+                            <tr v-for="res in filteredReservations" :key="res.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="text-lg font-bold text-slate-900 dark:text-white font-mono tracking-tight decoration-slate-400" :class="{'line-through opacity-50': res.status === 'CANCELLED'}">
+                                        #{{ res.booking_code }}
+                                    </div>
+                                    <div class="text-xs text-slate-400">{{ formatDate(res.created_at) }}</div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500">
+                                            {{ (res.user_name || 'GK').substring(0,2).toUpperCase() }}
+                                        </div>
+                                        <div class="text-sm font-medium text-slate-900 dark:text-slate-200">{{ res.user_name || 'Misafir' }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.auction_title || 'Bilinmeyen Oturum' }}</div>
+                                    <div class="text-xs text-slate-400">Stüdyo A</div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <span :class="getStatusConfig(res.status).class" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-transparent">
+                                        <span :class="getStatusConfig(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
+                                        {{ getStatusConfig(res.status).label }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap text-right">
+                                    <button v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
+                                        Giriþi Onayla
+                                    </button>
+                                    <button v-else class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
+                                        Detaylar
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Use simple pagination for now (static as API doesn't fully support it yet in this view) -->
+                <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-background-dark/30">
+                    <div class="text-sm text-slate-500 dark:text-slate-400">
+                        Toplam <span class="font-medium text-slate-900 dark:text-white">{{ reservations.length }}</span> kayýttan <span class="font-medium text-slate-900 dark:text-white">1</span> - <span class="font-medium text-slate-900 dark:text-white">{{ filteredReservations.length }}</span> arasý gösteriliyor
+                    </div>
+                    <div class="flex gap-2">
+                        <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            Önceki
+                        </button>
+                        <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            Sonraki
+                        </button>
+                    </div>
+                </div>
+            </div>
+        
         </div>
     </div>
+  </div>
 </template>
