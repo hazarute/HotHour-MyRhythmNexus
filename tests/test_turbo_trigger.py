@@ -7,14 +7,28 @@ from datetime import datetime, timedelta, timezone
 from app.services.auction_service import auction_service
 from app.core import db
 
+# All tests in this file run on the session event loop to share the same
+# Prisma HTTP connection managed by the session-scoped db_connect fixture.
+pytestmark = pytest.mark.asyncio(loop_scope="session")
 
-@pytest_asyncio.fixture(scope="function", autouse=True)
+
+@pytest_asyncio.fixture(scope="session", loop_scope="session", autouse=True)
 async def db_connect():
-    if not db.db.is_connected():
-        await db.db.connect()
+    # Force a fresh connection on this event loop.
+    # Previous test files (TestClient-based) may have left the Prisma client
+    # in a stale state tied to a now-closed loop. Suppress those cleanup errors.
+    try:
+        if db.db.is_connected():
+            await db.db.disconnect()
+    except Exception:
+        pass  # Stale loop cleanup – safe to ignore
+    await db.db.connect()
     yield
-    if db.db.is_connected():
-        await db.db.disconnect()
+    try:
+        if db.db.is_connected():
+            await db.db.disconnect()
+    except Exception:
+        pass
 
 
 async def delete_auction_in_db(auction_id: int):
@@ -24,7 +38,7 @@ async def delete_auction_in_db(auction_id: int):
         pass
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_auction_not_found():
     """Test trigger with non-existent auction"""
     result = await auction_service.check_and_trigger_turbo(999)
@@ -33,7 +47,7 @@ async def test_check_and_trigger_turbo_auction_not_found():
     assert result["turbo_started_at"] is None
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_not_enabled():
     """Test trigger when turbo is not enabled"""
     # Create test auction without turbo
@@ -64,7 +78,7 @@ async def test_check_and_trigger_turbo_not_enabled():
         await delete_auction_in_db(auction.id)
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_already_triggered():
     """Test trigger when turbo was already triggered"""
     # This test would require manual DB setup or mocking, 
@@ -72,7 +86,7 @@ async def test_check_and_trigger_turbo_already_triggered():
     pass
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_condition_not_met():
     """Test trigger when condition is not met (plenty of time left)"""
     now = datetime.now(timezone.utc)
@@ -104,7 +118,7 @@ async def test_check_and_trigger_turbo_condition_not_met():
         await delete_auction_in_db(auction.id)
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_success():
     """Test successful turbo trigger when condition is met"""
     now = datetime.now(timezone.utc)
@@ -136,7 +150,7 @@ async def test_check_and_trigger_turbo_success():
         await delete_auction_in_db(auction.id)
 
 
-@pytest.mark.asyncio
+
 async def test_check_and_trigger_turbo_multiple_calls():
     """Test that turbo trigger is idempotent"""
     now = datetime.now(timezone.utc)
@@ -171,7 +185,7 @@ async def test_check_and_trigger_turbo_multiple_calls():
         await delete_auction_in_db(auction.id)
 
 
-@pytest.mark.asyncio
+
 async def test_turbo_trigger_boundary_condition():
     """Test trigger at exact boundary (exactly turbo_trigger_mins left)"""
     now = datetime.now(timezone.utc)
