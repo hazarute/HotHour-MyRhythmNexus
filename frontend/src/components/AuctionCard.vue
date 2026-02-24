@@ -26,7 +26,7 @@ const bgImage = computed(() => {
     return props.auction.imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzQLXU7vvnTRdJ4MV4keULwtXLs9kob4G3VxrcVseAk9_7W6-DUBymCB389nrrP0dv4LJqbZPibtOIZqpJ9yCQvNBLY2ztMD3KkVCkR2XvJwaIwzi2eB_wRlZzNGkSJZmZLPEdMRxfXvNFb72QNivwO4mePlhNA9dhZkAvHkb21evrbK53XO7qPWYyZzgh8VkDCIxPYOC96choIVf7SgvFPtKGfXOPTBZNDR33gdq4vd0kJIgRgGyLwK64lz8TKvGQh8Zi878Q65k'
 })
 
-const studioName = computed(() => props.auction.studioName || 'Zenith Stüdyo') // Mock data if missing
+const studioName = computed(() => props.auction.studioName || 'Zenith StÃ¼dyo') // Mock data if missing
 const distance = computed(() => '1.2km uzakta') // Mock data
 const originalPrice = computed(() => (props.auction.currentPrice || 0) * 1.5) // Mock logic
 </script>
@@ -78,7 +78,7 @@ const originalPrice = computed(() => (props.auction.currentPrice || 0) * 1.5) //
                     </span>
                 </div>
                 <div class="text-right">
-                    <p class="text-neon-orange text-xs font-mono">Fiyat düþüyor</p>
+                    <p class="text-neon-orange text-xs font-mono">Fiyat dÃ¼ÅŸÃ¼yor</p>
                 </div>
             </div>
 

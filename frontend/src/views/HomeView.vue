@@ -23,22 +23,22 @@ onMounted(() => {
             <div class="max-w-2xl">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-6">
                     <span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
-                    Canlı Oturum Arenası
+                    CanlÄ± Oturum ArenasÄ±
                 </div>
                 
                 <h1 class="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight mb-6">
-                    Daha Az Öde. <br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary text-glow">Yanmaya Hazır Ol.</span>
+                    Daha Az Ã–de. <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary text-glow">Yanmaya HazÄ±r Ol.</span>
                 </h1>
                 
                 <p class="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
-                    Dinamik fiyatlarla üst düzey Pilates deneyimini yaşa. Saat işliyor, fiyat düşüyor. Tükenmeden yerini kap.
+                    Dinamik fiyatlarla Ã¼st dÃ¼zey Pilates deneyimini yaÅŸa. Saat iÅŸliyor, fiyat dÃ¼ÅŸÃ¼yor. TÃ¼kenmeden yerini kap.
                 </p>
                 
                 <div class="flex flex-wrap gap-4">
                     <button class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-neon-blue transition-all flex items-center gap-2">
                         <span class="material-symbols-outlined">gavel</span>
-                        Canlı Oturumları Gör
+                        CanlÄ± OturumlarÄ± GÃ¶r
                     </button>
                     <button class="bg-transparent hover:bg-white/5 text-white border border-white/20 font-bold py-3 px-8 rounded-lg transition-colors">
                         Daha Fazla Bilgi
@@ -66,7 +66,7 @@ onMounted(() => {
                     </div>
                     <div class="text-3xl font-bold text-white">%45</div>
                     <div class="text-xs text-slate-400 mt-1">
-                        standart fiyatlara göre
+                        standart fiyatlara gÃ¶re
                     </div>
                 </div>
             </div>
@@ -78,9 +78,9 @@ onMounted(() => {
         <div class="flex items-center justify-between mb-8">
             <h2 class="text-2xl font-bold text-white flex items-center gap-3">
                 <span class="w-2 h-8 bg-neon-magenta rounded-full"></span>
-                Canlı Oturumlar
+                CanlÄ± Oturumlar
             </h2>
-            <span class="text-slate-500 text-sm">{{ store.auctions.length }} aktif oturum gösteriliyor</span>
+            <span class="text-slate-500 text-sm">{{ store.auctions.length }} aktif oturum gÃ¶steriliyor</span>
         </div>
         
         <div v-if="store.loading" class="flex justify-center items-center h-64">
@@ -92,7 +92,7 @@ onMounted(() => {
         </div>
 
         <div v-else-if="store.auctions.length === 0" class="hh-card text-center text-gray-400 py-12 px-6">
-            <p class="mb-4">Şu anda aktif bir oturum yok.</p>
+            <p class="mb-4">Åu anda aktif bir oturum yok.</p>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

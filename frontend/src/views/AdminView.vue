@@ -24,7 +24,7 @@ const logout = () => {
                 </div>
                 <div class="flex flex-col">
                     <h1 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">HotHour</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Stüdyo Kontrol</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">StÃ¼dyo Kontrol</p>
                 </div>
             </div>
 
@@ -57,10 +57,10 @@ const logout = () => {
         <div class="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800">
             <div class="bg-center bg-no-repeat bg-cover rounded-full size-9 ring-2 ring-slate-200 dark:ring-slate-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXnMuRQFY36QcSLgusa3MwDPhOahlpgvV7-fqRP1ycZDfQt-nVJTVPIVMI8rZ2Juo-PBPsTdR5GBtm6MxOQAWbRk9C3fxKrfQoiwlgZaJmi2Ds1_z0OdSEI5pMIz-Aool-E3HE6NeFFNwoues6o9a8SMSFTiLEYPIG-WS8SYmIelhL0NwhfmoUTF4M3t_Y-2O-G5tIp6cGHWKLPPrwvE69q3kzUVlGQLnhVx2wqtiT2IzJF6gummhHRMGb--VNGXWcpTWzNMw1PN4');"></div>
             <div class="flex flex-col overflow-hidden">
-                <p class="text-slate-900 dark:text-white text-sm font-semibold truncate">{{ authStore.user?.full_name || 'Yönetici' }}</p>
+                <p class="text-slate-900 dark:text-white text-sm font-semibold truncate">{{ authStore.user?.full_name || 'YÃ¶netici' }}</p>
                 <p class="text-slate-500 dark:text-slate-400 text-xs truncate">{{ authStore.user?.role || 'Sahip' }}</p>
             </div>
-            <button @click="logout" class="ml-auto text-slate-400 hover:text-primary transition-colors" title="Çýkýþ Yap">
+            <button @click="logout" class="ml-auto text-slate-400 hover:text-primary transition-colors" title="Ã‡Ä±kÄ±ÅŸ Yap">
                 <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
             </button>
         </div>

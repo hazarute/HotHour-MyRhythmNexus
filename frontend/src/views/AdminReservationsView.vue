@@ -66,12 +66,12 @@ const getStatusConfig = (status) => {
     switch(status) {
         case 'COMPLETED':
         case 'CHECKED_IN':
-            return { label: 'Giriþ Yapýldý', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
+            return { label: 'GiriÅŸ YapÄ±ldÄ±', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
         case 'PENDING_ON_SITE':
         case 'CONFIRMED':
             return { label: 'Bekliyor', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', dot: 'bg-amber-500' }
         case 'CANCELLED':
-            return { label: 'Ýptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
+            return { label: 'Ä°ptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
         default:
             return { label: status, class: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300', dot: 'bg-slate-500' }
     }
@@ -89,8 +89,8 @@ onMounted(() => {
     <!-- Header -->
     <header class="sticky top-0 z-10 flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111811]/80 backdrop-blur-md">
         <div class="flex flex-col gap-1">
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Rezervasyon Yönetimi</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">Rezervasyonlarý yönet ve misafir giriþlerini kontrol et.</p>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Rezervasyon YÃ¶netimi</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">RezervasyonlarÄ± yÃ¶net ve misafir giriÅŸlerini kontrol et.</p>
         </div>
         <div class="flex gap-3">
             <button class="flex items-center gap-2 bg-slate-100 dark:bg-[#232d3f] hover:bg-slate-200 dark:hover:bg-[#344a34] text-slate-900 dark:text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
@@ -115,7 +115,7 @@ onMounted(() => {
                 <input 
                     v-model="searchQuery"
                     class="w-full bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-600 shadow-sm transition-all outline-none" 
-                    placeholder="Rezervasyon Kodu, Misafir Adý veya Stüdyo ara..." 
+                    placeholder="Rezervasyon Kodu, Misafir AdÄ± veya StÃ¼dyo ara..." 
                     type="text"
                 />
             </div>
@@ -144,10 +144,10 @@ onMounted(() => {
                         <div class="p-2 bg-orange-500/20 rounded-lg text-orange-500">
                             <span class="material-symbols-outlined">pending</span>
                         </div>
-                        <span class="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full">Ýþlem Gerekli</span>
+                        <span class="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full">Ä°ÅŸlem Gerekli</span>
                     </div>
                     <div class="relative z-10">
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Bekleyen Giriþler</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Bekleyen GiriÅŸler</p>
                         <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ pendingCheckIns }}</h3>
                     </div>
                 </div>
@@ -161,7 +161,7 @@ onMounted(() => {
                         </div>
                     </div>
                     <div class="relative z-10">
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Bugün Giriþ Yapanlar</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">BugÃ¼n GiriÅŸ Yapanlar</p>
                         <h3 class="text-2xl font-bold text-slate-900 dark:text-white">{{ checkedInToday }}</h3>
                     </div>
                 </div>
@@ -174,22 +174,22 @@ onMounted(() => {
                         <thead>
                             <tr class="bg-slate-50 dark:bg-background-dark/50 border-b border-slate-200 dark:border-slate-800">
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rezervasyon Kodu</th>
-                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Misafir Adý</th>
-                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Oturum Adý</th>
-                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Giriþ Durumu</th>
-                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ýþlem</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Misafir AdÄ±</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Oturum AdÄ±</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">GiriÅŸ Durumu</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ä°ÅŸlem</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                             
                             <tr v-if="loading" class="animate-pulse">
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-400">Yükleniyor...</td>
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400">YÃ¼kleniyor...</td>
                             </tr>
                             
                             <tr v-else-if="filteredReservations.length === 0">
                                 <td colspan="5" class="px-6 py-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
                                     <span class="material-symbols-outlined text-4xl opacity-50">inbox</span>
-                                    <p>Aramanýzla eþleþen rezervasyon bulunamadý.</p>
+                                    <p>AramanÄ±zla eÅŸleÅŸen rezervasyon bulunamadÄ±.</p>
                                 </td>
                             </tr>
 
@@ -210,7 +210,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.auction_title || 'Bilinmeyen Oturum' }}</div>
-                                    <div class="text-xs text-slate-400">Stüdyo A</div>
+                                    <div class="text-xs text-slate-400">StÃ¼dyo A</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <span :class="getStatusConfig(res.status).class" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-transparent">
@@ -220,7 +220,7 @@ onMounted(() => {
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
                                     <button v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
-                                        Giriþi Onayla
+                                        GiriÅŸi Onayla
                                     </button>
                                     <button v-else class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
                                         Detaylar
@@ -234,11 +234,11 @@ onMounted(() => {
                 <!-- Use simple pagination for now (static as API doesn't fully support it yet in this view) -->
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-background-dark/30">
                     <div class="text-sm text-slate-500 dark:text-slate-400">
-                        Toplam <span class="font-medium text-slate-900 dark:text-white">{{ reservations.length }}</span> kayýttan <span class="font-medium text-slate-900 dark:text-white">1</span> - <span class="font-medium text-slate-900 dark:text-white">{{ filteredReservations.length }}</span> arasý gösteriliyor
+                        Toplam <span class="font-medium text-slate-900 dark:text-white">{{ reservations.length }}</span> kayÄ±ttan <span class="font-medium text-slate-900 dark:text-white">1</span> - <span class="font-medium text-slate-900 dark:text-white">{{ filteredReservations.length }}</span> arasÄ± gÃ¶steriliyor
                     </div>
                     <div class="flex gap-2">
                         <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                            Önceki
+                            Ã–nceki
                         </button>
                         <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             Sonraki

@@ -16,7 +16,7 @@ const handleCreate = async (formData) => {
         showForm.value = false
         await store.fetchAuctions()
     } catch (err) {
-        alert('Oturum oluþturulurken hata: ' + err.message)
+        alert('Oturum oluÅŸturulurken hata: ' + err.message)
     }
 }
 
@@ -44,7 +44,7 @@ const formatTime = (seconds) => {
     <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-5 flex items-center justify-between">
         <div>
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Aktif Oturumlar</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Bugünkü dinamik fiyatlandýrma oturumlarýný yönet</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">BugÃ¼nkÃ¼ dinamik fiyatlandÄ±rma oturumlarÄ±nÄ± yÃ¶net</p>
         </div>
         <div class="flex items-center gap-4">
             <button class="flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
@@ -52,7 +52,7 @@ const formatTime = (seconds) => {
             </button>
             <button @click="showForm = !showForm" class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95">
                 <span class="material-symbols-outlined" style="font-size: 20px;">{{ showForm ? 'close' : 'add' }}</span>
-                <span class="text-sm font-medium">{{ showForm ? 'Formu Kapat' : 'Oturum Oluþtur' }}</span>
+                <span class="text-sm font-medium">{{ showForm ? 'Formu Kapat' : 'Oturum OluÅŸtur' }}</span>
             </button>
         </div>
     </header>
@@ -102,7 +102,7 @@ const formatTime = (seconds) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Bugün Satýlan</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">BugÃ¼n SatÄ±lan</p>
                         <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctions }} Yer</h3>
                     </div>
                 </div>
@@ -122,7 +122,7 @@ const formatTime = (seconds) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ort. Koltuk Fiyatý</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ort. Koltuk FiyatÄ±</p>
                         <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">?28.50</h3>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ const formatTime = (seconds) => {
                         </div>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Canlý Teklif Verenler</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">CanlÄ± Teklif Verenler</p>
                         <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">42</h3>
                     </div>
                 </div>
@@ -162,7 +162,7 @@ const formatTime = (seconds) => {
                     </button>
                     <button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
                         <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
-                        Dýþa Aktar
+                        DÄ±ÅŸa Aktar
                     </button>
                 </div>
             </div>
@@ -173,24 +173,24 @@ const formatTime = (seconds) => {
                     <thead>
                         <tr class="bg-slate-50 dark:bg-background-dark/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>
-                            <th class="px-6 py-4 font-semibold">Oturum Adý</th>
-                            <th class="px-6 py-4 font-semibold">Güncel Fiyat</th>
-                            <th class="px-6 py-4 font-semibold">Kalan Süre</th>
-                            <th class="px-6 py-4 font-semibold text-right">Ýþlem</th>
+                            <th class="px-6 py-4 font-semibold">Oturum AdÄ±</th>
+                            <th class="px-6 py-4 font-semibold">GÃ¼ncel Fiyat</th>
+                            <th class="px-6 py-4 font-semibold">Kalan SÃ¼re</th>
+                            <th class="px-6 py-4 font-semibold text-right">Ä°ÅŸlem</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
                         
                         <tr v-if="store.auctions.length === 0">
                             <td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
-                                Aktif oturum bulunamadý. Baþlamak için yeni bir tane oluþturun.
+                                Aktif oturum bulunamadÄ±. BaÅŸlamak iÃ§in yeni bir tane oluÅŸturun.
                             </td>
                         </tr>
 
                         <tr v-for="auction in store.auctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
                             <td class="px-6 py-4">
                                 <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_rgba(37,106,244,0.15)] backdrop-blur-sm">
-                                    AKTÝF
+                                    AKTÄ°F
                                 </span>
                                 <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20 shadow-[0_0_10px_rgba(11,218,94,0.15)] backdrop-blur-sm">
                                     SATILDI
@@ -208,7 +208,7 @@ const formatTime = (seconds) => {
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
                                     <span class="text-slate-900 dark:text-white font-bold">{{ formatCurrency(auction.currentPrice) }}</span>
-                                    <span v-if="auction.status === 'ACTIVE'" class="text-xs text-red-400"> Düþüyor</span>
+                                    <span v-if="auction.status === 'ACTIVE'" class="text-xs text-red-400"> DÃ¼ÅŸÃ¼yor</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
@@ -229,7 +229,7 @@ const formatTime = (seconds) => {
             
             <!-- Pagination (Static for demo) -->
             <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Toplam {{ store.auctions.length }} sonuçtan 1 - {{ store.auctions.length }} arasý gösteriliyor</span>
+                <span>Toplam {{ store.auctions.length }} sonuÃ§tan 1 - {{ store.auctions.length }} arasÄ± gÃ¶steriliyor</span>
                 <div class="flex gap-2">
                     <button disabled class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50">
                         <span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span>

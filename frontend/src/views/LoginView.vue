@@ -23,10 +23,10 @@ const handleLogin = async () => {
         router.push('/')
       }
     } else {
-      error.value = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.'
+      error.value = 'GiriÅŸ baÅŸarÄ±sÄ±z. LÃ¼tfen bilgilerinizi kontrol edin.'
     }
   } catch (err) {
-    error.value = err.message || 'Giriş sırasında bir hata oluştu.'
+    error.value = err.message || 'GiriÅŸ sÄ±rasÄ±nda bir hata oluÅŸtu.'
   } finally {
     loading.value = false
   }
@@ -43,25 +43,25 @@ const handleLogin = async () => {
         <div class="hidden lg:block">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-6">
             <span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
-            Stüdyo Kontrol Merkezi
+            StÃ¼dyo Kontrol Merkezi
           </div>
 
           <h1 class="text-5xl font-black text-white leading-tight tracking-tight mb-4">
-            Oturumları Yönet.
+            OturumlarÄ± YÃ¶net.
             <span class="block text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary hh-text-glow">Geliri Kontrol Et.</span>
           </h1>
 
           <p class="text-slate-400 text-lg max-w-xl leading-relaxed">
-            HotHour yönetim paneline erişmek, canlı oturumları yönetmek ve rezervasyon kodlarını stüdyo hızında doğrulamak için giriş yapın.
+            HotHour yÃ¶netim paneline eriÅŸmek, canlÄ± oturumlarÄ± yÃ¶netmek ve rezervasyon kodlarÄ±nÄ± stÃ¼dyo hÄ±zÄ±nda doÄŸrulamak iÃ§in giriÅŸ yapÄ±n.
           </p>
         </div>
 
         <div class="w-full max-w-md lg:ml-auto">
           <div class="hh-glass-card rounded-2xl p-8 border border-white/10 shadow-glow">
             <div class="mb-6">
-              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Yönetici Erişimi</p>
-              <h2 class="text-3xl font-bold text-white">Giriş Yap</h2>
-              <p class="text-slate-400 mt-2 text-sm">HotHour Kontrol Merkezine Erişin</p>
+              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">YÃ¶netici EriÅŸimi</p>
+              <h2 class="text-3xl font-bold text-white">GiriÅŸ Yap</h2>
+              <p class="text-slate-400 mt-2 text-sm">HotHour Kontrol Merkezine EriÅŸin</p>
             </div>
 
             <form @submit.prevent="handleLogin" class="space-y-5">
@@ -82,7 +82,7 @@ const handleLogin = async () => {
               </div>
 
               <div>
-                <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">Şifre</label>
+                <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">Åifre</label>
                 <input
                   v-model="password"
                   id="password"
@@ -103,15 +103,15 @@ const handleLogin = async () => {
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Giriş Yapılıyor...
+                  GiriÅŸ YapÄ±lÄ±yor...
                 </span>
-                <span v-else>Giriş Yap</span>
+                <span v-else>GiriÅŸ Yap</span>
               </button>
             </form>
 
             <div class="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
-              <span>Yetkisiz erişim yasaktır.</span>
-              <router-link to="/" class="text-neon-blue hover:text-white transition-colors">Arenaya Dön</router-link>
+              <span>Yetkisiz eriÅŸim yasaktÄ±r.</span>
+              <router-link to="/" class="text-neon-blue hover:text-white transition-colors">Arenaya DÃ¶n</router-link>
             </div>
           </div>
         </div>

@@ -33,9 +33,9 @@ const submitForm = () => {
 <template>
     <div class="space-y-5">
         <div>
-            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Oturum Oluþtur</p>
+            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Oturum OluÅŸtur</p>
             <h3 class="text-2xl font-bold text-white">Yeni Oturum Kurulumu</h3>
-            <p class="text-slate-400 text-sm mt-1">Bu oturum için zaman çizelgesi, fiyatlandýrma ve turbo davranýþýný yapýlandýrýn.</p>
+            <p class="text-slate-400 text-sm mt-1">Bu oturum iÃ§in zaman Ã§izelgesi, fiyatlandÄ±rma ve turbo davranÄ±ÅŸÄ±nÄ± yapÄ±landÄ±rÄ±n.</p>
         </div>
 
         <form @submit.prevent="submitForm" class="space-y-5">
@@ -43,22 +43,22 @@ const submitForm = () => {
                 <h4 class="text-white font-semibold">Temel Bilgiler</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Baþlýk</label>
+                        <label class="block text-sm font-medium text-slate-300">BaÅŸlÄ±k</label>
                         <input
                             v-model="form.title"
                             type="text"
                             required
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
-                            placeholder="Örn: Sabah Pilatesi @ 10:00"
+                            placeholder="Ã–rn: Sabah Pilatesi @ 10:00"
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Açýklama</label>
+                        <label class="block text-sm font-medium text-slate-300">AÃ§Ä±klama</label>
                         <input
                             v-model="form.description"
                             type="text"
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
-                            placeholder="Ýsteðe baðlý detaylar..."
+                            placeholder="Ä°steÄŸe baÄŸlÄ± detaylar..."
                         />
                     </div>
                 </div>
@@ -68,7 +68,7 @@ const submitForm = () => {
                 <h4 class="text-white font-semibold">Zamanlama</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Baþlangýç Zamaný</label>
+                        <label class="block text-sm font-medium text-slate-300">BaÅŸlangÄ±Ã§ ZamanÄ±</label>
                         <input
                             v-model="form.start_time"
                             type="datetime-local"
@@ -77,7 +77,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Bitiþ Zamaný</label>
+                        <label class="block text-sm font-medium text-slate-300">BitiÅŸ ZamanÄ±</label>
                         <input
                             v-model="form.end_time"
                             type="datetime-local"
@@ -89,10 +89,10 @@ const submitForm = () => {
             </div>
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
-                <h4 class="text-white font-semibold">Fiyatlandýrma Motoru</h4>
+                <h4 class="text-white font-semibold">FiyatlandÄ±rma Motoru</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Baþlangýç Fiyatý (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">BaÅŸlangÄ±Ã§ FiyatÄ± (TL)</label>
                         <input
                             v-model.number="form.start_price"
                             type="number"
@@ -115,7 +115,7 @@ const submitForm = () => {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Düþüþ Aralýðý (Dk)</label>
+                        <label class="block text-sm font-medium text-slate-300">DÃ¼ÅŸÃ¼ÅŸ AralÄ±ÄŸÄ± (Dk)</label>
                         <input
                             v-model.number="form.drop_interval_mins"
                             type="number"
@@ -125,7 +125,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Düþüþ Miktarý (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">DÃ¼ÅŸÃ¼ÅŸ MiktarÄ± (TL)</label>
                         <input
                             v-model.number="form.drop_amount"
                             type="number"
@@ -141,7 +141,7 @@ const submitForm = () => {
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <h4 class="text-white font-semibold">Turbo Mod</h4>
-                        <p class="text-xs text-slate-400">Oturum sonuna yaklaþýnca fiyat düþüþünü hýzlandýrýn.</p>
+                        <p class="text-xs text-slate-400">Oturum sonuna yaklaÅŸÄ±nca fiyat dÃ¼ÅŸÃ¼ÅŸÃ¼nÃ¼ hÄ±zlandÄ±rÄ±n.</p>
                     </div>
                     <label for="turbo-toggle" class="inline-flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
                         <input
@@ -165,7 +165,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Turbo Aralýðý (Dk)</label>
+                        <label class="block text-sm font-medium text-slate-300">Turbo AralÄ±ÄŸÄ± (Dk)</label>
                         <input
                             v-model.number="form.turbo_interval_mins"
                             type="number"
@@ -174,7 +174,7 @@ const submitForm = () => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Turbo Miktarý (TL)</label>
+                        <label class="block text-sm font-medium text-slate-300">Turbo MiktarÄ± (TL)</label>
                         <input
                             v-model.number="form.turbo_drop_amount"
                             type="number"
@@ -193,9 +193,9 @@ const submitForm = () => {
                 >
                     <span v-if="loading" class="flex items-center gap-2">
                         <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Oluþturuluyor...
+                        OluÅŸturuluyor...
                     </span>
-                    <span v-else>Oturumu Baþlat</span>
+                    <span v-else>Oturumu BaÅŸlat</span>
                 </button>
             </div>
         </form>

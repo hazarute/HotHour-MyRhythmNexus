@@ -13,11 +13,11 @@ const error = ref(null)
 const statusLabel = (status) => {
     if (!status) return 'Bekliyor'
     const maps = {
-        'COMPLETED': 'Tamamlandı',
-        'CHECKED_IN': 'Giriş Yapıldı',
-        'PENDING_ON_SITE': 'Ödeme Bekleniyor',
-        'CONFIRMED': 'Onaylandı',
-        'CANCELLED': 'İptal Edildi'
+        'COMPLETED': 'TamamlandÄ±',
+        'CHECKED_IN': 'GiriÅŸ YapÄ±ldÄ±',
+        'PENDING_ON_SITE': 'Ã–deme Bekleniyor',
+        'CONFIRMED': 'OnaylandÄ±',
+        'CANCELLED': 'Ä°ptal Edildi'
     }
     return maps[status] || status
 }
@@ -77,10 +77,10 @@ onMounted(() => {
     <div class="hh-section max-w-5xl py-8 lg:py-12">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6 mb-8">
             <div>
-                <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">Rezervasyonlarım</h1>
-                <p class="text-slate-400 text-base mt-2">Yaklaşan Pilates oturumlarınız ve geçmiş rezervasyonlarınız.</p>
+                <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">RezervasyonlarÄ±m</h1>
+                <p class="text-slate-400 text-base mt-2">YaklaÅŸan Pilates oturumlarÄ±nÄ±z ve geÃ§miÅŸ rezervasyonlarÄ±nÄ±z.</p>
             </div>
-            <router-link to="/" class="hh-btn-ghost text-sm">Arenaya Dön</router-link>
+            <router-link to="/" class="hh-btn-ghost text-sm">Arenaya DÃ¶n</router-link>
         </div>
 
     <!-- Loading State -->
@@ -97,10 +97,10 @@ onMounted(() => {
     <!-- Empty State -->
     <div v-else-if="reservations.length === 0" class="hh-card text-center py-20">
         <div class="text-6xl mb-4 opacity-50"></div>
-        <h2 class="text-xl text-gray-300 mb-2">Henüz rezervasyonunuz yok</h2>
-        <p class="text-gray-500 mb-6">Henüz bir oturum rezerve etmediniz. Şu an neyin popüler olduğuna göz atın!</p>
+        <h2 class="text-xl text-gray-300 mb-2">HenÃ¼z rezervasyonunuz yok</h2>
+        <p class="text-gray-500 mb-6">HenÃ¼z bir oturum rezerve etmediniz. Åu an neyin popÃ¼ler olduÄŸuna gÃ¶z atÄ±n!</p>
         <router-link to="/" class="hh-btn-neon">
-            Canlı Oturumları İncele
+            CanlÄ± OturumlarÄ± Ä°ncele
         </router-link>
     </div>
 
@@ -127,7 +127,7 @@ onMounted(() => {
 
                                     <div class="text-sm text-slate-400 flex items-center gap-2">
                                         <span></span>
-                                        <span>Stüdyo Konumu</span>
+                                        <span>StÃ¼dyo Konumu</span>
                                     </div>
                 </div>
 
@@ -150,13 +150,13 @@ onMounted(() => {
                     {{ res.booking_code }}
                 </div>
                                 <div class="text-[10px] text-slate-400 text-center max-w-[150px]">
-                                        Giriş yapmak için bu kodu resepsiyonda gösterin
+                                        GiriÅŸ yapmak iÃ§in bu kodu resepsiyonda gÃ¶sterin
                 </div>
                             </div>
 
                             <div class="md:w-[180px] p-3 flex flex-col gap-2">
                                 <div class="h-28 w-full rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"></div>
-                                <button class="hh-btn-ghost w-full text-xs uppercase tracking-wide">Fişi Göster</button>
+                                <button class="hh-btn-ghost w-full text-xs uppercase tracking-wide">FiÅŸi GÃ¶ster</button>
                             </div>
             </div>
         </div>
