@@ -45,10 +45,41 @@
      - Idempotent behavior
      - Boundary conditions
 
-## Faz 3: Rezervasyon Sistemi
-- [ ] "Hemen Kap" (Booking) mantığı ve Race Condition yönetimi
-- [ ] Rezervasyon Kodu Üretimi
-- [ ] Rezervasyon Geçmişi ve Detayları
+## Faz 3: Rezervasyon Sistemi (Hemen Kap / Booking)
+- [X] **Prisma Schema Güncelleme:**
+  - Reservation modeli (auctionId unique, userId, lockedPrice, bookingCode)
+  - PaymentStatus enum (PENDING_ON_SITE, COMPLETED, NO_SHOW, CANCELLED)
+  - User → Reservation relation
+  - Auction → Reservation relation
+- [X] **Pydantic Models** (`app/models/reservation.py`):
+  - ReservationCreate, ReservationResponse, ReservationDetail
+  - PaymentStatus enum
+- [X] **Booking Service** (`app/services/booking_service.py`):
+  - `book_auction()` - atomic booking with race condition handling
+  - `get_reservation()`, `get_reservation_by_code()`
+  - `get_user_reservations()`, `cancel_reservation()`
+  - Race Condition: Unique constraint on auctionId (one-to-one)
+- [X] **Booking Utilities** (`app/utils/booking_utils.py`):
+  - `generate_booking_code()` - HOT-XXXX format
+  - `parse_booking_code()` - parsing helper
+- [X] **API Endpoints** (`app/api/reservations.py`):
+  - `POST /api/v1/reservations/book` - Create reservation
+  - `GET /api/v1/reservations/{id}` - Get reservation
+  - `GET /api/v1/reservations/my/all` - List user reservations
+  - `DELETE /api/v1/reservations/{id}` - Cancel reservation
+  - `POST /api/v1/reservations/{booking_code}/trigger-manual` - Manual lookup
+- [X] **Race Condition Handling:**
+  - Prisma unique constraint on auctionId ("one auction = one reservation")
+  - Concurrent requests → AuctionAlreadyBookedError (409 Conflict)
+  - Atomic operation in database layer
+- [X] **API Integration:**
+  - Registered in `app/main.py`
+  - Current user authentication via JWT token
+  - Ownership verification (users can only book/view own reservations)
+- [ ] **Integration Tests** (Delayed):
+  - Event loop debugging needed for full TestClient integration
+  - Core logic verified manually and via code review
+  - Manual testing recommended for immediate verification
 
 ## Faz 4: Gerçek Zamanlı Özellikler (Real-time)
 - [ ] Socket.io entegrasyonu

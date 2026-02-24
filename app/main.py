@@ -33,8 +33,10 @@ def create_application() -> FastAPI:
     # Include Routers
     application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     # Auctions router (admin-only create)
-    from app.api import auctions
+    from app.api import auctions, reservations
     application.include_router(auctions.router, prefix="/api/v1/auctions", tags=["auctions"])
+    # Reservations router (booking/status)
+    application.include_router(reservations.router)
     # Note: test-only helpers removed; tests use DB fixtures instead
 
     @application.get("/health")
