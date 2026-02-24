@@ -78,7 +78,7 @@ const handleBook = async () => {
         return
     }
 
-    if (!confirm(`${auction.value.currentPrice} TL tutarındaki bu oturumu rezerve etmek istediğinize emin misiniz?`)) {
+    if (!confirm(`${auction.value.currentPrice} TL tutarÃ½ndaki bu oturumu rezerve etmek istediÃ°inize emin misiniz?`)) {
         return
     }
 
@@ -143,7 +143,7 @@ const mins = '00'
         <nav class="flex flex-wrap gap-2 mb-8 items-center justify-center sm:justify-start">
             <router-link to="/" class="text-slate-400 hover:text-white text-sm font-medium transition-colors">Ana Sayfa</router-link>
             <span class="text-slate-600 text-sm font-medium">/</span>
-            <span class="text-slate-400 text-sm font-medium">Pilates Oturumları</span>
+            <span class="text-slate-400 text-sm font-medium">Pilates OturumlarÃ½</span>
             <span class="text-slate-600 text-sm font-medium">/</span>
             <span class="text-sm font-medium flex items-center gap-1 transition-colors duration-500" :class="themeClasses.textAccent">
                 <span class="material-symbols-outlined text-sm">bolt</span>
@@ -170,11 +170,11 @@ const mins = '00'
                                 <span class="relative inline-flex rounded-full h-3 w-3" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
                             </span>
                             <p class="font-bold tracking-widest text-xs uppercase" :class="isTurbo ? 'text-[#ff2a2a]' : 'text-green-500'">
-                                Canlı Oturum
+                                CanlÃ½ Oturum
                             </p>
                         </div>
                         <h1 class="text-white text-2xl sm:text-3xl font-bold leading-tight mt-1">{{ auction.title }}</h1>
-                        <p class="text-slate-400 text-sm text-left">{{ auction.studioName || 'Zenith Stüdyo' }}</p>
+                        <p class="text-slate-400 text-sm text-left">{{ auction.studioName || 'Zenith StÃ¼dyo' }}</p>
                     </div>
                     <div class="px-3 py-1 rounded-lg border border-white/10" :class="isTurbo ? 'bg-[#392830]' : 'bg-white/5'">
                         <span class="text-slate-300 text-xs font-mono">ID: #{{ auction.id }}</span>
@@ -183,7 +183,7 @@ const mins = '00'
 
                 <!-- Price Section -->
                 <div class="flex flex-col items-center justify-center py-6 w-full relative">
-                    <div class="text-slate-400 text-sm font-medium mb-2 uppercase tracking-wider">Güncel Fiyat</div>
+                    <div class="text-slate-400 text-sm font-medium mb-2 uppercase tracking-wider">GÃ¼ncel Fiyat</div>
                     
                     <div class="relative">
                         <h1 class="text-white text-[80px] sm:text-[100px] font-mono font-black leading-none tracking-tighter transition-all duration-300 transform"
@@ -198,7 +198,7 @@ const mins = '00'
                          :class="isTurbo ? 'bg-red-500/10 border-red-500/20' : 'bg-blue-500/10 border-blue-500/20'">
                         <span class="material-symbols-outlined text-sm" :class="isTurbo ? 'text-red-500' : 'text-blue-400'">trending_down</span>
                         <p class="text-xs font-bold uppercase tracking-wide" :class="isTurbo ? 'text-red-400' : 'text-blue-400'">
-                            {{ isTurbo ? 'Hızlı Düşüş' : 'Fiyat Düşüyor' }}
+                            {{ isTurbo ? 'HÃ½zlÃ½ DÃ¼Ã¾Ã¼Ã¾' : 'Fiyat DÃ¼Ã¾Ã¼yor' }}
                         </p>
                     </div>
                 </div>
@@ -232,13 +232,13 @@ const mins = '00'
                 <!-- Info Row -->
                 <div class="grid grid-cols-2 gap-4 w-full mb-4">
                     <div class="p-3 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
-                        <p class="text-slate-400 text-xs mb-1">Başlangıç Fiyatı</p>
+                        <p class="text-slate-400 text-xs mb-1">BaÃ¾langÃ½Ã§ FiyatÃ½</p>
                         <p class="text-white font-bold line-through decoration-slate-500">?{{ auction.startPrice }}</p>
                     </div>
                     <div class="p-3 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
                         <p class="text-slate-400 text-xs mb-1">Tasarruf</p>
                         <p class="font-bold text-green-400">
-                            %{{ Math.round(((auction.startPrice - auction.currentPrice) / auction.startPrice) * 100) }} İndirim
+                            %{{ Math.round(((auction.startPrice - auction.currentPrice) / auction.startPrice) * 100) }} Ãndirim
                         </p>
                     </div>
                 </div>
@@ -256,24 +256,24 @@ const mins = '00'
                         
                         <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse">
                              <span class="material-symbols-outlined animate-spin">sync</span>
-                             İŞLENİYOR...
+                             ÃÃLENÃYOR...
                         </span>
                         <div v-else class="flex items-center gap-2">
                              <span class="material-symbols-outlined text-white text-3xl font-bold" :class="{'animate-pulse': isTurbo}">shopping_bag</span>
                              <span class="text-2xl font-black text-white tracking-wider uppercase">
-                                 {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
+                                 {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÃœKENDÃ' }}
                              </span>
                         </div>
                     </div>
                 </button>
 
-                <p class="text-slate-500 text-xs mt-4">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz. İadeler kabul edilmemektedir.</p>
+                <p class="text-slate-500 text-xs mt-4">TÃ½klayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">KullanÃ½m ÃartlarÃ½nÃ½</a> kabul etmiÃ¾ olursunuz. Ãadeler kabul edilmemektedir.</p>
             </div>
         </div>
 
         <!-- Live Feed (Static Mock) -->
         <div class="mt-8 grid gap-3 w-full">
-            <p class="text-slate-400 text-sm font-medium mb-1 px-2">Canlı Hareketler</p>
+            <p class="text-slate-400 text-sm font-medium mb-1 px-2">CanlÃ½ Hareketler</p>
             <div class="flex items-center justify-between p-3 rounded-xl border border-white/5 transition-colors" :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
                 <div class="flex items-center gap-3">
                      <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
@@ -281,10 +281,10 @@ const mins = '00'
                      </div>
                      <div>
                          <p class="text-white text-sm font-medium">Elif D.</p>
-                         <p class="text-slate-400 text-xs">Sıraya girdi</p>
+                         <p class="text-slate-400 text-xs">SÃ½raya girdi</p>
                      </div>
                 </div>
-                <span class="text-slate-500 text-xs">2sn önce</span>
+                <span class="text-slate-500 text-xs">2sn Ã¶nce</span>
             </div>
         </div>
 
@@ -296,8 +296,8 @@ const mins = '00'
             <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
             <div class="relative z-10">
                 <div class="text-6xl mb-4"></div>
-                <h2 class="text-3xl font-bold text-white mb-2">Rezervasyon Onaylandı!</h2>
-                <p class="text-slate-300 mb-6">Bu oturumu başarıyla yakaladınız.</p>
+                <h2 class="text-3xl font-bold text-white mb-2">Rezervasyon OnaylandÃ½!</h2>
+                <p class="text-slate-300 mb-6">Bu oturumu baÃ¾arÃ½yla yakaladÃ½nÃ½z.</p>
                 
                 <div class="bg-white/10 p-4 rounded-lg mb-6 border border-white/10">
                     <div class="text-sm text-slate-400 uppercase tracking-wider mb-1">Rezervasyon Kodunuz</div>
@@ -316,7 +316,7 @@ const mins = '00'
   </div>
   
   <div v-else class="min-h-screen flex flex-col items-center justify-center bg-background-dark text-white">
-        <h2 class="text-2xl text-slate-500">Oturum bulunamadı</h2>
-        <router-link to="/" class="mt-4 px-6 py-2 rounded-lg border border-white/20 hover:bg-white/10 transition-colors">Ana Sayfaya Dön</router-link>
+        <h2 class="text-2xl text-slate-500">Oturum bulunamadÃ½</h2>
+        <router-link to="/" class="mt-4 px-6 py-2 rounded-lg border border-white/20 hover:bg-white/10 transition-colors">Ana Sayfaya DÃ¶n</router-link>
   </div>
 </template>
