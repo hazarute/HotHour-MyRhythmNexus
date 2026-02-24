@@ -1,6 +1,8 @@
 from app.core.db import db
 from app.services.price_service import price_service
 from app.utils.validators import auction_validator, ValidationError
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 
 class AuctionService:
@@ -12,7 +14,10 @@ class AuctionService:
         
         # Map incoming keys to Prisma model fields
         drop_amount = data.get("drop_amount")
-        turbo_drop = data.get("turbo_drop_amount", drop_amount if drop_amount is not None else "0.00")
+        turbo_drop = data.get("turbo_drop_amount")
+        if turbo_drop is None:
+            # Default to drop_amount if not provided
+            turbo_drop = drop_amount if drop_amount is not None else Decimal("0.00")
 
         auction = await db.auction.create(
             data={
@@ -24,7 +29,7 @@ class AuctionService:
                 "startTime": data.get("start_time"),
                 "endTime": data.get("end_time"),
                 "dropIntervalMins": data.get("drop_interval_mins", 60),
-                "dropAmount": drop_amount if drop_amount is not None else "0.00",
+                "dropAmount": drop_amount if drop_amount is not None else Decimal("0.00"),
                 "turboEnabled": data.get("turbo_enabled", False),
                 "turboTriggerMins": data.get("turbo_trigger_mins", 120),
                 "turboDropAmount": turbo_drop,
@@ -70,6 +75,66 @@ class AuctionService:
         mapping = await self._to_mapping(auction)
         price, details = price_service.compute_current_price(mapping, now=now)
         return {"price": str(price), "details": details}
+
+    async def check_and_trigger_turbo(self, auction_id: int, now: datetime = None):
+        """Check if turbo mode should be triggered and update auction if needed.
+        
+        Args:
+            auction_id: The auction ID to check
+            now: Current time (default: now UTC)
+            
+        Returns:
+            dict: {"triggered": bool, "reason": str, "turbo_started_at": datetime or None}
+        """
+        now = now or datetime.now(timezone.utc)
+        
+        auction = await db.auction.find_unique(where={"id": auction_id})
+        if not auction:
+            return {"triggered": False, "reason": "auction_not_found", "turbo_started_at": None}
+        
+        # Check if turbo is enabled
+        if not getattr(auction, "turboEnabled", False) and not getattr(auction, "turbo_enabled", False):
+            return {"triggered": False, "reason": "turbo_not_enabled", "turbo_started_at": None}
+        
+        # Already triggered
+        if getattr(auction, "turboStartedAt", None) is not None:
+            return {"triggered": False, "reason": "turbo_already_triggered", "turbo_started_at": getattr(auction, "turboStartedAt")}
+        
+        # Check if auction has ended
+        end_time = getattr(auction, "endTime", None) or getattr(auction, "end_time", None)
+        if end_time is None:
+            return {"triggered": False, "reason": "invalid_end_time", "turbo_started_at": None}
+        
+        # Ensure end_time is timezone-aware
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+        
+        # Calculate remaining time
+        remaining_min = (end_time - now).total_seconds() / 60
+        
+        # Get turbo trigger threshold
+        turbo_trigger_mins = getattr(auction, "turboTriggerMins", None) or getattr(auction, "turbo_trigger_mins", 120)
+        
+        # Check if trigger condition is met
+        if remaining_min <= turbo_trigger_mins:
+            # Trigger turbo mode
+            updated_auction = await db.auction.update(
+                where={"id": auction_id},
+                data={"turboStartedAt": now}
+            )
+            return {
+                "triggered": True,
+                "reason": "turbo_condition_met",
+                "turbo_started_at": now,
+                "remaining_minutes": round(remaining_min, 2)
+            }
+        
+        return {
+            "triggered": False,
+            "reason": "turbo_condition_not_met",
+            "turbo_started_at": None,
+            "remaining_minutes": round(remaining_min, 2)
+        }
 
     async def list_auctions(self, include_computed: bool = False, now=None):
         """If `include_computed` is True, returns list of dicts with `computedPrice`.

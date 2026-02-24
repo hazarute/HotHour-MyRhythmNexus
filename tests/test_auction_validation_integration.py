@@ -7,7 +7,7 @@ Tests that validation rules are enforced correctly through the API.
 import uuid
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.core import db, security
@@ -59,7 +59,7 @@ async def test_create_valid_auction():
 
     await create_admin_user(email, phone, "Admin User", password)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "title": "Valid Auction",
         "description": "This is a valid auction",
@@ -97,7 +97,7 @@ async def test_start_price_must_exceed_floor_price_api():
 
     await create_admin_user(email, phone, "Admin User", password)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "title": "Invalid Auction",
         "description": "Start price less than floor",
@@ -131,7 +131,7 @@ async def test_turbo_mode_validation_api():
 
     await create_admin_user(email, phone, "Admin User", password)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "title": "Invalid Turbo Auction",
         "description": "Invalid turbo mode",
@@ -168,7 +168,7 @@ async def test_valid_turbo_auction_api():
 
     await create_admin_user(email, phone, "Admin User", password)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     payload = {
         "title": "Turbo Auction",
         "description": "Valid turbo mode auction",

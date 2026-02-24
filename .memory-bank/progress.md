@@ -31,6 +31,19 @@
    - Turbo mode validation
  - [X] Pydantic model güncelleme: turbo fields eklendi
  - [X] API error handling (HTTPException 400)
+ - [X] **Turbo Modu Trigger Mekanizması**
+   - Prisma schema: `turboStartedAt` field eklendi
+   - `AuctionService.check_and_trigger_turbo()` methodu
+   - `POST /api/v1/auctions/{id}/trigger-turbo` endpoint
+   - Validator: timezone-aware datetime comparisons
+   - **Tests**: `tests/test_turbo_trigger.py` (7 test ✓)
+     - Auction not found
+     - Turbo disabled
+     - Already triggered
+     - Condition not met
+     - Successful trigger
+     - Idempotent behavior
+     - Boundary conditions
 
 ## Faz 3: Rezervasyon Sistemi
 - [ ] "Hemen Kap" (Booking) mantığı ve Race Condition yönetimi

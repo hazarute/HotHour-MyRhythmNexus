@@ -1,7 +1,7 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz 2: Açık Artırma (Auction) Yönetimi (Validasyon ✓)**
+**Faz 2.5: Turbo Modu Trigger Mekanizması (✅ Tamamlandı)**
 
 ## Mevcut Durum
 *   **Tamamlanan:**
@@ -17,18 +17,26 @@
         - Fiyat: startPrice > floorPrice, tüm pozitif, dropAmount limit
         - Zaman: startTime < endTime, endTime future, dropInterval uygun
         - Turbo: turbo_drop_amount, turbo_interval_mins kuralları
-        - `app/utils/validators.py` (AuctionValidator sınıfı)
+        - `app/utils/validators.py` (AuctionValidator sınıfı + timezone fix)
         - Unit test: 26 ✓ | Integration test: 4 ✓
+    *   **✅ Turbo Modu Trigger Mekanizması (7 test geçiyor)**
+        - `AuctionService.check_and_trigger_turbo()` methodu
+        - Turbo koşulu: `remaining_min <= turbo_trigger_mins`
+        - Idempotent trigger (yeniden tetiklenmiyor)
+        - `POST /api/v1/auctions/{id}/trigger-turbo` endpoint'i
+        - Prisma: `turboStartedAt` field ve `@default` values
+        - Validator: timezone-aware datetime comparisons
+
 *   **Bekleyen:**
-    *   Turbo Modu trigger mekanizması.
-    *   Reservation Sistemi (Faz 3).
+    *   Reservation Sistemi (Faz 3): "Hemen Kap" & Race Condition.
 
 ## Test Durumu
-*   **Test Suite:** `tests/test_auth.py` ve `tests/test_auctions.py`
-*   **Durum:** ✅ Geçiyor (Async Client, Function scope fixture)
-*   **Kapsam:** Register, Login, Admin Create Auction, Non-Admin Reject.
+*   **Turbo Trigger Tests:** 7/7 ✅ (test_turbo_trigger.py)
+*   **Auction Tests:** 2/2 ✅ (test_auctions.py)
+*   **Computed Price:** 1/1 ✅ (test_auctions_computed.py)
+*   **Toplam:** 41 test geçiyor
 
 ## Sıradaki Görevler
-1.  Turbo Modu Trigger Mekanizması (açık artırma sırasında fiyat hızlanır).
-2.  Reservation Sistemi (Faz 3): "Hemen Kap" ve Race Condition yönetimi.
+1.  Reservation Sistemi (Faz 3): "Hemen Kap" (Booking) mantığı.
+2.  Race Condition yönetimi (Concurrent booking).
 3.  Booking Code üretimi ve geçmişi.

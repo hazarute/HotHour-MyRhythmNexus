@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query, HTTPException
+from fastapi import APIRouter, Depends, status, Query, HTTPException, Path
 from app.models.auction import AuctionCreate, AuctionResponse
 from app.services.auction_service import auction_service
 from app.core.deps import get_current_admin_user
@@ -67,3 +67,24 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "priceDetails": a.get("priceDetails"),
             })
     return mapped
+
+
+@router.post("/{auction_id}/trigger-turbo", status_code=status.HTTP_200_OK)
+async def trigger_turbo_mode(auction_id: int = Path(..., gt=0)):
+    """
+    Check if turbo mode should be triggered for the given auction.
+    If conditions are met, triggers turbo mode and returns the result.
+    
+    Args:
+        auction_id: The ID of the auction
+        
+    Returns:
+        dict with keys: triggered, reason, turbo_started_at, remaining_minutes
+    """
+    result = await auction_service.check_and_trigger_turbo(auction_id)
+    if result["reason"] == "auction_not_found":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Auction not found"
+        )
+    return result

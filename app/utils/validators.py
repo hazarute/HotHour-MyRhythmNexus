@@ -5,7 +5,7 @@ Provides validation rules for auction creation and updates.
 Validates pricing, timing, and auction-specific business logic.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Tuple
 
@@ -102,7 +102,14 @@ class AuctionValidator:
         Raises:
             ValidationError: If any timing constraint is violated
         """
-        now = datetime.utcnow()
+        # Ensure datetime comparisons are timezone-aware
+        now = datetime.now(timezone.utc)
+        
+        # Ensure start_time and end_time are timezone-aware
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
 
         # Rule 1: Start time must be before end time
         if start_time >= end_time:

@@ -2,6 +2,7 @@ import uuid
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
+from datetime import datetime, timedelta, timezone
 from app.main import app
 from app.core import db
 from app.core import security
@@ -50,13 +51,18 @@ async def test_list_auctions_includes_computed_price():
     phone = f"+100{uuid.uuid4().hex[:7]}"
     password = "AdminPass123!"
 
+    # Use future dates for auction
+    now = datetime.now(timezone.utc)
+    start_time = (now + timedelta(hours=1)).isoformat()
+    end_time = (now + timedelta(hours=3)).isoformat()
+
     payload = {
         "title": "Computed Auction",
         "description": "Testing computed price",
         "start_price": "100.00",
         "floor_price": "10.00",
-        "start_time": "2026-02-11T10:00:00Z",
-        "end_time": "2026-02-11T12:00:00Z",
+        "start_time": start_time,
+        "end_time": end_time,
         "drop_interval_mins": 30,
         "drop_amount": "5.00",
     }

@@ -83,8 +83,9 @@ model Auction {
   // --- TURBO MODE ---
   turboEnabled     Boolean @default(false)
   turboTriggerMins Int     @default(120)
-  turboDropAmount  Decimal @db.Decimal(10, 2)
+  turboDropAmount  Decimal @default(0) @db.Decimal(10, 2)
   turboIntervalMins Int    @default(5)
+  turboStartedAt   DateTime? // When turbo mode was triggered
 
   status        AuctionStatus @default(DRAFT)
   createdAt     DateTime      @default(now())
