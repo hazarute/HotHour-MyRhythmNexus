@@ -107,16 +107,16 @@
     - Configure typography fonts (Modern sans-serif for readability, Monospaced/Digital font for numbers/timers).
 - [X] **State Management (Pinia):** Setup Pinia stores to manage global state (e.g., current auction data, socket connection status, user session).
 - [X] **Router Setup (Vue Router):** Define routes for Public views (`/`, `/auction/:id`) and Admin views (`/admin/dashboard`, `/admin/create`, `/admin/reservations`).
-- [ ] **Socket.io Client Client Wrapper:** Create a reusable service/composable for managing the Socket.io connection, listening for events (`price_update`, `turbo_triggered`), and handling reconnections cleanly.
+- [X] **Socket.io Client Wrapper:** Create a reusable service/composable for managing the Socket.io connection, listening for events (`price_update`, `turbo_triggered`), and handling reconnections cleanly.
 
 #### 5.2. Public User Interface (The "Game" Arena)
 *Focus: Mobile-first design, high energy, clear CTA, gamification visuals.*
 
-- [ ] **Layout & Navigation:** Create a sleek, dark-themed main layout container.
-- [ ] **Auction List View (Home):**
+- [X] **Layout & Navigation:** Create a sleek, dark-themed main layout container.
+- [X] **Auction List View (Home):**
     - Display cards for currently active and upcoming auctions.
     - Visual indicators for "Live Now" vs "Starting Soon".
-- [ ] **Auction Detail View (The Core Experience):**
+- [X] **Auction Detail View (The Core Experience):**
     - **Giant Price Display:** A prominent, digital-style component showing the `currentPrice`. Must animate smoothly on socket updates.
     - **Countdown Timer:** Real-time countdown to the next scheduled price drop.
     - **Turbo Mode Visuals:** Implement visual triggers that activate when the backend emits the `turbo_triggered` event (e.g., background glow changes to red/orange, flame particle effects around the price, accelerated timer animations).

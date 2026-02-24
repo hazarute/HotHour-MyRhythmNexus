@@ -10,6 +10,12 @@ const router = createRouter({
       component: HomeView
     },
     {
+      path: '/auction/:id',
+      name: 'auction-detail',
+      component: () => import('../views/AuctionDetailView.vue'),
+      props: true
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('../views/AdminView.vue')

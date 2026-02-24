@@ -1,27 +1,27 @@
-# Aktif Bağlam (Active Context)
+# Aktif BaÄŸlam (Active Context)
 
-## Şu Anki Odak
-**Faz 5: Frontend Development (Vue.js + Tailwind CSS) **
+## Åu Anki Odak
+**Faz 5: Frontend Development (Vue.js + Tailwind CSS) ğŸš§**
 
 ## Mevcut Durum
 
-** Frontend Altyapısı Kuruldu (5.1):**
-- **Vue 3 + Vite:** rontend klasöründe proje oluşturuldu.
-- **Tailwind CSS:** 	ailwind.config.js ile Neon tema renkleri (
-eon-blue, 
-eon-pink vb.) tanımlandı.
-- **Router:** / (Home) ve /admin (Admin) rotaları eklendi.
-- **Pinia:** State management aktif edildi (main.js).
-- **UI:** App.vue responsive navigasyon barı ile güncellendi.
-- **Style:** style.css dark mode ve full-screen yapılandırması yapıldı.
+**âœ… Frontend AltyapÄ±sÄ± Kuruldu (5.1):**
+- **Vue 3 + Vite:** `frontend` klasÃ¶rÃ¼nde proje oluÅŸturuldu.
+- **Tailwind CSS:** `tailwind.config.js` ile Neon tema renkleri (`neon-blue`, `neon-pink` vb.) tanÄ±mlandÄ±.
+- **Router:** `/` (Home) ve `/admin` (Admin) rotalarÄ± eklendi.
+- **Pinia:** State management aktif edildi (`main.js`).
+- **Socket.io Wrapper:** `src/services/socket.js` ve `src/stores/socket.js` oluÅŸturuldu.
 
-## Sıradaki Görevler
-1. **Socket.io Client Wrapper:** src/stores/socket.js veya benzeri bir composable oluşturup backend ile bağlantı kurmak.
-2. **Public UI (Game Arena):** AuctionList ve AuctionDetail bileşenlerini geliştirmek.
-   - Fiyat göstergesi (PriceTicker)
-   - Geri sayım (Timer)
-   - Hemen Kap butonu
+**âœ… Public UI (Game Arena) GeliÅŸtirildi (5.2):**
+- **Home View:** `AuctionCard` bileÅŸenleri ile aktif aÃ§Ä±k artÄ±rmalar listeleniyor. (Mock veri ile)
+- **Detail View:** Dinamik fiyat (`PriceTicker`), sayaÃ§ (`CountDownTimer`) ve Socket.io entegrasyonu tamam.
 
-## Bekleyen İşler (Backlog)
-- Admin paneli formları
+## SÄ±radaki GÃ¶revler
+1. **Admin Paneli GeliÅŸtirme:**
+   - AÃ§Ä±k artÄ±rma oluÅŸturma formu (`AuctionCreateForm`)
+   - YÃ¶netim panosu (Dashboard)
+
+## Bekleyen Ä°ÅŸler (Backlog)
+- Backend ile gerÃ§ek veri entegrasyonu (Mock'larÄ±n kaldÄ±rÄ±lmasÄ±)
+- End-to-end entegrasyon testi
 - End-to-end entegrasyon testi
