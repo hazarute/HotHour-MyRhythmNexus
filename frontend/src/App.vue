@@ -21,7 +21,10 @@ const handleLogout = () => {
         <router-link to="/" class="hover:text-neon-blue transition-colors text-sm font-medium">Home</router-link>
         
         <template v-if="authStore.isAuthenticated">
-          <router-link to="/admin" class="hover:text-neon-pink transition-colors text-sm font-medium">Dashboard</router-link>
+          <!-- Conditional Router Links based on role -->
+          <router-link v-if="authStore.isAdmin" to="/admin" class="hover:text-neon-pink transition-colors text-sm font-medium">Dashboard</router-link>
+          <router-link to="/my-reservations" class="hover:text-neon-blue transition-colors text-sm font-medium">My Reservations</router-link>
+          
           <button @click="handleLogout" class="text-xs border border-gray-600 rounded px-3 py-1 hover:bg-gray-800 transition">
             Logout
           </button>

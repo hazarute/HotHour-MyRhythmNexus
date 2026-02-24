@@ -16,7 +16,7 @@ Proje, API-First yaklaşımıyla tasarlanmış olup, backend ve frontend bileşe
 | **Real-time** | WebSocket Engine | Socket.io | Backend: `AsyncServer`, Frontend: `socket.io-client` (Aktif) |
 | **Frontend** | Core Framework | Vue.js | Vue 3 (Composition API) |
 | **Frontend** | Build Tool | Vite | Hızlı modül değişimi (HMR) ve derleme |
-| **Frontend** | Styling | Tailwind CSS | Utility-first CSS framework (Neon/Dark tema için) |
+| **Frontend** | Styling | Tailwind CSS | v4.2+ (PostCSS integration: `@tailwindcss/postcss`) |
 | **Frontend** | State Management | Pinia | Global durum yönetimi (Açık artırma verileri, Auth state) |
 | **Frontend** | Routing | Vue Router | SPA navigasyon yönetimi |
 | **DevOps** | Container | Docker Compose | Veritabanı hizmeti (Port: 5433) |

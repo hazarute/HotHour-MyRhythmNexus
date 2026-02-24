@@ -140,6 +140,25 @@ async def get_reservation(
     return reservation
 
 
+@router.get("/admin/all")
+async def get_all_reservations(current_user = Depends(get_current_user)):
+    """
+    Get ALL reservations (Admin only).
+    
+    Returns:
+    - 200: List of reservations with user details
+    - 403: Forbidden (if not admin)
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+
+    reservations = await booking_service.get_all_reservations()
+    return reservations
+
+
 @router.get("/my/all")
 async def get_my_reservations(current_user = Depends(get_current_user)):
     """

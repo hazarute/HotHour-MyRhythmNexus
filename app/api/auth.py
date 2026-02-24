@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.models.user import UserCreate, UserResponse, UserLogin, Token
 from app.services.user_service import user_service
 from app.core import security
+from app.core.deps import get_current_user
 from datetime import timedelta
 from app.core.config import settings
 
@@ -40,3 +41,13 @@ async def login(user_in: UserLogin):
         subject=user.id, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user=Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.fullName,
+        "phone": current_user.phone,
+        "is_verified": current_user.isVerified,
+    }

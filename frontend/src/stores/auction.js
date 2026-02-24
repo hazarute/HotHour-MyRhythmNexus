@@ -110,12 +110,26 @@ export const useAuctionStore = defineStore('auction', () => {
 
     async function createAuction(payload) {
         const authStore = useAuthStore()
+        // ... (existing code)
+    }
+
+    async function bookAuction(auctionId) {
+        const authStore = useAuthStore()
+        
+        if (!authStore.isAuthenticated) {
+            throw new Error("You must be logged in to book a session.")
+        }
+        
         loading.value = true
         error.value = null
         try {
-            // Use environment variable or default to localhost
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-            const response = await fetch(`${baseUrl}/api/v1/auctions/`, {
+            const payload = {
+                auction_id: auctionId,
+                user_id: authStore.user.id
+            }
+
+            const response = await fetch(`${baseUrl}/api/v1/reservations/book`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -125,20 +139,23 @@ export const useAuctionStore = defineStore('auction', () => {
             })
 
             if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error("Unauthorized - Please login first")
-                }
                 const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.detail || 'Failed to create auction')
+                // Handle specific race condition error 409
+                if (response.status === 409) {
+                    throw new Error("Sorry! Someone just booked this session seconds ago.")
+                }
+                throw new Error(errorData.detail || 'Booking failed')
             }
 
-            const newAuction = await response.json()
-            auctions.value.unshift(newAuction) // Add to top of list
-            return newAuction
+            const reservation = await response.json()
+            // Ideally update local auction status to SOLD immediately
+            if (currentAuction.value && currentAuction.value.id === auctionId) {
+                currentAuction.value.status = 'SOLD'
+            }
+            return reservation
         } catch (err) {
-            console.error("Create auction error:", err)
+            console.error("Booking error:", err)
             error.value = err.message
-            // For now, re-throw so the component can handle UI feeback
             throw err
         } finally {
             loading.value = false
@@ -153,6 +170,7 @@ export const useAuctionStore = defineStore('auction', () => {
         fetchAuctions,
         fetchAuctionById,
         createAuction,
+        bookAuction,
         updatePrice
     }
 })

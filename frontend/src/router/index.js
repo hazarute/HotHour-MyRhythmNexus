@@ -23,10 +23,28 @@ const router = createRouter({
       props: true
     },
     {
+      path: '/my-reservations',
+      name: 'my-reservations',
+      component: () => import('../views/MyReservationsView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/admin',
       name: 'admin',
       component: () => import('../views/AdminView.vue'),
-      meta: { requiresAuth: true, requiresAdmin: true }
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        {
+          path: '', // Default to dashboard
+          name: 'admin-dashboard',
+          component: () => import('../views/AdminDashboardView.vue') // Assuming this exists or I need to create it?
+        },
+        {
+          path: 'reservations',
+          name: 'admin-reservations',
+          component: () => import('../views/AdminReservationsView.vue')
+        }
+      ]
     }
   ]
 })

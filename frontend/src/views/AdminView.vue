@@ -1,121 +1,54 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useAuctionStore } from '@/stores/auction'
-import AuctionCreateForm from '@/components/AuctionCreateForm.vue'
-import { RouterLink } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { useRouter, RouterLink, RouterView } from 'vue-router'
 
-const store = useAuctionStore()
-const showForm = ref(false)
+const authStore = useAuthStore()
+const router = useRouter()
 
-onMounted(() => {
-  store.fetchAuctions()
-})
-
-const handleCreate = async (formData) => {
-    try {
-        console.log("Submitting auction:", formData)
-        await store.createAuction(formData)
-        showForm.value = false
-        // Fetch fresh list to ensure ID and calculated fields are back from server
-        await store.fetchAuctions()
-    } catch (err) {
-        alert('Error creating auction: ' + err.message)
-    }
-}
-
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleString('tr-TR', { 
-        month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' 
-    })
+const logout = () => {
+    authStore.logout()
+    router.push({ name: 'home' })
 }
 </script>
 
 <template>
-  <div class="admin-dashboard p-8 min-h-screen text-gray-100">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-neon-pink tracking-tight drop-shadow-neon">Studio Manager</h1>
-            <p class="text-gray-400 text-sm mt-1">Manage inventory, monitor sales & create flash deals</p>
+  <div class="min-h-screen bg-dark-bg text-gray-100 flex flex-col md:flex-row">
+    
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-card-bg/50 border-r border-gray-800 flex-shrink-0">
+        <div class="p-6 border-b border-gray-800">
+             <h1 class="text-2xl font-bold text-neon-pink tracking-tight drop-shadow-neon">Studio<br/><span class="text-white">Manager</span></h1>
+             <p class="text-xs text-gray-500 mt-2">Admin Control Panel</p>
         </div>
         
-        <button @click="showForm = !showForm" 
-            class="bg-neon-blue hover:bg-blue-400 text-dark-bg px-6 py-2 rounded font-bold shadow-lg shadow-neon-blue/20 transition-all flex items-center gap-2">
-            <span v-if="!showForm">
-                + New Auction
-            </span>
-            <span v-else>Close Form</span>
-        </button>
-    </div>
+        <nav class="p-4 space-y-2">
+             <RouterLink :to="{ name: 'admin-dashboard' }" 
+                class="block px-4 py-3 rounded hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
+                active-class="bg-neon-blue/10 text-neon-blue font-bold border-l-2 border-neon-blue">
+                Auctions & Dashboard
+             </RouterLink>
+             
+             <RouterLink :to="{ name: 'admin-reservations' }" 
+                class="block px-4 py-3 rounded hover:bg-white/5 text-gray-300 hover:text-white transition-colors"
+                active-class="bg-neon-blue/10 text-neon-blue font-bold border-l-2 border-neon-blue">
+                Reservations
+             </RouterLink>
 
-    <!-- Create Form Section -->
-    <transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform -translate-y-4 opacity-0" enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="transform translate-y-0 opacity-100" leave-to-class="transform -translate-y-4 opacity-0">
-        <div v-if="showForm" class="mb-10">
-            <AuctionCreateForm @create-auction="handleCreate" />
-        </div>
-    </transition>
+             <hr class="border-gray-800 my-4" />
+             
+             <button @click="logout" class="w-full text-left px-4 py-3 rounded hover:bg-red-900/20 text-red-400 hover:text-red-300 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                </svg>
+                Logout
+             </button>
+        </nav>
+    </aside>
 
-    <!-- Error State -->
-    <div v-if="store.error" class="bg-red-900/50 border border-red-500 text-red-100 p-4 rounded mb-6">
-        {{ store.error }}
-    </div>
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto h-screen">
+        <RouterView />
+    </main>
 
-    <!-- Auction List Table -->
-    <div class="bg-card-bg rounded-xl shadow-lg border border-gray-800 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-dark-bg/50 border-b border-gray-700">
-                    <tr>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Session</th>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Schedule</th>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cur. Price</th>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Floor</th>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-800">
-                    <tr v-for="auction in store.auctions" :key="auction.id" class="hover:bg-white/5 transition-colors group">
-                        <td class="p-4">
-                            <div class="font-medium text-white group-hover:text-neon-blue transition-colors">{{ auction.title }}</div>
-                            <div class="text-xs text-gray-500 font-mono">ID: {{ auction.id }}</div>
-                        </td>
-                        <td class="p-4 text-sm text-gray-300">
-                            <div>{{ formatDate(auction.start_time || auction.startTime) }}</div>
-                        </td>
-                        <td class="p-4 text-sm">
-                            <span class="text-neon-pink font-bold font-mono text-lg">{{ auction.current_price || auction.currentPrice || auction.start_price }} ₺</span>
-                        </td>
-                         <td class="p-4 text-sm text-gray-500 font-mono">
-                            {{ auction.floor_price || auction.floorPrice }} ₺
-                        </td>
-                        <td class="p-4">
-                            <span class="px-2 py-1 text-xs font-bold border rounded uppercase bg-opacity-10 bg-current inline-block text-center min-w-[80px]"
-                                :class="{
-                                    'text-green-400 border-green-400': auction.status === 'ACTIVE',
-                                    'text-gray-500 border-gray-500': auction.status === 'EXPIRED' || auction.status === 'CANCELLED',
-                                    'text-neon-pink border-neon-pink': auction.status === 'SOLD'
-                                }">
-                                {{ auction.status }}
-                            </span>
-                             <div v-if="auction.turbo_active" class="mt-1 text-[10px] text-neon-pink animate-pulse font-bold tracking-widest uppercase">⚡ Turbo</div>
-                        </td>
-                        <td class="p-4 text-right">
-                             <RouterLink :to="`/auction/${auction.id}`" class="text-gray-400 hover:text-white transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-auto">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                </svg>
-                             </RouterLink>
-                        </td>
-                    </tr>
-                    <tr v-if="store.auctions.length === 0">
-                        <td colspan="6" class="p-8 text-center text-gray-500 italic">
-                            No active auctions found. Create one to get started.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
   </div>
 </template>

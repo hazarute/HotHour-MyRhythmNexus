@@ -186,22 +186,55 @@ class BookingService:
         }
     
     async def get_user_reservations(self, user_id: int) -> list[Dict]:
-        """Get all reservations for a user"""
-        reservations = await db.reservation.find_many(where={"userId": user_id})
+        """Get all reservations for a user with auction details"""
+        reservations = await db.reservation.find_many(
+            where={"userId": user_id},
+            include={"auction": True},
+            order={"createdAt": "desc"}
+        )
+        
+        return [
+            {
+                "id": res.id,
+                "auction_id": res.auctionId,
+                "auction_title": res.auction.title if res.auction else "Unknown Auction",
+                "auction_start_time": res.auction.startTime if res.auction else None,
+                "user_id": res.userId,
+                "locked_price": str(res.lockedPrice),
+                "booking_code": res.bookingCode,
+                "status": getattr(res, 'status', 'CONFIRMED'),
+                "reserved_at": res.reservedAt.isoformat() if res.reservedAt else None,
+            }
+            for res in reservations
+        ]
+    
+    async def get_all_reservations(self) -> list[Dict]:
+        """
+        Get all reservations with user and auction details.
+        """
+        reservations = await db.reservation.find_many(
+            include={
+                "user": True,
+                "auction": True
+            },
+            order={"createdAt": "desc"}
+        )
         
         return [
             {
                 "id": res.id,
                 "auction_id": res.auctionId,
                 "user_id": res.userId,
-                "locked_price": res.lockedPrice,
+                "user_name": f"{res.user.firstName} {res.user.lastName}" if res.user else "Unknown User",
+                "auction_title": res.auction.title if res.auction else "Unknown Auction",
+                "locked_price": str(res.lockedPrice),
                 "booking_code": res.bookingCode,
-                "status": res.status,
-                "reserved_at": res.reservedAt,
+                "status": getattr(res, 'status', 'CONFIRMED'),
+                "created_at": res.createdAt.isoformat() if res.createdAt else None,
             }
             for res in reservations
         ]
-    
+
     async def cancel_reservation(self, reservation_id: int) -> bool:
         """
         Cancel a reservation (mark as CANCELLED).

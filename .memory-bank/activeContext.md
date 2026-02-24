@@ -1,27 +1,23 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz 5: Frontend Development (Vue.js + Tailwind CSS) 🚧**
+**Faz 5.5: Kullanıcı Deneyimi ve Tam Entegrasyon**
+- [x] Admin Rezervasyon Listesi
+- [x] Kullanıcı Rezervasyon Sayfası (`MyReservationsView`)
+- [x] Global Navigasyon Güncellemesi (`App.vue`)
 
-## Mevcut Durum
+## Son Değişiklikler
+- **Backend:** `booking_service.get_user_reservations` methodu, açık artırma detaylarını (`auction relation`) döndürecek şekilde güncellendi.
+- **Frontend:**
+  - `MyReservationsView.vue` eklendi. Kullanıcılar kendi rezervasyonlarını burada görebiliyor.
+  - `App.vue` navigasyon barına "My Reservations" linki eklendi (Giriş yapmış tüm kullanıcılar için).
+  - "Dashboard" linki sadece Admin yetkisi olanlar için görünür kılındı.
+- **Router:** `/my-reservations` rotası eklendi.
 
-**✅ Frontend Altyapısı Kuruldu (5.1):**
-- **Vue 3 + Vite:** `frontend` klasöründe proje oluşturuldu.
-- **Tailwind CSS:** `tailwind.config.js` ile Neon tema renkleri (`neon-blue`, `neon-pink` vb.) tanımlandı.
-- **Router:** `/` (Home) ve `/admin` (Admin) rotaları eklendi.
-- **Pinia:** State management aktif edildi (`main.js`).
-- **Socket.io Wrapper:** `src/services/socket.js` ve `src/stores/socket.js` oluşturuldu.
-
-**✅ Public UI (Game Arena) Geliştirildi (5.2):**
-- **Home View:** `AuctionCard` bileşenleri ile aktif açık artırmalar listeleniyor. (Mock veri ile)
-- **Detail View:** Dinamik fiyat (`PriceTicker`), sayaç (`CountDownTimer`) ve Socket.io entegrasyonu tamam.
-
-## Sıradaki Görevler
-1. **Admin Paneli Geliştirme:**
-   - Açık artırma oluşturma formu (`AuctionCreateForm`)
-   - Yönetim panosu (Dashboard)
+## Sıradaki Adımlar
+1. **End-to-End Entegrasyon Testi SİMÜLASYONU:**
+   - Manuel Test adımlarının belirlenmesi.
+   - Sistemin bir bütün olarak (Admin + User + Socket) çalıştığının doğrulanması.
 
 ## Bekleyen İşler (Backlog)
-- Backend ile gerçek veri entegrasyonu (Mock'ların kaldırılması)
-- End-to-end entegrasyon testi
-- End-to-end entegrasyon testi
+- E2E Test Scritpleri (Cypress veya Playwright)

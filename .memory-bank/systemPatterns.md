@@ -60,6 +60,16 @@ graph TD
 * **Kimlik Doğrulama:** Stateless JWT (JSON Web Token) kullanılır. Secret Key sadece `.env` üzerinden yönetilir.
 * **Şifreleme:** Kullanıcı şifreleri `bcrypt` kullanılarak tek yönlü hash'lenir.
 * **Yetkilendirme:** Endpoint'lerde rol tabanlı (Admin vs User) bağımlılıklar (FastAPI Dependencies) kullanılır.
+* **Frontend Güvenliği:**
+  * **Pinia Auth Store:** Token ve User bilgisi global state'de saklanır.
+  * **Route Guards:** `vue-router` üzerinde `requiresAuth` ve `requiresAdmin` meta etiketleri ile korumalı rotalara erişim kontrol edilir.
+  * **Token Storage:** JWT token şu an için `localStorage` üzerindedir (MVP). İleride `httpOnly` cookie'ye taşınması planlanmaktadır.
+
+### 6. Frontend Mimarisi (Vue 3 + Pinia)
+
+* **Store Pattern:** Veri mantığı (API çağrıları, state) tamamen Pinia store'larına (`auction.js`, `auth.js`) taşınmıştır. Bileşenler (Components) bu store'ları tüketir.
+* **Composition API:** Tüm bileşenlerde `<script setup>` syntax'ı kullanılır.
+* **Tailwind v4:** Stil yönetimi CSS değişkenleri ve utility class'lar üzerinden sağlanır. `@tailwindcss/postcss` plugin'i ile çalışır.
 
 ## Klasör Yapısı (Full-Stack Dağılımı)
 

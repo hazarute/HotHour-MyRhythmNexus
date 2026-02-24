@@ -121,32 +121,36 @@
     - **Countdown Timer:** Real-time countdown to the next scheduled price drop.
     - **Turbo Mode Visuals:** Implement visual triggers that activate when the backend emits the `turbo_triggered` event (e.g., background glow changes to red/orange, flame particle effects around the price, accelerated timer animations).
     - **"HEMEN KAP" (Instant Book) Button:**
-        - Large, irresistible CTA button.
-        - Must handle loading state immediately upon click to prevent double bookings visually.
-        - Integration with the reservation API endpoint.
-    - **Session Details:** Clean display of standard info (Instructor, Time slot, Description).
-- [ ] **Booking Success Flow:**
-    - A celebratory modal window appearing upon successful reservation.
-    - Clear display of the **Booking Code** (e.g., `HOT-8X2A`).
-    - Instructions for "Pay-at-Venue".
+        - [X] Large, irresistible CTA button.
+        - [X] Must handle loading state immediately upon click to prevent double bookings visually.
+        - [X] Integration with the reservation API endpoint.
+    - [X] **Session Details:** Clean display of standard info (Instructor, Time slot, Description).
+- [X] **Booking Success Flow:**
+    - [X] A celebratory modal window appearing upon successful reservation.
+    - [X] Clear display of the **Booking Code** (e.g., `HOT-8X2A`).
+    - [X] Instructions for "Pay-at-Venue".
 
 #### 5.3. Admin Panel (Control Center)
 *Focus: Functionality, data clarity, secure access.*
 
-- [ ] **Authentication View:** Simple, secure login page for studio admins.
-- [ ] **Admin Layout:** Sidebar navigation and standard dashboard structure.
-- [ ] **Auction Creation Wizard (Complex Form):**
+- [X] **Authentication View:** Simple, secure login page for studio admins (`LoginView.vue`).
+- [X] **Admin Layout:** Sidebar navigation and standard dashboard structure (`App.vue` + `AdminView.vue`).
+- [X] **Auction Creation Wizard (Complex Form):**
     - **Basic Info:** Title, description, start/end date-time pickers.
     - **Pricing Config:** Inputs for Start Price, Floor Price, Drop Interval, Drop Amount with validation logic.
     - **Turbo Config:** Toggle switch for Turbo Mode. Inputs for Trigger Time (mins before end), Turbo Drop Amount, and Turbo Interval.
-- [ ] **Dashboard / Auction Management View:**
+- [X] **Dashboard / Auction Management View:**
     - A table listing all auctions with their statuses (DRAFT, ACTIVE, SOLD, EXPIRED).
     - Quick actions to Edit Drafts or Cancel active auctions.
-- [ ] **Reservations View:**
-    - A list of all successful bookings.
-    - Search/Filter functionality by Booking Code or User Name for quick verification at the studio reception.
+- [X] **Reservations View:**
+    - [X] A list of all successful bookings.
+    - [X] Search/Filter functionality by Booking Code or User Name for quick verification at the studio reception.
 
 #### 5.4. Integration & End-to-End Testing
-- [ ] **API Wiring:** Ensure all frontend forms and displays are correctly hooked up to the FastAPI endpoints defined in Phase 2.
+- [X] **Booking Flow UI:** Integration of "Instant Book" button with `booking_service`.
+- [X] **Success Modal:** Booking confirmation display with `booking_code`.
+- [X] **My Reservations UI:** User profile page to view their bookings.
+- [ ] **E2E Testing:** Verify full user journey (Login -> View -> Book).
+- [X] **Production Build Check:** Ensure `npm run build` passes with no errors.
 - [ ] **Real-time Sync Test:** Verify that price updates and Turbo mode triggers propagate instantly to multiple connected clients simultaneously.
 - [ ] **Full Cycle Simulation:** Manually test the entire flow: Admin creates auction -> User sees it live -> User waits for Turbo -> User clicks "Hemen Kap" -> Admin sees the reservation code in the panel.

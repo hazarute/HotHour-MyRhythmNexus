@@ -1,45 +1,71 @@
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue' // Added ref
-import { useRoute } from 'vue-router'
+import { onMounted, onUnmounted, computed, ref } from 'vue' 
+import { useRoute, useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import { useSocketStore } from '../stores/socket'
+import { useAuthStore } from '../stores/auth'
 import PriceTicker from '../components/PriceTicker.vue'
 import CountDownTimer from '../components/CountDownTimer.vue'
 
 const route = useRoute()
+const router = useRouter()
 const auctionStore = useAuctionStore()
 const socketStore = useSocketStore()
+const authStore = useAuthStore()
 
 const auction = computed(() => auctionStore.currentAuction)
+const showSuccessModal = ref(false)
+const reservation = ref(null)
+const bookingLoading = ref(false)
 
 onMounted(async () => {
     const id = route.params.id
-    // Connect to socket and subscribe first to be ready
     if (!socketStore.isConnected) {
         socketStore.connect()
     }
-    
-    // Subscribe to room
     socketStore.subscribeAuction(id)
-
-    // Fetch initial data
     await auctionStore.fetchAuctionById(id)
 
-    // Listen for real-time updates
     socketStore.on('price_update', (data) => {
-        // data = { auction_id: ..., current_price: ..., details: ... }
         if (data.auction_id == id) {
-             console.log('Price update received:', data)
              auctionStore.updatePrice(id, data.current_price)
-             // Ideally update nextDropTime from data.details if backend sends it
+        }
+    })
+
+    socketStore.on('auction_booked', (data) => {
+        if (data.auction_id == id) {
+            console.log('Auction booked by another user:', data)
+            // Ideally update status in store
+            if (auction.value) {
+                auction.value.status = 'SOLD'
+            }
         }
     })
 })
 
-const handleBook = () => {
-    // Phase 6: Booking Integration
+const handleBook = async () => {
     if (!auction.value) return;
-    alert(`Booking initiated for ${auction.value.title} at ${auction.value.currentPrice}`)
+
+    if (!authStore.isAuthenticated) {
+        // Redirect to login with return path
+        router.push({ name: 'login', query: { redirect: route.fullPath } })
+        return
+    }
+
+    if (!confirm(`Are you sure you want to book this session for ${auction.value.currentPrice} TL?`)) {
+        return
+    }
+
+    bookingLoading.value = true
+    try {
+        const result = await auctionStore.bookAuction(auction.value.id)
+        reservation.value = result
+        showSuccessModal.value = true
+    } catch (err) {
+        alert(err.message) // Simple alert for now
+    } finally {
+        bookingLoading.value = false
+    }
 }
 
 onUnmounted(() => {
@@ -51,11 +77,35 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="auctionStore.loading" class="flex items-center justify-center min-h-[60vh]">
+  <div v-if="auctionStore.loading && !auction" class="flex items-center justify-center min-h-[60vh]">
     <div class="animate-spin h-12 w-12 border-4 border-neon-blue border-t-transparent rounded-full"></div>
   </div>
   
-  <div v-else-if="auction" class="max-w-4xl mx-auto py-8 px-4 grid grid-cols-1 md:grid-cols-2 gap-12">
+  <div v-else-if="auction" class="max-w-4xl mx-auto py-8 px-4 grid grid-cols-1 md:grid-cols-2 gap-12 relative">
+    
+    <!-- Success Modal Overlay -->
+    <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-card-bg border-2 border-neon-green rounded-xl p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(0,255,0,0.3)] animate-bounce-in">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-3xl font-bold text-white mb-2">Booking Confirmed!</h2>
+            <p class="text-gray-300 mb-6">You successfully caught this session.</p>
+            
+            <div class="bg-white/10 p-4 rounded-lg mb-6">
+                <div class="text-sm text-gray-400 uppercase tracking-wider mb-1">Your Booking Code</div>
+                <div class="text-4xl font-mono font-bold text-neon-green tracking-widest">{{ reservation?.booking_code || 'HOT-XXXX' }}</div>
+            </div>
+            
+            <div class="text-sm text-gray-400 mb-6">
+                Please show this code at the studio reception.<br>
+                Locked Price: <span class="text-white font-bold">{{ reservation?.locked_price }} TL</span>
+            </div>
+            
+            <button @click="showSuccessModal = false" class="bg-neon-green text-black font-bold py-3 px-8 rounded hover:scale-105 transition-transform w-full">
+                Close
+            </button>
+        </div>
+    </div>
+
     <!-- Left Column: Visuals & Price -->
     <div class="space-y-8 text-center md:text-left">
       <div class="relative bg-card-bg p-8 rounded-xl border border-neon-blue/30 shadow-[0_0_30px_rgba(0,243,255,0.15)] overflow-hidden">
@@ -78,11 +128,18 @@ onUnmounted(() => {
       
       <button 
         @click="handleBook"
-        class="w-full bg-gradient-to-r from-neon-blue to-neon-pink p-4 rounded-lg font-bold text-xl text-black hover:scale-[1.02] transform transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="auction.status !== 'ACTIVE'"
+        class="w-full bg-gradient-to-r from-neon-blue to-neon-pink p-4 rounded-lg font-bold text-xl text-black hover:scale-[1.02] transform transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+        :disabled="auction.status !== 'ACTIVE' || bookingLoading"
       >
-        <span v-if="auction.status === 'ACTIVE'">⚡ HEMEN KAP (BOOK NOW)</span>
+        <span v-if="bookingLoading" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            BOOKING...
+        </span>
+        <span v-else-if="auction.status === 'ACTIVE'">⚡ HEMEN KAP (BOOK NOW)</span>
         <span v-else>SOLD OUT</span>
+        
+        <!-- Shine Effect -->
+        <div class="absolute inset-0 -translate-x-full group-hover:animate-shine bg-gradient-to-r from-transparent via-white/30 to-transparent z-10"></div>
       </button>
       
       <p class="text-xs text-center text-gray-500 mt-2">
@@ -95,11 +152,9 @@ onUnmounted(() => {
         <div>
             <h1 class="text-4xl font-bold mb-2 text-white">{{ auction.title }}</h1>
             <div class="flex items-center space-x-2 text-neon-blue">
-                <span class="text-lg">Instructed by {{ auction.instructor }}</span>
+                <span class="text-lg">Instructed by {{ auction.instructor || 'Studio Instructor' }}</span>
             </div>
         </div>
-        
-        <div class="bg-gray-800/50 p-6 rounded-lg">
             <h3 class="font-bold text-gray-300 mb-2">Session Details</h3>
             <p class="text-gray-400 leading-relaxed mb-4">
                 {{ auction.description || 'Join us for an intense session focused on core strength and flexibility. Suitable for all levels.' }}
@@ -114,7 +169,6 @@ onUnmounted(() => {
                     <span class="text-white">{{ new Date(auction.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
                 </div>
             </div>
-        </div>
         
         <div class="bg-blue-900/20 p-4 rounded border-l-4 border-neon-blue">
             <h4 class="font-bold text-neon-blue mb-1">How it works</h4>
