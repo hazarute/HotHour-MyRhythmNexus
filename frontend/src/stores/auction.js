@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { useAuthStore } from './auth'
 
 export const useAuctionStore = defineStore('auction', () => {
     // State
@@ -108,6 +109,7 @@ export const useAuctionStore = defineStore('auction', () => {
     }
 
     async function createAuction(payload) {
+        const authStore = useAuthStore()
         loading.value = true
         error.value = null
         try {
@@ -117,12 +119,15 @@ export const useAuctionStore = defineStore('auction', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${userStore.token}` // Note: Auth will be added later
+                    'Authorization': `Bearer ${authStore.token}`
                 },
                 body: JSON.stringify(payload)
             })
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error("Unauthorized - Please login first")
+                }
                 const errorData = await response.json().catch(() => ({}))
                 throw new Error(errorData.detail || 'Failed to create auction')
             }
