@@ -44,6 +44,8 @@ onMounted(() => {
             :auction="auction" 
         />
     </div>
+  </div>
+</template>
 
 <style scoped>
 @keyframes pulse-slow {

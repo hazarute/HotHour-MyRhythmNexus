@@ -107,6 +107,39 @@ export const useAuctionStore = defineStore('auction', () => {
         }
     }
 
+    async function createAuction(payload) {
+        loading.value = true
+        error.value = null
+        try {
+            // Use environment variable or default to localhost
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+            const response = await fetch(`${baseUrl}/api/v1/auctions/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': `Bearer ${userStore.token}` // Note: Auth will be added later
+                },
+                body: JSON.stringify(payload)
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.detail || 'Failed to create auction')
+            }
+
+            const newAuction = await response.json()
+            auctions.value.unshift(newAuction) // Add to top of list
+            return newAuction
+        } catch (err) {
+            console.error("Create auction error:", err)
+            error.value = err.message
+            // For now, re-throw so the component can handle UI feeback
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
     return {
         auctions,
         currentAuction,
@@ -114,6 +147,7 @@ export const useAuctionStore = defineStore('auction', () => {
         error,
         fetchAuctions,
         fetchAuctionById,
+        createAuction,
         updatePrice
     }
 })
