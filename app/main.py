@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.db import connect_db, disconnect_db
+from app.core.socket import sio
 from app.api import auth
+import socketio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,4 +51,13 @@ def create_application() -> FastAPI:
 
     return application
 
-app = create_application()
+_fastapi_app = create_application()
+
+# Mount Socket.io ASGI app alongside FastAPI
+# All Socket.io traffic goes through /socket.io/
+# FastAPI handles everything else
+app = socketio.ASGIApp(
+    socketio_server=sio,
+    other_asgi_app=_fastapi_app,
+    socketio_path="/socket.io",
+)

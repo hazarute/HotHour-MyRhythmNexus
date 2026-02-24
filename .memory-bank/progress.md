@@ -82,9 +82,19 @@
   - Manual testing recommended for immediate verification
 
 ## Faz 4: Gerçek Zamanlı Özellikler (Real-time)
-- [ ] Socket.io entegrasyonu
-- [ ] Fiyat güncellemelerinin broadcast edilmesi
-- [ ] Turbo Mod tetikleyicileri
+- [X] Socket.io entegrasyonu (`app/core/socket.py` - AsyncServer, room-based)
+- [X] Fiyat güncellemelerinin broadcast edilmesi (`emit_price_update` + `/broadcast-price` admin endpoint)
+- [X] Turbo Mod tetikleyici bildirimleri (`emit_turbo_triggered` - `check_and_trigger_turbo` içine entegre)
+- [X] Booking confirmation bildirimleri (`emit_booking_confirmed` + `emit_auction_booked` - `book_auction` içine entegre)
+- [X] ASGI entegrasyonu (`main.py` → `socketio.ASGIApp` wrap)
+
+  **Socket Rooms:**
+  - `auction:{id}` → `price_update`, `turbo_triggered`, `auction_booked` events
+  - `user:{id}` → `booking_confirmed` event
+
+  **Client Events:**
+  - `subscribe_auction {auction_id}` → auction room'a katıl
+  - `subscribe_user {user_id}` → kişisel bildirimler için katıl
 
 ## Faz 5: Önyüz Entegrasyonu ve Test
 - [ ] API dokümantasyonu (Swagger/Redoc) kontrolü

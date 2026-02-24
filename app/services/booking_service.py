@@ -14,6 +14,7 @@ from app.utils.booking_utils import generate_booking_code
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
+from app.services import socket_service
 
 
 class BookingError(Exception):
@@ -117,7 +118,7 @@ class BookingService:
                 }
             )
             
-            return {
+            result = {
                 "id": reservation.id,
                 "auction_id": reservation.auctionId,
                 "user_id": reservation.userId,
@@ -126,6 +127,21 @@ class BookingService:
                 "status": reservation.status,
                 "reserved_at": reservation.reservedAt,
             }
+
+            # Broadcast real-time events after successful booking
+            await socket_service.emit_booking_confirmed(
+                user_id=user_id,
+                auction_id=auction_id,
+                booking_code=reservation.bookingCode,
+                locked_price=reservation.lockedPrice,
+                status=reservation.status,
+            )
+            await socket_service.emit_auction_booked(
+                auction_id=auction_id,
+                booking_code=reservation.bookingCode,
+            )
+
+            return result
         
         except Exception as e:
             # Prisma's unique constraint violation

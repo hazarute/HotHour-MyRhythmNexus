@@ -3,6 +3,7 @@ from app.services.price_service import price_service
 from app.utils.validators import auction_validator, ValidationError
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from app.services import socket_service
 
 
 class AuctionService:
@@ -121,6 +122,12 @@ class AuctionService:
             updated_auction = await db.auction.update(
                 where={"id": auction_id},
                 data={"turboStartedAt": now}
+            )
+            # Broadcast turbo activation to all auction subscribers
+            await socket_service.emit_turbo_triggered(
+                auction_id=auction_id,
+                turbo_started_at=now,
+                remaining_minutes=round(remaining_min, 2),
             )
             return {
                 "triggered": True,

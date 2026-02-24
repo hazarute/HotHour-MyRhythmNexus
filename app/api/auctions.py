@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query, HTTPException, Path
 from app.models.auction import AuctionCreate, AuctionResponse
 from app.services.auction_service import auction_service
+from app.services import socket_service
 from app.core.deps import get_current_admin_user
 from app.utils.validators import ValidationError
 
@@ -88,3 +89,40 @@ async def trigger_turbo_mode(auction_id: int = Path(..., gt=0)):
             detail="Auction not found"
         )
     return result
+
+
+@router.post("/{auction_id}/broadcast-price", status_code=status.HTTP_200_OK)
+async def broadcast_current_price(
+    auction_id: int = Path(..., gt=0),
+    admin=Depends(get_current_admin_user),
+):
+    """
+    Admin endpoint: compute and broadcast the current price of an auction
+    to all Socket.io subscribers of that auction room.
+
+    Useful for:
+    - Manual price refresh triggers
+    - Scheduled background tasks calling this via internal HTTP
+    - Testing real-time price updates
+
+    Returns:
+        {"auction_id": int, "current_price": str, "broadcast": true}
+    """
+    price_result = await auction_service.get_current_price(auction_id)
+    if price_result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Auction not found"
+        )
+
+    await socket_service.emit_price_update(
+        auction_id=auction_id,
+        current_price=price_result["price"],
+        details=price_result.get("details"),
+    )
+
+    return {
+        "auction_id": auction_id,
+        "current_price": price_result["price"],
+        "broadcast": True,
+    }

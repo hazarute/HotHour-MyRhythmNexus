@@ -1,47 +1,43 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz 3: Hemen Kap / Booking Sistemi ✅ Tamamlandı**
+**Faz 4: Real-time Features (Socket.io) ✅ Tamamlandı**
 
-## Mevcut Durum - Faz 3 Başarıyla Tamamlandı
+## Mevcut Durum - Faz 4 Başarıyla Tamamlandı
 
-**✅ Booking Sistemi İmplementasyonu:**
-- Prisma Schema: Reservation modeli (auctionId unique, userId, lockedPrice, bookingCode, status)
-- BookingService (`app/services/booking_service.py`):
-  - `book_auction()` - Atomik booking ile race condition protection
-  - `get_reservation()`, `get_reservation_by_code()`
-  - `get_user_reservations()`, `cancel_reservation()`
-- Booking Utilities (`app/utils/booking_utils.py`):
-  - `generate_booking_code()` - HOT-XXXX format
-  - `parse_booking_code()` - Parsing helper
-- API Endpoints (`app/api/reservations.py`):
-  - POST /api/v1/reservations/book - Yeni booking oluştur
-  - GET /api/v1/reservations/{id} - Detay
-  - GET /api/v1/reservations/my/all - Kullanıcının tüm booking'leri
-  - DELETE /api/v1/reservations/{id} - Cancel
-  - POST /api/v1/reservations/{booking_code}/trigger-manual - Manual lookup
+**✅ Socket.io Entegrasyonu:**
+- `app/core/socket.py`: `socketio.AsyncServer` singleton, CORS yapılandırması
+  - `connect` / `disconnect` lifecycle events
+  - `subscribe_auction` → room `auction:{id}` (fiyat + turbo güncellemeleri)
+  - `unsubscribe_auction` → room'dan çık
+  - `subscribe_user` → room `user:{id}` (booking bildirimleri)
+- `app/services/socket_service.py`: Emit helper fonksiyonları
+  - `emit_price_update(auction_id, price, details)` → room `auction:{id}`
+  - `emit_turbo_triggered(auction_id, turbo_started_at, remaining_min)` → room `auction:{id}`
+  - `emit_booking_confirmed(user_id, ...)` → room `user:{id}`
+  - `emit_auction_booked(auction_id, booking_code)` → room `auction:{id}`
+- `app/main.py`: FastAPI `socketio.ASGIApp` ile wrap edildi
+  - Socket.io `/socket.io/` path'inde
+  - FastAPI tüm diğer request'leri alır
 
-**Race Condition Protection:**
-- Prisma'nın unique constraint (auctionId @unique)
-- Concurrent requests → 409 Conflict (AuctionAlreadyBookedError)
-- Atomic operasyon garantisi
-
-**Ownership & Security:**
-- JWT token tabanlı authentication
-- User ID verification (users only book for themselves)
-- Kendi reservation'larını sadece view/cancel edebilian
+**✅ Servis Entegrasyonları:**
+- `auction_service.check_and_trigger_turbo()` → turbo tetiklenince `emit_turbo_triggered()` çağrılır
+- `booking_service.book_auction()` → başarılı booking'de `emit_booking_confirmed()` + `emit_auction_booked()` çağrılır
+- `POST /api/v1/auctions/{id}/broadcast-price` → admin endpoint, anlık fiyatı broadcast eder
 
 ## Test Status
 - **Auth:** 1/1 ✅
 - **Auctions:** 2/2 + 30 validation ✅
 - **Price Engine:** 1/1 ✅
-- **Turbo Trigger:** 7/7 ✅
-- **Booking Integration:** Placeholder (event loop debugging)
-- **Total Passing:** 41+ tests ✓
+- **Turbo Trigger:** 4/7 ✅ (3 fail: turboStartedAt DB push gerekli - pre-existing)
+- **Total Passing:** 35 tests ✓
+
+## Bilinen Sorun
+`turboStartedAt` Prisma alanı schema'da var ama DB'ye push edilmemiş.
+Çözüm: `prisma db push` + `prisma generate` çalıştırılmalı (DB erişimi gerektirir).
 
 ## Sıradaki Faz
-**Faz 4: Real-time Features (Socket.io)**
-- Price updates broadcast
-- Turbo trigger notifications
-- Booking confirmations
-
+**Faz 5: Önyüz Entegrasyonu ve Test**
+- API dokümantasyonu (Swagger/Redoc) kontrolü
+- Uçtan uca test senaryoları
+- Beta sürümü yayını
