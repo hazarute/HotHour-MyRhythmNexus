@@ -1,43 +1,27 @@
-# Aktif Bağlam (Active Context)
+# Aktif Ba�lam (Active Context)
 
-## Şu Anki Odak
-**Faz 4: Real-time Features (Socket.io) ✅ Tamamlandı**
+## �u Anki Odak
+**Faz 5: Frontend Development (Vue.js + Tailwind CSS) **
 
-## Mevcut Durum - Faz 4 Başarıyla Tamamlandı
+## Mevcut Durum
 
-**✅ Socket.io Entegrasyonu:**
-- `app/core/socket.py`: `socketio.AsyncServer` singleton, CORS yapılandırması
-  - `connect` / `disconnect` lifecycle events
-  - `subscribe_auction` → room `auction:{id}` (fiyat + turbo güncellemeleri)
-  - `unsubscribe_auction` → room'dan çık
-  - `subscribe_user` → room `user:{id}` (booking bildirimleri)
-- `app/services/socket_service.py`: Emit helper fonksiyonları
-  - `emit_price_update(auction_id, price, details)` → room `auction:{id}`
-  - `emit_turbo_triggered(auction_id, turbo_started_at, remaining_min)` → room `auction:{id}`
-  - `emit_booking_confirmed(user_id, ...)` → room `user:{id}`
-  - `emit_auction_booked(auction_id, booking_code)` → room `auction:{id}`
-- `app/main.py`: FastAPI `socketio.ASGIApp` ile wrap edildi
-  - Socket.io `/socket.io/` path'inde
-  - FastAPI tüm diğer request'leri alır
+** Frontend Altyap�s� Kuruldu (5.1):**
+- **Vue 3 + Vite:** rontend klas�r�nde proje olu�turuldu.
+- **Tailwind CSS:** 	ailwind.config.js ile Neon tema renkleri (
+eon-blue, 
+eon-pink vb.) tan�mland�.
+- **Router:** / (Home) ve /admin (Admin) rotalar� eklendi.
+- **Pinia:** State management aktif edildi (main.js).
+- **UI:** App.vue responsive navigasyon bar� ile g�ncellendi.
+- **Style:** style.css dark mode ve full-screen yap�land�rmas� yap�ld�.
 
-**✅ Servis Entegrasyonları:**
-- `auction_service.check_and_trigger_turbo()` → turbo tetiklenince `emit_turbo_triggered()` çağrılır
-- `booking_service.book_auction()` → başarılı booking'de `emit_booking_confirmed()` + `emit_auction_booked()` çağrılır
-- `POST /api/v1/auctions/{id}/broadcast-price` → admin endpoint, anlık fiyatı broadcast eder
+## S�radaki G�revler
+1. **Socket.io Client Wrapper:** src/stores/socket.js veya benzeri bir composable olu�turup backend ile ba�lant� kurmak.
+2. **Public UI (Game Arena):** AuctionList ve AuctionDetail bile�enlerini geli�tirmek.
+   - Fiyat g�stergesi (PriceTicker)
+   - Geri say�m (Timer)
+   - Hemen Kap butonu
 
-## Test Status
-- **Auth:** 1/1 ✅
-- **Auctions:** 2/2 + 30 validation ✅
-- **Price Engine:** 1/1 ✅
-- **Turbo Trigger:** 4/7 ✅ (3 fail: turboStartedAt DB push gerekli - pre-existing)
-- **Total Passing:** 35 tests ✓
-
-## Bilinen Sorun
-`turboStartedAt` Prisma alanı schema'da var ama DB'ye push edilmemiş.
-Çözüm: `prisma db push` + `prisma generate` çalıştırılmalı (DB erişimi gerektirir).
-
-## Sıradaki Faz
-**Faz 5: Önyüz Entegrasyonu ve Test**
-- API dokümantasyonu (Swagger/Redoc) kontrolü
-- Uçtan uca test senaryoları
-- Beta sürümü yayını
+## Bekleyen ��ler (Backlog)
+- Admin paneli formlar�
+- End-to-end entegrasyon testi

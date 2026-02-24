@@ -1,7 +1,7 @@
 # Sistem Mimarisi (System Patterns)
 
 ## Mimari Genel Bakış
-Sistem, modern bir **Micro-SaaS** mimarisi izlemektedir. Backend öncelikli olarak Python/FastAPI üzerine kuruludur ve veri tutarlılığı için güçlü bir SQL veritabanı (PostgreSQL) kullanır.
+Sistem, modern bir **Micro-SaaS** mimarisi izlemektedir. Uygulama, "API-First" prensibiyle tasarlanmış olup; yüksek performanslı bir Python/FastAPI backend, gerçek zamanlı iletişim için Socket.io ve reaktif bir Vue 3 / Tailwind CSS frontend barındırır. Veri bütünlüğü ve işlemlerin güvenliği PostgreSQL üzerinde Prisma ORM ile sağlanır.
 
 ### Diyagram
 ```mermaid
@@ -9,60 +9,86 @@ graph TD
     User((Kullanıcı))
     Admin((Stüdyo Yöneticisi))
 
-    subgraph "HotHour Core"
-        API[Backend API<br/>(FastAPI)]
-        WS[WebSocket Engine<br/>(Socket.io)]
+    subgraph "HotHour Full-Stack Platform"
+        FE[Frontend SPA<br/>Vue 3 + Pinia]
+        API[Backend API<br/>FastAPI]
+        WS[WebSocket Engine<br/>Socket.io AsyncServer]
         Prisma[Prisma Client Py]
         DB[(PostgreSQL)]
     end
 
-    User -- "HTTP (Rezervasyon)" --> API
-    User -- "WS (Canlı Fiyat)" --> WS
-    Admin -- "HTTP (Seans Girişi)" --> API
+    User -- "HTTP (SPA Yükleme & API)" --> FE
+    FE -- "REST (Auth & İşlemler)" --> API
+    FE -- "WS (Canlı Fiyat & Efektler)" --> WS
+    Admin -- "HTTP (Admin Panel)" --> FE
     API -- "ORM Queries" --> Prisma
-    Prisma -- "SQL" --> DB
-    WS -- "Fiyat Broadcast" --> FE(Frontend)
-    API -- "Turbo Mod Tetikleyici" --> WS
+    Prisma -- "SQL Transactions" --> DB
+    API -- "Event Tetikleyici (Turbo vb.)" --> WS
+    WS -- "Broadcast (Oda Bazlı)" --> FE
+
 ```
 
 ## Temel Tasarım Desenleri
 
-### 1. API First Design
-*   Tüm iş mantığı FastAPI endpoint'leri üzerinden sunulur.
-*   Frontend (Vue.js) tamamen API tüketicisidir.
+### 1. API-First ve Ayrık (Decoupled) Mimari
 
-### 2. Gerçek Zamanlı Fiyatlandırma Motoru
-*   Fiyat hesaplaması veritabanında saklanan konfigürasyona (`startPrice`, `dropInterval`, `startTime` vb.) göre dinamik olarak yapılır veya bir background job (Celery/APScheduler - *belirlenecek*) tarafından periyodik olarak güncellenir.
-*   *Not: Mevcut yapıda Prisma modelinde `currentPrice` alanı var, bu alanın senkronizasyonu kritik.*
+* Tüm iş mantığı, doğrulama (validation) ve veritabanı işlemleri FastAPI endpoint'leri üzerinden izole bir şekilde sunulur.
+* Frontend (Vue 3), veriyi yönetmekten ziyade API ve WebSocket üzerinden gelen state'i (durumu) tüketip görselleştiren bir sunum katmanıdır.
 
-### 3. Yarış Durumu (Race Condition) Yönetimi
-*   `Reservation` tablosundaki `auctionId` alanı `@unique` olarak tanımlanmıştır.
-*   Aynı anda iki kişi aynı seansa "Kap" dediğinde, veritabanı seviyesinde işlem bütünlüğü (transaction) sağlanmalı ve sadece ilk gelen işlem başarılı olmalıdır.
+### 2. Olay Güdümlü Gerçek Zamanlı Motor (Event-Driven Real-time)
 
-### 4. Code-First ORM
-*   Veritabanı şeması `prisma/schema.prisma` dosyasında tanımlanır.
-*   `app/core/db.py` içinde global bir Singleton `Prisma` instance'ı oluşturulur.
-*   FastAPI `lifespan` eventleri ile uygulama başlangıcında `connect`, kapanışında `disconnect` yapılır.
+* Backend tarafında fiyat hesaplamaları "On-Demand" (istek anında) veya admin tetiklemeleriyle hesaplanır. Ekstra bir background worker (Celery vb.) karmaşasından kaçınılmıştır.
+* `socketio.AsyncServer` kullanılarak "Oda (Room)" tabanlı bir yayın mimarisi kurulmuştur:
+* **`auction:{id}` Odası:** İlgili seansın fiyat güncellemeleri (`price_update`) ve turbo mod bildirimlerini (`turbo_triggered`, `auction_booked`) dinler.
+* **`user:{id}` Odası:** Sadece o kullanıcıya özel rezervasyon onayları (`booking_confirmed`) iletilir.
+
+
+
+### 3. Yarış Durumu (Race Condition) ve İşlem Bütünlüğü
+
+* "Hemen Kap" senaryosunda aynı milisaniyede gelen istekleri yönetmek için veritabanı seviyesinde kilit (lock) mekanizması kullanılır.
+* `Reservation` tablosundaki `auctionId` alanı `@unique` kısıtlamasına sahiptir. Bu 1-1 ilişki modeli sayesinde, ilk istek veritabanına yazılır yazılmaz ikinci istek Prisma tarafından engellenir ve API `409 Conflict (AuctionAlreadyBookedError)` döndürür.
+
+### 4. Code-First ORM ve Veritabanı Yönetimi
+
+* Tek gerçeklik kaynağı (Single Source of Truth) `prisma/schema.prisma` dosyasıdır.
+* `app/core/db.py` içinde Singleton bir Prisma instance'ı yönetilir. FastAPI `lifespan` eventleri ile bağlantı havuzu (connection pool) uygulama döngüsüne entegre edilmiştir.
+* Para birimi hassasiyeti için `Decimal` tipleri aktif olarak kullanılır ve API katmanında doğru dönüşümler yapılır.
 
 ### 5. Güvenlik Mimarisi
-*   **JWT (JSON Web Token):** Stateless authentication için kullanılır.
-*   **Password Hashing:** `bcrypt` algoritması ile şifreler veritabanında hashli tutulur.
-*   **Servis Katmanı:**
-    *   `UserService`: Veritabanı ve CRUD işlemleri.
-    *   `AuthService` (Planlanan): Token üretimi ve iş mantığı.
 
-## Klasör Yapısı (Gerçekleşen)
-```
+* **Kimlik Doğrulama:** Stateless JWT (JSON Web Token) kullanılır. Secret Key sadece `.env` üzerinden yönetilir.
+* **Şifreleme:** Kullanıcı şifreleri `bcrypt` kullanılarak tek yönlü hash'lenir.
+* **Yetkilendirme:** Endpoint'lerde rol tabanlı (Admin vs User) bağımlılıklar (FastAPI Dependencies) kullanılır.
+
+## Klasör Yapısı (Full-Stack Dağılımı)
+
+```text
 .
-├── app/
-│   ├── main.py            # Uygulama ve Router tanımları
-│   ├── api/               # Endpoint'ler (Örn: auth.py)
-│   ├── core/              # Config, Security, DB
-│   ├── services/          # İş mantığı (UserService)
-│   ├── models/            # Pydantic modelleri (UserCreate, Token)
-│   └── utils/             # Yardımcı araçlar
-├── prisma/
-│   └── schema.prisma      # DB Şeması (ASCII Only)
+├── backend/               # FastAPI Çekirdeği
+│   ├── app/
+│   │   ├── api/           # Router ve Endpoint'ler (auth.py, reservations.py vb.)
+│   │   ├── core/          # Güvenlik, DB Config, Socket Kurulumu
+│   │   ├── services/      # İş mantığı (auction_service.py, booking_service.py)
+│   │   ├── models/        # Pydantic şemaları
+│   │   └── utils/         # Validatörler ve Helper fonksiyonlar
+│   ├── prisma/
+│   │   └── schema.prisma  # ORM Şeması
+│   ├── tests/             # Unit ve Integration Testleri
+│   └── main.py            # ASGI Entrypoint (FastAPI + Socket.io Wrap)
+│
+├── frontend/              # Vue 3 SPA (Faz 5)
+│   ├── src/
+│   │   ├── assets/        # CSS (Tailwind), İkonlar, Neon Görseller
+│   │   ├── components/    # Tekrar kullanılabilir UI (PriceTicker, Timer, BookButton)
+│   │   ├── views/         # Sayfalar (Home, AdminDashboard, AuctionDetail)
+│   │   ├── stores/        # Pinia State Management
+│   │   ├── services/      # Axios API Client ve Socket.io Wrapper
+│   │   └── router/        # Vue Router ayarları
+│   ├── tailwind.config.js # Tema yapılandırması
+│   └── package.json       # Frontend bağımlılıkları
+│
 ├── .env                   # Çevresel değişkenler
-└── docker-compose.yml     # PostgreSQL servisi
+└── docker-compose.yml     # PostgreSQL ve gerektiğinde Redis container'ı
+
 ```
