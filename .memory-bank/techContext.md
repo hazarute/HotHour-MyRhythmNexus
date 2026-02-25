@@ -4,7 +4,7 @@
 
 | Katman | Teknoloji |
 | --- | --- |
-| Backend | Python 3.10+, FastAPI, Uvicorn |
+| Backend | Python 3.10+, FastAPI, Uvicorn, fastapi-mail |
 | ORM/DB | Prisma Client Python, PostgreSQL |
 | Realtime | Socket.IO AsyncServer + socket.io-client |
 | Frontend | Vue 3 (Composition API), Pinia, Vue Router |

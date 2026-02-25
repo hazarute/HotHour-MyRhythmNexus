@@ -22,7 +22,7 @@ async def db_connect():
         await db.db.disconnect()
 
 
-async def create_admin_user(email: str, phone: str, full_name: str, password: str):
+async def create_admin_user(email: str, phone: str, full_name: str, password: str, gender: str = "FEMALE"):
     """Create admin user directly in DB for testing"""
     hashed = security.get_password_hash(password)
     return await db.db.user.create(
@@ -32,6 +32,7 @@ async def create_admin_user(email: str, phone: str, full_name: str, password: st
             "fullName": full_name,
             "hashedPassword": hashed,
             "role": "ADMIN",
+            "gender": gender,
         }
     )
 

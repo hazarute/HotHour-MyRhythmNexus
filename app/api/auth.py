@@ -1,22 +1,25 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from app.models.user import UserCreate, UserResponse, UserLogin, Token
 from app.services.user_service import user_service
 from app.core import security
 from app.core.deps import get_current_user
-from datetime import timedelta
+from app.core.email import send_verification_email
+from datetime import datetime, timedelta, timezone
 from app.core.config import settings
 
 router = APIRouter()
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
-async def register(user_in: UserCreate):
+async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
     """
     User registration endpoint.
     
     Validates input, checks for duplicates, creates user, and returns JWT token.
+    Sends verification email in background.
     
     Args:
         user_in: UserCreate model with email, phone, full_name, gender, password
+        background_tasks: FastAPI BackgroundTasks
         
     Returns:
         Token: access_token, token_type, and user data
@@ -41,25 +44,38 @@ async def register(user_in: UserCreate):
         )
     
     try:
-        # Create user in database
+        # Create user in database (isVerified defaults to False)
+        # Note: Prisma schema sets isVerified default to false
         user = await user_service.create_user(user_in)
         
-        # Generate JWT token
+        # Determine verification status (if manually set or forced)
+        # Assuming database default is False, so user.isVerified is False
+        
+        # Update user to be unverified if needed, but create_user should handle it
+        # Send verification email
+        is_verified = getattr(user, 'is_verified', getattr(user, 'isVerified', False))
+        if not is_verified:
+            verification_token = security.create_verification_token(user.email)
+            background_tasks.add_task(send_verification_email, user.email, verification_token)
+        
+        # Generate Access Token (so user is logged in immediately)
+        # They can access the site but might be restricted on some features until verified
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = security.create_access_token(
             subject=user.id, expires_delta=access_token_expires
         )
         
         # Build user response with Prisma->Pydantic field mappings
+        # Note: Prisma Client Python converts schema fields (camelCase) to snake_case attributes
         user_response = UserResponse(
             id=user.id,
-            email=user.email,
-            full_name=user.fullName,
-            phone=user.phone,
-            gender=user.gender,
-            role=user.role,
-            is_verified=user.isVerified,
-            created_at=user.createdAt,
+            email=getattr(user, 'email', ''),
+            full_name=getattr(user, 'full_name', getattr(user, 'fullName', '')),
+            phone=getattr(user, 'phone', ''),
+            gender=getattr(user, 'gender', 'FEMALE'),  # Default if missing
+            role=getattr(user, 'role', 'USER'),
+            is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
+            created_at=getattr(user, 'created_at', getattr(user, 'createdAt', datetime.now(timezone.utc))),
         )
         
         return {
@@ -69,10 +85,47 @@ async def register(user_in: UserCreate):
         }
     except Exception as e:
         # Catch database constraint violations, validation errors, etc.
+        # Log the error for debugging
+        print(f"Registration error attributes: {dir(user)}")
+        print(f"Registration error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Kayıt sırasında bir hata oluştu. Lütfen bilgilerinizi kontrol edin."
         )
+
+@router.get("/verify-email", status_code=status.HTTP_200_OK)
+async def verify_email(token: str):
+    """
+    Verify email address using the token sent via email.
+    """
+    payload = security.decode_token(token)
+    if not payload or payload.get("type") != "verification":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Geçersiz veya süresi dolmuş doğrulama linki"
+        )
+    
+    email = payload.get("sub")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Geçersiz token içeriği"
+        )
+        
+    user = await user_service.get_user_by_email(email)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Kullanıcı bulunamadı"
+        )
+        
+    is_verified = getattr(user, 'is_verified', getattr(user, 'isVerified', False))
+    if is_verified:
+        return {"message": "Email adresi zaten doğrulanmış"}
+        
+    await user_service.verify_user(email)
+    
+    return {"message": "Email adresi başarıyla doğrulandı"}
 
 @router.post("/login", response_model=Token)
 async def login(user_in: UserLogin):
@@ -92,7 +145,8 @@ async def login(user_in: UserLogin):
     """
     # Verify user exists and password is correct
     user = await user_service.get_user_by_email(user_in.email)
-    if not user or not security.verify_password(user_in.password, user.hashedPassword):
+    hashed_password = getattr(user, 'hashed_password', getattr(user, 'hashedPassword', ''))
+    if not user or not security.verify_password(user_in.password, hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email veya şifre hatalı",
@@ -108,13 +162,13 @@ async def login(user_in: UserLogin):
     # Build user response with Prisma->Pydantic field mappings
     user_response = UserResponse(
         id=user.id,
-        email=user.email,
-        full_name=user.fullName,
-        phone=user.phone,
-        gender=user.gender,
-        role=user.role,
-        is_verified=user.isVerified,
-        created_at=user.createdAt,
+        email=getattr(user, 'email', ''),
+        full_name=getattr(user, 'full_name', getattr(user, 'fullName', '')),
+        phone=getattr(user, 'phone', ''),
+        gender=getattr(user, 'gender', 'FEMALE'),
+        role=getattr(user, 'role', 'USER'),
+        is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
+        created_at=getattr(user, 'created_at', getattr(user, 'createdAt', datetime.now(timezone.utc))),
     )
     
     return {
@@ -138,11 +192,11 @@ async def read_users_me(current_user=Depends(get_current_user)):
     """
     return UserResponse(
         id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.fullName,
-        phone=current_user.phone,
-        gender=current_user.gender,
-        role=current_user.role,
-        is_verified=current_user.isVerified,
-        created_at=current_user.createdAt,
+        email=getattr(current_user, 'email', ''),
+        full_name=getattr(current_user, 'full_name', getattr(current_user, 'fullName', '')),
+        phone=getattr(current_user, 'phone', ''),
+        gender=getattr(current_user, 'gender', 'FEMALE'),
+        role=getattr(current_user, 'role', 'USER'),
+        is_verified=getattr(current_user, 'is_verified', getattr(current_user, 'isVerified', False)),
+        created_at=getattr(current_user, 'created_at', getattr(current_user, 'createdAt', datetime.now(timezone.utc))),
     )

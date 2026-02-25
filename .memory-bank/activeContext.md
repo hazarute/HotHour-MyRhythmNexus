@@ -1,79 +1,45 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz R3.2: User Models Refactor + Token Flow Tamam** ✅
+**Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler** 🚀
 
-- Yapılan: app/models/user.py sıfırdan (Prisma schema-aligned)
-- Backend: Auth endpoints Token döner (access_token + user data)
-- Frontend: SignUpView direkt Token kullanır (login çağrısı yok)
-- Syntax: Python ✅ + Vue ✅ + Build ✅
+Tüm teknik geliştirme fazları tamamlandı. Email doğrulama sistemi başarıyla entegre edildi ve birim testleri (pytest) geçti. Şimdi sistemin bir bütün olarak beklenen davranışı sergilediğini doğrulamak için **manuel testler** yapacağız.
 
-## 📐 User Models Yeniden Mimarisi
+## 🔍 Test ve Revizyon Planı
 
-### Prisma ↔ Pydantic Field Mappings
-```
-fullName     → full_name
-isVerified   → is_verified
-createdAt    → created_at
-hashedPassword → hashed_password (backend only)
-```
+Uygulamayı çalıştırıp aşağıdaki senaryoları tarayıcı üzerinden doğrulayacağız:
 
-### Request Models (Built-in Validators)
-**UserCreate:**
-- email: EmailStr (Pydantic auto-validate)
-- full_name: 3+ chars, letters + Turkish (regex)
-- phone: 10+ rakam extracted (regex)
-- gender: Enum (FEMALE | MALE)
-- password: 8+ chars
+### Öncelikli Modüller
+1.  **Kimlik Doğrulama (Auth):**
+    - [ ] Kayıt ol (Email gönderiliyor mu?)
+    - [ ] Email linkine tıkla (VerifyEmailView çalışıyor mu?)
+    - [ ] Giriş yap (Doğrulanmış kullanıcı)
+    - [ ] Token saklama ve çıkış yapma.
 
-**UserLogin:**
-- email: EmailStr
-- password: str
+2.  **Açık Artırmalar (Auctions):**
+    - [ ] Ana sayfa listesi (Socket güncellemeleri)
+    - [ ] Detay sayfası (Sayaç, Teklif verme)
+    - [ ] Açık artırma süresi dolunca ne oluyor?
 
-### Response Models (API Returns)
-**UserResponse:** `{id, email, full_name, phone, gender, role, is_verified, created_at}`
-**UserPublicProfile:** `{id, full_name, created_at}` (privacy)
-**Token:** `{access_token, token_type, user: UserResponse}` 🆕
+3.  **Rezervasyonlar (Reservations):**
+    - [ ] Hemen Al (Buy Now) butonu çalışıyor mu?
+    - [ ] "My Reservations" ekranında rezervasyon görünüyor mu?
+    - [ ] Erişim kodu doğru üretildi mi?
 
-### Internal Models (Backend-Only)
-**UserInDB:** Hashed password ile (DB operations)
-**TokenData:** JWT içinden extracted {user_id, email}
+4.  **Admin Paneli:**
+    - [ ] Yeni açık artırma oluşturma.
+    - [ ] Rezervasyon listesi kontrolü.
 
-## 🔐 Validasyon 3-Katmanı
+## ✅ Tamamlanan Son İşler (Faz R4.1)
+- **Email Doğrulama Sistemi:**
+    - Backend: `POST /api/v1/auth/register` (Email gönderimi entegre)
+    - Backend: `GET /api/v1/auth/verify-email` (Token doğrulama)
+    - Frontend: `VerifyEmailView.vue` (Durum bildilendirme ekranı)
+    - Test: `tests/test_email_verification.py` (Kapsamlı testler BAŞARILI)
+    - Fix: Prisma `camelCase` vs Pydantic `snake_case` uyumsuzlukları giderildi.
 
-1. **Frontend** (@input handlers): Real-time filtering
-2. **Backend Validators** (@field_validator): Data integrity (422)
-3. **Business Logic** (auth.py): Duplicate checks (400)
-4. **Database**: Unique constraints
-
-## 🔄 Backend Endpoint Changes
-
-### Register (POST /register)
-| Aspect | Before | After |
-|--------|--------|-------|
-| Response | UserResponse | Token {access_token, user} 🆕 |
-| Flow | Register → need login | Register → auto-token |
-| Duplicates | Email only | Email + Phone 🆕 |
-
-### Login (POST /login) 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Response | {access_token, token_type} | Token {access_token, user} 🆕 |
-| User Data | Separate /me call | Immediate return |
-
-### /me (GET /me)
-- Unchanged: UserResponse return
-
-## 📝 Dosyalar Güncellendi
-- ✅ [app/models/user.py](app/models/user.py) - Sıfırdan (docstrings + validators)
-- ✅ [app/api/auth.py](app/api/auth.py) - Token response + field mapping
-- ✅ [app/services/user_service.py](app/services/user_service.py) - get_user_by_phone()
-- ✅ [frontend/src/views/SignUpView.vue](frontend/src/views/SignUpView.vue) - Token handler
-
-## ⏭️ Sıradaki Adımlar (Test)
-1. [ ] Backend sunucu başlatma (uvicorn)
-2. [ ] Registration form submit via localhost
-3. [ ] Token + auto-redirect doğrulama
-4. [ ] Login endpoint test (existing user)
-5. [ ] Error cases (duplicate email/phone, invalid data)
-- [ ] Duplicate email/phone edge cases
+## 📝 Sıradaki Adımlar
+1.  Backend sunucusunu başlat: `uvicorn app.main:app --reload`
+2.  Frontend sunucusunu başlat: `npm run dev`
+3.  Tarayıcıda `http://localhost:5173` adresine git.
+4.  Kayıt ol akışını test et.

@@ -21,5 +21,11 @@ class UserService:
     
     async def get_user_by_phone(self, phone: str):
         return await db.user.find_unique(where={"phone": phone})
+
+    async def verify_user(self, email: str):
+        return await db.user.update(
+            where={"email": email},
+            data={"isVerified": True}
+        )
             
 user_service = UserService()

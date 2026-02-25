@@ -17,7 +17,7 @@ async def db_connect():
         await db.db.disconnect()
 
 
-async def create_user_in_db(email: str, phone: str, full_name: str, password: str, role: str = "USER"):
+async def create_user_in_db(email: str, phone: str, full_name: str, password: str, role: str = "USER", gender: str = "FEMALE"):
     hashed = security.get_password_hash(password)
     return await db.db.user.create(
         data={
@@ -26,6 +26,7 @@ async def create_user_in_db(email: str, phone: str, full_name: str, password: st
             "fullName": full_name,
             "hashedPassword": hashed,
             "role": role,
+            "gender": gender,
         }
     )
 

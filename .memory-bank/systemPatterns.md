@@ -56,3 +56,16 @@ flowchart LR
 ## Mimari Sınırlar
 - Backend endpointleri, veritabanı şeması ve servis kuralları bu fazda değişmeyecek.
 - Yeniden tasarım fazı, yalnızca frontend görsel katman + component kompozisyonu kapsamındadır.
+
+## Backend Patterns (Faz R3 Update)
+
+### Auth ve Kullanıcı Yönetimi
+- **JWT (Stateless):** Access token `Authorization: Bearer` header ile taşınır.
+- **Pydantic & Prisma:** 
+  - Request: `UserCreate`, `UserLogin` (Strict Validation)
+  - Response: `Token`, `UserResponse`
+  - DB: Prisma user tablosu ile tam uyumlu mapping.
+- **Email Verification:**
+  - Akış: `POST /register` -> Background Task (Send Mail) -> `GET /verify-email`.
+  - Token: Özel `type='verification'` claim'li JWT.
+  - State: `user.isVerified` varsayılan `False`.

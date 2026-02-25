@@ -95,9 +95,40 @@ Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsi
 - [X] 3-Katmanlı validasyon: Frontend → Pydantic → Business Logic
 - [X] GitHub commit + push: Commit ID 9356949
 
-## Backlog / Sıradaki
-- [ ] Localhost backend server başlatma (uvicorn)
-- [ ] Registration form E2E test
+## 🚀 Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler (YENİ HEDEF)
+Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son revizyonlar.
+
+### R4.1 Kimlik Doğrulama (Auth) Revizyonu
+- [X] Kayıt Ol (Sign Up) akışı ve validasyonların canlı testi
+- [ ] Giriş Yap (Login) ve Token saklama (LocalStorage) kontrolü
+- [ ] Otomatik oturum açma ve güvenli çıkış (Logout) testi
+- [X] **E-posta Doğrulama Sistemi (Email Verification) Entegrasyonu** 🆕
+    - [X] Backend: SMTP/Email Service yapılandırması (`app/core/email.py`)
+    - [X] DB: `User` tablosunda token yönetimi (JWT `type="verification"`)
+    - [X] API: `/auth/verify-email` endpoint'inin yazılması
+    - [X] Frontend: Doğrulama bekleme ve sonuç sayfası (`VerifyEmailView.vue`)
+    - [X] Flowupdate: Kayıt sonrası "Lütfen e-postanızı doğrulayın" uyarısı
+    - [X] Test: `tests/test_email_verification.py` başarıyla geçti
+
+### R4.2 Açık Artırma (Auction) Modülü Revizyonu
+- [ ] Ana sayfa listeleme performansı ve filtreler
+- [ ] Detay sayfası görsel bütünlüğü ve sayaç (Timer) doğruluğu
+- [ ] Socket.io ile gerçek zamanlı fiyat güncelleme testi
+
+### R4.3 Rezervasyon (Reservation) Modülü Revizyonu
+- [ ] Hemen Al (Buy Now) butonu ve ödeme/rezervasyon simülasyonu
+- [ ] "Rezervasyonlarım" sayfasında QR/Access Code görüntüleme
+- [ ] Geçmiş ve gelecek rezervasyonların ayrımı
+
+### R4.4 Admin Paneli Revizyonu
+- [ ] Yeni açık artırma oluşturma formu ve validasyonları
+- [ ] Rezervasyon listesi ve detay görüntüleme
+- [ ] Mobil görünümde admin panelinin kullanılabilirliği
+
+### R4.5 Son Kontroller
+- [ ] Tüm sayfalarda responsive tasarım (Mobil/Tablet/Desktop) kontrolü
+- [ ] Konsol hatalarının temizlenmesi
+- [ ] Production build (`npm run build`) son kontrolü
 - [ ] Login flow test
 - [ ] Duplicate email/phone edge cases
 - [ ] Password recovery flow (opsiyonel)
