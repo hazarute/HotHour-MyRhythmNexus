@@ -38,17 +38,18 @@ const handleLogin = async () => {
     <div class="absolute inset-0 opacity-35 bg-gradient-to-br from-neon-blue/10 via-primary/5 to-neon-magenta/10"></div>
     <div class="absolute inset-0 bg-gradient-to-r from-dark-bg via-dark-bg/95 to-dark-bg/70"></div>
 
-    <div class="relative hh-section min-h-screen flex items-center py-10">
-      <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div class="relative hh-section min-h-screen flex items-center justify-center lg:justify-start px-4 sm:px-6 py-10">
+      <div class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+        <!-- Desktop Info Side -->
         <div class="hidden lg:block">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-6">
             <span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
             Stüdyo Kontrol Merkezi
           </div>
 
-          <h1 class="text-5xl font-black text-white leading-tight tracking-tight mb-4">
+          <h1 class="text-5xl xl:text-6xl font-black text-white leading-tight tracking-tight mb-6">
             Oturumları Yönet.
-            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary hh-text-glow">Geliri Kontrol Et.</span>
+            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-primary hh-text-glow mt-2">Geliri Kontrol Et.</span>
           </h1>
 
           <p class="text-slate-400 text-lg max-w-xl leading-relaxed">
@@ -56,12 +57,22 @@ const handleLogin = async () => {
           </p>
         </div>
 
-        <div class="w-full max-w-md lg:ml-auto">
-          <div class="hh-glass-card rounded-2xl p-8 border border-white/10 shadow-glow">
-            <div class="mb-6">
-              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Yönetici Erişimi</p>
-              <h2 class="text-3xl font-bold text-white">Giriş Yap</h2>
-              <p class="text-slate-400 mt-2 text-sm">HotHour Kontrol Merkezine Erişin</p>
+        <!-- Login Form Side -->
+        <div class="w-full max-w-sm sm:max-w-md mx-auto lg:ml-auto">
+            <!-- Mobile Logo/Branding -->
+            <div class="lg:hidden text-center mb-8">
+                <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-lg shadow-primary/30 mb-4">
+                     <span class="material-symbols-outlined text-white text-3xl">hourglass_top</span>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-2">HotHour Admin</h1>
+                <p class="text-slate-400 text-sm">Stüdyo Yönetim Paneli</p>
+            </div>
+
+          <div class="hh-glass-card rounded-2xl p-6 sm:p-8 border border-white/10 shadow-glow backdrop-blur-xl bg-dark-bg/80">
+            <div class="mb-6 text-center lg:text-left">
+              <p class="text-neon-blue text-xs uppercase tracking-widest mb-2 font-bold">Yönetici Erişimi</p>
+              <h2 class="text-2xl sm:text-3xl font-bold text-white">Giriş Yap</h2>
+              <p class="text-slate-400 mt-2 text-sm">Hesabınıza erişmek için bilgilerinizi girin</p>
             </div>
 
             <form @submit.prevent="handleLogin" class="space-y-5">

@@ -41,18 +41,18 @@ const formatTime = (seconds) => {
 <template>
   <div>
     <!-- Header Area -->
-    <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-5 flex items-center justify-between">
+    <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Aktif Oturumlar</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Aktif Oturumlar</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
             <button class="flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
                 <span class="material-symbols-outlined">notifications</span>
             </button>
-            <button @click="showForm = !showForm" class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95">
+            <button @click="showForm = !showForm" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
                 <span class="material-symbols-outlined" style="font-size: 20px;">{{ showForm ? 'close' : 'add' }}</span>
-                <span class="text-sm font-medium">{{ showForm ? 'Formu Kapat' : 'Oturum Oluştur' }}</span>
+                <span class="font-medium">{{ showForm ? 'Kapat' : 'Oturum Oluştur' }}</span>
             </button>
         </div>
     </header>
@@ -61,7 +61,7 @@ const formatTime = (seconds) => {
         
         <!-- Create Form (Conditionally rendered) -->
         <transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform -translate-y-4 opacity-0" enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="transform translate-y-0 opacity-100" leave-to-class="transform -translate-y-4 opacity-0">
-            <div v-if="showForm" class="bg-white dark:bg-[#1a2230] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative z-20">
+            <div v-if="showForm" class="bg-white dark:bg-[#1a2230] p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative z-20">
                 <AuctionCreateForm @create-auction="handleCreate" />
             </div>
         </transition>
@@ -169,7 +169,36 @@ const formatTime = (seconds) => {
 
             <!-- Table Container -->
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <!-- Mobile List View -->
+                <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
+                     <div v-if="store.auctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
+                        Aktif oturum bulunamadı.
+                     </div>
+                     <div v-for="auction in store.auctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
+                        <div class="flex justify-between items-start">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-slate-900 dark:text-white">{{ auction.title }}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400">ID: {{ auction.id }}</span>
+                            </div>
+                            <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
+                            <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
+                            <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ auction.status }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-slate-400">Güncel Fiyat</span>
+                                <span class="font-bold text-slate-900 dark:text-white">{{ formatCurrency(auction.currentPrice) }}</span>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-xs text-slate-400">Kalan Süre</span>
+                                <span class="font-mono text-primary font-medium">01:30:00</span>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+
+                <!-- Desktop Table View -->
+                <table class="w-full text-left border-collapse hidden md:table">
                     <thead>
                         <tr class="bg-slate-50 dark:bg-background-dark/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>

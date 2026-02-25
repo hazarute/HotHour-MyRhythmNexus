@@ -137,155 +137,238 @@ const mins = '00'
          :style="{ backgroundColor: isTurbo ? 'rgba(255, 123, 0, 0.2)' : 'rgba(37, 106, 244, 0.2)' }"></div>
 
     <!-- Details Container -->
-    <div class="layout-content-container flex flex-col w-full max-w-[640px] relative z-10 font-display">
+    <div class="layout-content-container flex flex-col w-full max-w-5xl md:flex-row md:items-start md:justify-center gap-6 md:gap-12 relative z-10 font-display transition-all duration-300">
         
-        <!-- Breadcrumbs -->
-        <nav class="flex flex-wrap gap-2 mb-8 items-center justify-center sm:justify-start">
-            <router-link to="/" class="text-slate-400 hover:text-white text-sm font-medium transition-colors">Ana Sayfa</router-link>
-            <span class="text-slate-600 text-sm font-medium">/</span>
-            <span class="text-slate-400 text-sm font-medium">Pilates Oturumları</span>
-            <span class="text-slate-600 text-sm font-medium">/</span>
-            <span class="text-sm font-medium flex items-center gap-1 transition-colors duration-500" :class="themeClasses.textAccent">
-                <span class="material-symbols-outlined text-sm">bolt</span>
-                {{ isTurbo ? 'Turbo Mod' : 'Normal Mod' }}
-            </span>
-        </nav>
+        <!-- Left Column: Visual/Timer (Desktop) -->
+        <div class="hidden md:flex flex-col w-full md:w-1/2 gap-6 sticky top-24">
+             <div class="rounded-[2rem] overflow-hidden relative group aspect-square">
+                 <img src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=2070&auto=format&fit=crop" class="object-cover w-full h-full opacity-60 group-hover:scale-110 transition-transform duration-700" />
+                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
+                 
+                 <!-- Timer Overlay -->
+                 <div class="absolute bottom-8 left-0 right-0 px-8">
+                     <div class="flex justify-between items-end">
+                         <div>
+                             <p class="text-sm uppercase tracking-widest text-slate-300 mb-2">Başlangıç</p>
+                             <p class="text-3xl font-bold text-white">{{ formatTime(auction.startTime) }}</p>
+                         </div>
+                         <div class="text-right">
+                            <p class="text-sm uppercase tracking-widest text-slate-300 mb-2">Bitiş</p>
+                            <p class="text-3xl font-bold text-white">{{ formatTime(auction.endTime) }}</p>
+                         </div>
+                     </div>
+                 </div>
+             </div>
 
-        <!-- Main Card -->
-        <div class="relative rounded-3xl p-1 overflow-hidden transition-all duration-500"
-             :class="[themeClasses.shadowNeon, isTurbo ? 'border-2 border-[#f20d80]/50' : 'border border-white/10']">
+             <!-- Desktop Live Feed -->
+             <div class="w-full">
+                <p class="text-slate-400 text-sm font-medium mb-3 px-2 uppercase tracking-wider">Canlı Hareketler</p>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-500/20">ED</div>
+                            <div class="flex flex-col">
+                                <span class="text-white text-sm font-bold">Elif D.</span>
+                                <span class="text-slate-400 text-xs">Odaya katıldı</span>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 text-xs font-mono">2sn önce</span>
+                    </div>
+                     <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm opacity-60">
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-purple-500/20">MK</div>
+                            <div class="flex flex-col">
+                                <span class="text-white text-sm font-bold">Murat K.</span>
+                                <span class="text-slate-400 text-xs">Odaya katıldı</span>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 text-xs font-mono">15sn önce</span>
+                    </div>
+                </div>
+             </div>
+        </div>
+
+        <!-- Right Column: Price & Action -->
+        <div class="w-full md:w-1/2 flex flex-col items-center relative">
             
-            <!-- Animated Border (Turbo only) -->
-            <div v-if="isTurbo" class="absolute inset-0 bg-gradient-to-r from-[#f20d80] via-[#ff7b00] to-[#f20d80] opacity-20 animate-pulse pointer-events-none"></div>
+            <!-- Breadcrumbs (Mobile only) -->
+            <nav class="flex md:hidden flex-wrap gap-2 mb-6 items-center justify-center">
+                <router-link to="/" class="text-slate-400 hover:text-white text-xs font-medium transition-colors">Ana Sayfa</router-link>
+                <span class="text-slate-600 text-xs font-medium">/</span>
+                <span class="text-slate-400 text-xs font-medium">Pilates</span>
+                <span class="text-slate-600 text-xs font-medium">/</span>
+                <span class="text-xs font-medium flex items-center gap-1 transition-colors duration-500" :class="themeClasses.textAccent">
+                    <span class="material-symbols-outlined text-xs">bolt</span>
+                    {{ isTurbo ? 'Turbo' : 'Normal' }}
+                </span>
+            </nav>
+
+            <!-- Main Card -->
+            <div class="relative w-full rounded-[2rem] p-[1px] overflow-hidden transition-all duration-500 shadow-2xl"
+                 :class="[themeClasses.shadowNeon, isTurbo ? 'border-2 border-[#f20d80]/50' : 'border border-white/10']">
             
-            <div class="rounded-[1.3rem] p-6 sm:p-10 relative overflow-hidden flex flex-col items-center text-center gap-6 h-full transition-colors duration-500"
-                 :class="[isTurbo ? 'bg-background-dark' : 'bg-[#1a1f2e]/90 backdrop-blur-xl']">
+                <!-- Animated Border (Turbo only) -->
+                <div v-if="isTurbo" class="absolute inset-0 bg-gradient-to-r from-[#f20d80] via-[#ff7b00] to-[#f20d80] opacity-20 animate-pulse pointer-events-none"></div>
                 
-                <!-- Header -->
-                <div class="w-full flex justify-between items-start mb-4">
-                    <div class="flex flex-col items-start gap-1">
-                        <div class="flex items-center gap-2">
-                            <span class="relative flex h-3 w-3">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
-                            </span>
-                            <p class="font-bold tracking-widest text-xs uppercase" :class="isTurbo ? 'text-[#ff2a2a]' : 'text-green-500'">
-                                Canlı Oturum
+                <div class="rounded-[2rem] p-6 sm:p-8 md:p-10 relative overflow-hidden flex flex-col items-center text-center gap-6 md:gap-8 h-full transition-colors duration-500 bg-background-dark/90 backdrop-blur-3xl">
+                    
+                    <!-- Header -->
+                    <div class="w-full flex justify-between items-start">
+                        <div class="flex flex-col items-start gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="relative flex h-3 w-3">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
+                                </span>
+                                <p class="font-bold tracking-widest text-[10px] sm:text-xs uppercase" :class="isTurbo ? 'text-[#ff2a2a]' : 'text-green-500'">
+                                    Canlı Oturum
+                                </p>
+                            </div>
+                            <h1 class="text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight mt-1 text-left">{{ auction.title }}</h1>
+                            <p class="text-slate-400 text-xs sm:text-sm text-left">{{ auction.studioName || 'Zenith Stüdyo' }}</p>
+                        </div>
+                        <div class="px-2 py-1 sm:px-3 sm:py-1 rounded-lg border border-white/10" :class="isTurbo ? 'bg-[#392830]' : 'bg-white/5'">
+                            <span class="text-slate-300 text-[10px] sm:text-xs font-mono">#{{ auction.id }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Price Section -->
+                    <div class="flex flex-col items-center justify-center py-4 sm:py-8 w-full relative">
+                        <div class="text-slate-400 text-xs sm:text-sm font-medium mb-2 uppercase tracking-wider">Güncel Fiyat</div>
+                        
+                        <div class="relative">
+                            <h1 class="text-white text-[72px] sm:text-[100px] md:text-[120px] font-mono font-black leading-none tracking-tighter transition-all duration-300 transform"
+                                :class="{ 'drop-shadow-[0_0_25px_rgba(242,13,128,0.5)]': isTurbo }">
+                                ?{{ formatPrice(auction.currentPrice) }}
+                            </h1>
+                            <!-- Glitch bg -->
+                            <div v-if="isTurbo" class="absolute -inset-1 bg-[#f20d80]/20 blur-xl -z-10 animate-pulse"></div>
+                        </div>
+
+                        <div class="mt-4 flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors duration-500"
+                            :class="isTurbo ? 'bg-red-500/10 border-red-500/20' : 'bg-blue-500/10 border-blue-500/20'">
+                            <span class="material-symbols-outlined text-sm" :class="isTurbo ? 'text-red-500' : 'text-blue-400'">trending_down</span>
+                            <p class="text-xs font-bold uppercase tracking-wide" :class="isTurbo ? 'text-red-400' : 'text-blue-400'">
+                                {{ isTurbo ? 'Hızlı Düşüş' : 'Fiyat Düşüyor' }}
                             </p>
                         </div>
-                        <h1 class="text-white text-2xl sm:text-3xl font-bold leading-tight mt-1">{{ auction.title }}</h1>
-                        <p class="text-slate-400 text-sm text-left">{{ auction.studioName || 'Zenith Stüdyo' }}</p>
                     </div>
-                    <div class="px-3 py-1 rounded-lg border border-white/10" :class="isTurbo ? 'bg-[#392830]' : 'bg-white/5'">
-                        <span class="text-slate-300 text-xs font-mono">ID: #{{ auction.id }}</span>
+
+                    <!-- Timer Grid (Compact on Mobile) -->
+                    <div class="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-sm mb-2 sm:mb-6">
+                        <!-- Hours -->
+                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
+                            :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
+                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ hours }}</span>
+                            <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Saat</span>
+                        </div>
+                        <!-- Mins -->
+                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
+                            :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
+                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ mins }}</span>
+                            <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Dk</span>
+                        </div>
+                        <!-- Secs (Active) -->
+                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border relative overflow-hidden transition-all"
+                            :class="isTurbo ? 'bg-[#2a1621] border-[#ff2a2a]/30 shadow-[0_0_15px_rgba(255,42,42,0.15)]' : 'bg-white/5 border-neon-blue/30'">
+                            <div v-if="isTurbo" class="absolute inset-0 bg-[#ff2a2a]/5 animate-pulse"></div>
+                            <span class="text-xl sm:text-3xl font-bold font-mono relative z-10" :class="themeClasses.textTurbo">
+                                {{ formatTime(auction.nextDropTime) }}
+                            </span>
+                            <span class="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider relative z-10" :class="themeClasses.textTurbo">Sn</span>
+                        </div>
                     </div>
+
+                    <!-- Info Row -->
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-2 sm:mb-4">
+                        <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
+                            <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Başlangıç</p>
+                            <p class="text-white font-bold line-through decoration-slate-500 text-sm sm:text-base">₺{{ auction.startPrice }}</p>
+                        </div>
+                        <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
+                            <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Kazanç</p>
+                            <p class="font-bold text-green-400 text-sm sm:text-base">
+                                %{{ Math.round(((auction.startPrice - auction.currentPrice) / auction.startPrice) * 100) }} İndirim
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- CTA Button (Desktop - Hidden Mobile Trigger) -->
+                    <button @click="handleBook" 
+                            :disabled="auction.status !== 'ACTIVE' || bookingLoading"
+                            class="hidden md:flex group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-2"
+                            :class="[themeClasses.gradientBtn, themeClasses.shadowNeon]">
+                        
+                        <div class="relative flex h-16 w-full items-center justify-center rounded-[14px] px-8 transition-all"
+                            :class="`bg-gradient-to-r ${themeClasses.gradientBtn}`">
+                            
+                            <span class="absolute right-0 -mt-12 -mr-12 h-32 w-32 translate-x-1/2 rotate-45 bg-white opacity-10 blur-xl transition-all duration-1000 group-hover:-translate-x-full"></span>
+                            
+                            <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse">
+                                <span class="material-symbols-outlined animate-spin">sync</span>
+                                İŞLENİYOR...
+                            </span>
+                            <div v-else class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-white text-3xl font-bold" :class="{'animate-pulse': isTurbo}">shopping_bag</span>
+                                <span class="text-2xl font-black text-white tracking-wider uppercase">
+                                    {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
+                                </span>
+                            </div>
+                        </div>
+                    </button>
+
+                    <p class="hidden md:block text-slate-500 text-xs">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz.</p>
                 </div>
+            </div>
 
-                <!-- Price Section -->
-                <div class="flex flex-col items-center justify-center py-6 w-full relative">
-                    <div class="text-slate-400 text-sm font-medium mb-2 uppercase tracking-wider">Güncel Fiyat</div>
-                    
-                    <div class="relative">
-                        <h1 class="text-white text-[80px] sm:text-[100px] font-mono font-black leading-none tracking-tighter transition-all duration-300 transform"
-                            :class="{ 'drop-shadow-[0_0_25px_rgba(242,13,128,0.5)]': isTurbo }">
-                            ?{{ formatPrice(auction.currentPrice) }}
-                        </h1>
-                        <!-- Glitch bg -->
-                        <div v-if="isTurbo" class="absolute -inset-1 bg-[#f20d80]/20 blur-xl -z-10 animate-pulse"></div>
+            <!-- Mobile Live Feed -->
+            <div class="md:hidden mt-6 w-full px-1">
+                <p class="text-slate-400 text-xs font-medium mb-3 px-2 uppercase tracking-wider">Canlı Hareketler</p>
+                <div class="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm">
+                    <div class="flex items-center gap-3">
+                         <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-500/20">
+                             ED
+                         </div>
+                         <div class="flex flex-col">
+                             <span class="text-white text-sm font-bold">Elif D.</span>
+                             <span class="text-slate-400 text-[10px]">Odaya katıldı</span>
+                         </div>
                     </div>
-
-                    <div class="mt-4 flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors duration-500"
-                         :class="isTurbo ? 'bg-red-500/10 border-red-500/20' : 'bg-blue-500/10 border-blue-500/20'">
-                        <span class="material-symbols-outlined text-sm" :class="isTurbo ? 'text-red-500' : 'text-blue-400'">trending_down</span>
-                        <p class="text-xs font-bold uppercase tracking-wide" :class="isTurbo ? 'text-red-400' : 'text-blue-400'">
-                            {{ isTurbo ? 'Hızlı Düşüş' : 'Fiyat Düşüyor' }}
-                        </p>
-                    </div>
+                    <span class="text-slate-500 text-[10px]">2sn önce</span>
                 </div>
+            </div>
 
-                <!-- Timer Grid -->
-                <div class="grid grid-cols-3 gap-3 w-full max-w-sm mb-6">
-                    <!-- Hours -->
-                    <div class="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/5 transition-colors"
-                         :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                        <span class="text-3xl font-bold text-white font-mono">{{ hours }}</span>
-                        <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Saat</span>
-                    </div>
-                     <!-- Mins -->
-                    <div class="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/5 transition-colors"
-                         :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                        <span class="text-3xl font-bold text-white font-mono">{{ mins }}</span>
-                        <span class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Dk</span>
-                    </div>
-                     <!-- Secs (Active) -->
-                    <div class="flex flex-col items-center gap-2 p-3 rounded-xl border relative overflow-hidden transition-all"
-                         :class="isTurbo ? 'bg-[#2a1621] border-[#ff2a2a]/30 shadow-[0_0_15px_rgba(255,42,42,0.15)]' : 'bg-white/5 border-neon-blue/30'">
-                        <div v-if="isTurbo" class="absolute inset-0 bg-[#ff2a2a]/5 animate-pulse"></div>
-                        <!-- We assume logic to calculate remaining seconds for drop exists, using placeholder for visual match -->
-                        <span class="text-3xl font-bold font-mono relative z-10" :class="themeClasses.textTurbo">
-                            {{ formatTime(auction.nextDropTime) }}
-                        </span>
-                        <span class="text-[10px] uppercase font-bold tracking-wider relative z-10" :class="themeClasses.textTurbo">Sn</span>
-                    </div>
-                </div>
-
-                <!-- Info Row -->
-                <div class="grid grid-cols-2 gap-4 w-full mb-4">
-                    <div class="p-3 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
-                        <p class="text-slate-400 text-xs mb-1">Başlangıç Fiyatı</p>
-                        <p class="text-white font-bold line-through decoration-slate-500">?{{ auction.startPrice }}</p>
-                    </div>
-                    <div class="p-3 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
-                        <p class="text-slate-400 text-xs mb-1">Tasarruf</p>
-                        <p class="font-bold text-green-400">
-                            %{{ Math.round(((auction.startPrice - auction.currentPrice) / auction.startPrice) * 100) }} İndirim
-                        </p>
-                    </div>
-                </div>
-
-                <!-- CTA Button -->
-                <button @click="handleBook" 
+            <!-- Mobile Sticky Bottom Action Bar -->
+            <div class="md:hidden fixed bottom-0 left-0 w-full z-50 p-4 bg-background-dark/80 backdrop-blur-xl border-t border-white/10 safe-area-bottom">
+                 <button @click="handleBook" 
                         :disabled="auction.status !== 'ACTIVE' || bookingLoading"
-                        class="group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                        class="w-full relative overflow-hidden rounded-xl p-[1px] shadow-lg transition-transform active:scale-95"
                         :class="[themeClasses.gradientBtn, themeClasses.shadowNeon]">
                     
-                    <div class="relative flex h-16 w-full items-center justify-center rounded-[14px] px-8 transition-all"
+                    <div class="relative flex h-14 w-full items-center justify-center rounded-[11px] px-6"
                          :class="`bg-gradient-to-r ${themeClasses.gradientBtn}`">
-                        
-                        <span class="absolute right-0 -mt-12 -mr-12 h-32 w-32 translate-x-1/2 rotate-45 bg-white opacity-10 blur-xl transition-all duration-1000 group-hover:-translate-x-full"></span>
-                        
-                        <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse">
-                             <span class="material-symbols-outlined animate-spin">sync</span>
+                        <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse text-lg">
+                             <span class="material-symbols-outlined animate-spin text-xl">sync</span>
                              İŞLENİYOR...
                         </span>
-                        <div v-else class="flex items-center gap-2">
-                             <span class="material-symbols-outlined text-white text-3xl font-bold" :class="{'animate-pulse': isTurbo}">shopping_bag</span>
-                             <span class="text-2xl font-black text-white tracking-wider uppercase">
-                                 {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
-                             </span>
+                        <div v-else class="flex items-center justify-between w-full">
+                             <div class="flex flex-col items-start leading-none">
+                                <span class="text-[10px] text-white/80 font-medium uppercase tracking-wider">Son Fiyat</span>
+                                <span class="text-xl font-black text-white">₺{{ formatPrice(auction.currentPrice) }}</span>
+                             </div>
+                             <div class="flex items-center gap-2 pl-4 border-l border-white/20">
+                                <span class="text-lg font-black text-white tracking-wider uppercase">
+                                    {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
+                                </span>
+                                <span class="material-symbols-outlined text-white text-xl font-bold">arrow_forward</span>
+                             </div>
                         </div>
                     </div>
                 </button>
-
-                <p class="text-slate-500 text-xs mt-4">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz. İadeler kabul edilmemektedir.</p>
             </div>
-        </div>
+            <!-- Spacer for sticky bottom -->
+            <div class="h-24 md:hidden"></div>
 
-        <!-- Live Feed (Static Mock) -->
-        <div class="mt-8 grid gap-3 w-full">
-            <p class="text-slate-400 text-sm font-medium mb-1 px-2">Canlı Hareketler</p>
-            <div class="flex items-center justify-between p-3 rounded-xl border border-white/5 transition-colors" :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                <div class="flex items-center gap-3">
-                     <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white">
-                         ED
-                     </div>
-                     <div>
-                         <p class="text-white text-sm font-medium">Elif D.</p>
-                         <p class="text-slate-400 text-xs">Sıraya girdi</p>
-                     </div>
-                </div>
-                <span class="text-slate-500 text-xs">2sn önce</span>
-            </div>
         </div>
 
     </div>

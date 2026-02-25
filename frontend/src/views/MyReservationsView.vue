@@ -138,7 +138,7 @@ onMounted(() => {
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Kilitlenen Fiyat</p>
-                                        <p class="font-medium text-slate-200">?{{ res.locked_price }}</p>
+                                        <p class="font-medium text-slate-200">₺{{ res.locked_price }}</p>
                                     </div>
                                 </div>
                             </div>

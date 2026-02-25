@@ -56,9 +56,6 @@ const handleLogout = () => {
           </div>
           
           <template v-if="authStore.isAuthenticated">
-             <router-link v-if="authStore.isAdmin" to="/admin" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg shadow-blue-500/20 transition-all mr-2">
-                Admin Dashboard
-            </router-link>
              <button @click="handleLogout" class="bg-surface-dark hover:bg-surface-dark/80 text-white text-sm font-bold py-2 px-6 rounded-full border border-white/10 transition-colors">
                 Logout
             </button>
