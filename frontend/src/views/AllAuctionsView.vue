@@ -103,7 +103,7 @@ const handleFilterChange = (status) => {
           :class="[
             'px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all flex-shrink-0',
             filterStatus === 'ACTIVE' 
-              ? 'bg-neon-green text-black border border-neon-green' 
+              ? 'bg-neon-orange text-black border border-neon-orange' 
               : 'bg-white/5 text-slate-400 border border-white/10 hover:border-white/20'
           ]"
         >
