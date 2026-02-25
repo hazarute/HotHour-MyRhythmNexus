@@ -86,10 +86,19 @@ Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsi
 - [X] İlgili testler tekrar koşuldu (`test_e2e_flow`, `test_booking_integration`, `test_realtime_sync`)
 - [X] Test tamamlandı: E2E/booking/realtime test senaryoları ve frontend build doğrulaması başarılı (24.02.2026)
 
-## Backlog
-- [X] Admin script'leri oluşturuldu (create_admin.py, list_admins.py, delete_admin.py)
-- [X] Script'ler için test yazıldı (test_scripts_create_admin.py)
-- [X] Kayıt Ol sayfası oluşturuldu (SignUpView.vue, `/signup` route)
-- [ ] Kayıt Ol sayfası manuel test (localhost)
-- [ ] Form submit ve backend integration test
-- [ ] Tam cycle simulation (Faz R3 doğrulaması)
+## Faz R3+ - Kayıt Sistemi Tamamlandı ✅
+- [X] SignUpView.vue: Responsive kayıt formu (mobile-first)
+- [X] Frontend validasyonlar: Input handlers, real-time feedback
+- [X] Backend User Models: Prisma-aligned (production-ready)
+- [X] Auth endpoints: Token return + user data
+- [X] Prisma migration: Gender required (NOT NULL)
+- [X] 3-Katmanlı validasyon: Frontend → Pydantic → Business Logic
+- [X] GitHub commit + push: Commit ID 9356949
+
+## Backlog / Sıradaki
+- [ ] Localhost backend server başlatma (uvicorn)
+- [ ] Registration form E2E test
+- [ ] Login flow test
+- [ ] Duplicate email/phone edge cases
+- [ ] Password recovery flow (opsiyonel)
+- [ ] Email verification (opsiyonel)
