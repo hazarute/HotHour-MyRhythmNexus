@@ -28,6 +28,11 @@ const router = createRouter({
       component: () => import('../views/AllAuctionsView.vue')
     },
     {
+      path: '/how-it-works',
+      name: 'how-it-works',
+      component: () => import('../views/HowItWorksView.vue')
+    },
+    {
       path: '/my-reservations',
       name: 'my-reservations',
       component: () => import('../views/MyReservationsView.vue'),

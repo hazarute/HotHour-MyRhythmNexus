@@ -37,13 +37,12 @@ const handleLogout = () => {
           </router-link>
           
           <nav class="hidden md:flex items-center gap-8">
-            <router-link to="/" class="text-sm font-medium text-neon-blue drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">Arena</router-link>
+            <router-link to="/" class="text-sm font-medium text-neon-blue drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">Ana Sayfa</router-link>
             <template v-if="authStore.isAuthenticated">
                 <router-link to="/my-reservations" class="text-sm font-medium text-slate-400 hover:text-white transition-colors" active-class="text-white">My Reservations</router-link>
             </template>
             <template v-else>
-                <a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">Studios</a>
-                <a class="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">How it Works</a>
+                <router-link to="/how-it-works" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Nasıl Çalışır</router-link>
             </template>
             <router-link v-if="authStore.isAdmin" to="/admin" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Studio Panel</router-link>
           </nav>
