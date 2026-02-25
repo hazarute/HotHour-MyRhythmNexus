@@ -8,54 +8,54 @@ const expandedStep = ref(null)
 const steps = [
   {
     id: 1,
-    title: 'Oturum Seç',
-    icon: 'calendar_month',
-    description: 'Canlı Oturumlar sayfasından ilgin çeken Pilates oturumunu seç.',
-    details: 'Tüm etkinlikler, güne, saate ve zorluk seviyesine göre filtrelenmiştir. İstediğin stüdyoyu ve antrenörü bulman kolay.'
+    title: 'Boş Seansları Keşfet',
+    icon: 'search',
+    description: 'Stüdyoların hafta içi premium seanslarındaki boşlukları yakala.',
+    details: 'Reformer, Cadillac veya kişiye özel Pilates antrenmanları... Filtrele, sana en uygun stüdyoyu ve saati seç. Unutma, bu seanslar normalde çok daha yüksek fiyatlı!'
   },
   {
     id: 2,
-    title: 'Fiyat Düştüğünde Kap',
+    title: 'Fiyatın Düşüşünü İzle',
     icon: 'trending_down',
-    description: 'Dinamik fiyatlandırma ile saat ilerledikçe fiyat düşer.',
-    details: 'Oturum başlanana 24 saat kala sabit bir fiyatla başlar. Sonra her saatin başında %10 indirim uygulanır. En düşük fiyat ile hemen kap!'
+    description: 'Hollanda Açık Artırması mantığıyla zaman geçtikçe fiyat düşer.',
+    details: 'Seans saati yaklaştıkça fiyat tavan fiyattan taban fiyata doğru erimeye başlar. Seansa 2 saat kala 🔥 Turbo Mod devreye girer ve fiyatlar çılgın gibi düşer! Beklemek risklidir, başkası senden önce kapabilir.'
   },
   {
     id: 3,
-    title: 'Rezervasyon Yap',
-    icon: 'check_circle',
-    description: 'Seçilen fiyattan hemen kap ve yer rezerv et.',
-    details: 'Ödeme güvenli ve anlık işlenir. Rezervasyonun tamamlandığında SMS ve e-posta onay alırsın. İstediğin zaman iptal edebilirsin.'
+    title: 'Hemen Kap (Kilitle)',
+    icon: 'touch_app',
+    description: 'Fiyat bütçene uygun olduğunda "Hemen Kap" butonuna bas.',
+    details: 'Sistem saniyenin binde biri hızında çalışır. Butona ilk basan kişi o anki güncel fiyatı dondurur (kilitler) ve seansı kapatır. Tebrikler, piyasa değerinin çok altında bir seans yakaladın!'
   },
   {
     id: 4,
-    title: 'Oturumda Hazır Ol',
-    icon: 'fitness_center',
-    description: 'Belirlenen saatte stüdyoya git ve antrenörlüğünü yap.',
-    details: 'Giriş yaparken QR kodunu göster. Oturum bittiğinde Pilates maceraya devam et ya da sonrakini planla!'
+    title: 'Stüdyoda Öde',
+    icon: 'storefront',
+    description: 'Kredi kartı girmek yok! Sana verilen kod ile stüdyoya git.',
+    details: 'Rezervasyon onaylandığında ekranda eşsiz bir kod (Örn: HOT-8X2A) göreceksin. Sadece stüdyoya git, resepsiyona kodunu söyle ve o an kilitlediğin indirimli fiyat üzerinden ödemeni nakit veya kartla yerinde yap.'
   }
 ]
 
 const faqs = [
   {
-    question: 'Fiyat ne kadar düşebilir?',
-    answer: 'Oturumun başlanana 24 saat kala seçilen fiyatla başlar. Her saatin başında %10 indirim uygulanır. Örneğin; 100₺ olan bir oturum 24 saat sonra 67,66₺ olur.'
+    question: 'Fiyat ne kadar düşebilir? Sıfıra iner mi?',
+    answer: 'Hayır, her seansın stüdyo tarafından belirlenmiş bir "Taban Fiyatı" (Floor Price) vardır. Fiyat bu rakamın altına asla düşmez. Taban fiyata ulaşmadan önce seansı kapmak tamamen senin hızına ve stratejine bağlı!'
   },
   {
-    question: 'Rezervasyonu iptal edebilir miyim?',
-    answer: 'Oturum başlayana 4 saat kadar kalana kadar rezervasyonunu iptal edebilirsin. İptal ederken başka birine yardımcı olursun ve o da indirimli fiyattan yararlanabilir.'
+    question: 'Ödeme için kredi kartı girmem gerekiyor mu?',
+    answer: 'Kesinlikle hayır! HotHour güven üzerine kuruludur. Kredi kartı bilgini istemeyiz. Seansı uygulamadan rezerve edersin, ödemeyi ise stüdyoya gittiğinde fiziksel olarak yaparsın (Yerinde Ödeme).'
   },
   {
-    question: 'Ödeme güvenli mi?',
-    answer: 'Evet! Tüm ödemeler PCI-DSS sertifikalı güvenli ağ geçidi üzerinden yapılır. Kredi kartı bilgilerin hiçbir zaman sunucularımızda depolanmaz.'
+    question: 'Turbo Mod (🔥 Sıcak Saat) nedir?',
+    answer: 'Seansın başlamasına çok az bir zaman (genellikle son 2 saat) kala devreye giren özel bir moddur. Bu modda fiyatlar normalden çok daha hızlı ve agresif bir şekilde düşmeye başlar. Ekranın kırmızıya döndüğünü gördüğünde elini çabuk tutmalısın!'
   },
   {
-    question: 'Başka bir kişinin yerine rezervasyon yapabilir miyim?',
-    answer: 'Evet! Rezervasyon yaptıktan sonra başka bir kişiyi katılımcı olarak ekleyebilirsin. O kişi oturum gün geldiğinde QR koduyla giriş yapacak.'
+    question: 'Aynı seansa başka biriyle aynı anda basarsak ne olur?',
+    answer: 'HotHour altyapısı "Yarış Durumu"na (Race Condition) karşı özel olarak korunmaktadır. "Hemen Kap" butonuna salise farkıyla bile olsa ilk basan kişi fiyatı kilitler ve seansı alır. Diğer kullanıcı "Seans başkası tarafından kapıldı" uyarısı görür.'
   },
   {
-    question: 'Stüdyo hangisi? Kaç kişilik oturum?',
-    answer: 'Her oturum detay sayfasında stüdyonun adı, konumu, mesafeniz ve maksimum katılımcı sayısı gösterilir. Oturum başlamaya 2 saat kalana katılımcı sayısı sabitlenir.'
+    question: 'Rezervasyonumu iptal edebilir miyim?',
+    answer: 'Uygulama üzerinden seansa belirli bir süre kalana kadar iptal edebilirsin. Lütfen stüdyoların emeğine saygı göstererek gidemeyeceğin seansları erkenden iptal et ki o boşluktan başkası faydalanabilsin.'
   }
 ]
 
@@ -82,12 +82,12 @@ const toggleFaq = (index) => {
         </div>
         
         <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight tracking-tight mb-4 md:mb-6">
-          Dinamik Fiyatlandırma <br>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-orange text-glow">Nasıl Çalışır?</span>
+          Fırsatı Yakala: <br>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-orange text-glow">HotHour Nasıl Çalışır?</span>
         </h1>
         
         <p class="text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 md:mb-10">
-          HotHour'da her saat önemlidir. Belirli bir oturuma ne kadar geç kaldırsan, fiyat o kadar düşer. Tüm süreci anlamak için aşağıdaki adımları izle.
+          HotHour'da zaman paradır! Seçtiğin pilates seansının saati yaklaştıkça fiyatı sürekli düşer. Yeterince beklersen harika bir indirim yakalarsın, çok beklersen başkası kapar. İşte oyunun kuralları:
         </p>
 
         <button 
@@ -103,7 +103,7 @@ const toggleFaq = (index) => {
     <!-- Steps Section -->
     <section class="hh-section max-w-4xl py-8 md:py-12">
       <div class="mb-8 md:mb-12 text-center">
-        <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">4 Adımta Başlangıç</h2>
+        <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">4 Adımda Başlangıç</h2>
         <p class="text-slate-400 text-sm md:text-base">Basit, hızlı ve güvenli bir satın alma deneyimi</p>
       </div>
 
@@ -145,7 +145,7 @@ const toggleFaq = (index) => {
     <section class="hh-section max-w-4xl py-8 md:py-12 border-t border-slate-800">
       <div class="mb-8 md:mb-12">
         <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Fiyatlandırma Örneği</h2>
-        <p class="text-slate-400 text-sm md:text-base">100₺ tarifeli bir oturumun fiyatı saatlere göre nasıl değişir</p>
+        <p class="text-slate-400 text-sm md:text-base">6000₺ değerindeki bir Reformer Pilates seansının fiyat yolculuğu:</p>
       </div>
 
       <!-- Timeline Chart -->
@@ -154,11 +154,11 @@ const toggleFaq = (index) => {
           <!-- Hour 24 -->
           <div class="flex items-center gap-4">
             <div class="w-24 md:w-32 flex-shrink-0">
-              <p class="text-xs md:text-sm font-medium text-slate-400">24 saat önce</p>
+              <p class="text-xs md:text-sm font-medium text-slate-400">Başlangıç Fiyatı</p>
             </div>
             <div class="flex-1">
               <div class="relative h-10 md:h-12 bg-gradient-to-r from-neon-orange to-orange-600 rounded-lg flex items-center justify-end pr-4 md:pr-6 group hover:shadow-neon-orange/20 hover:shadow-lg transition-shadow">
-                <span class="font-bold text-white text-sm md:text-base">100₺</span>
+                <span class="font-bold text-white text-sm md:text-base">6000₺</span>
               </div>
             </div>
           </div>
@@ -166,11 +166,11 @@ const toggleFaq = (index) => {
           <!-- Hour 12 -->
           <div class="flex items-center gap-4">
             <div class="w-24 md:w-32 flex-shrink-0">
-              <p class="text-xs md:text-sm font-medium text-slate-400">12 saat kalana</p>
+              <p class="text-xs md:text-sm font-medium text-slate-400">Standart Düşüş</p>
             </div>
             <div class="flex-1">
               <div class="relative w-2/3 h-10 md:h-12 bg-gradient-to-r from-neon-magenta to-pink-600 rounded-lg flex items-center justify-end pr-4 md:pr-6 hover:shadow-neon-magenta/20 hover:shadow-lg transition-shadow">
-                <span class="font-bold text-white text-sm md:text-base">81,00₺</span>
+                <span class="font-bold text-white text-sm md:text-base">4800₺</span>
               </div>
             </div>
           </div>
@@ -178,11 +178,11 @@ const toggleFaq = (index) => {
           <!-- Hour 6 -->
           <div class="flex items-center gap-4">
             <div class="w-24 md:w-32 flex-shrink-0">
-              <p class="text-xs md:text-sm font-medium text-slate-400">6 saat kalana</p>
+              <p class="text-xs md:text-sm font-medium text-slate-400">🔥 Turbo Mod Aktif</p>
             </div>
             <div class="flex-1">
               <div class="relative w-1/2 h-10 md:h-12 bg-gradient-to-r from-neon-blue to-blue-600 rounded-lg flex items-center justify-end pr-4 md:pr-6 hover:shadow-neon-blue/20 hover:shadow-lg transition-shadow">
-                <span class="font-bold text-white text-sm md:text-base">65,61₺</span>
+                <span class="font-bold text-white text-sm md:text-base">3000₺</span>
               </div>
             </div>
           </div>
@@ -190,11 +190,11 @@ const toggleFaq = (index) => {
           <!-- Hour 0 -->
           <div class="flex items-center gap-4">
             <div class="w-24 md:w-32 flex-shrink-0">
-              <p class="text-xs md:text-sm font-medium text-slate-400">Hemen kap!</p>
+              <p class="text-xs md:text-sm font-medium text-slate-400">Hemen Kapıldı!</p>
             </div>
             <div class="flex-1">
               <div class="relative w-1/3 h-10 md:h-12 bg-gradient-to-r from-neon-green to-green-600 rounded-lg flex items-center justify-end pr-4 md:pr-6 hover:shadow-neon-green/20 hover:shadow-lg transition-shadow">
-                <span class="font-bold text-white text-sm md:text-base">53.10₺</span>
+                <span class="font-bold text-white text-sm md:text-base">2400₺</span>
               </div>
             </div>
           </div>
@@ -203,7 +203,7 @@ const toggleFaq = (index) => {
         <div class="mt-6 md:mt-8 p-4 bg-white/5 border border-white/10 rounded-lg">
           <p class="text-xs md:text-sm text-slate-300 flex items-start gap-2">
             <span class="material-symbols-outlined text-neon-blue flex-shrink-0 mt-1">info</span>
-            <span>Her saatin başında %10 otomatik indirim uygulanır. Oturum başlanana 4 saat kalana kadar kap yapabilirsin.</span>
+            <span>Stüdyolar fiyatın düşüş hızını ve Turbo modun ne zaman başlayacağını kendileri belirler. Gözün sayaçta olsun!</span>
           </p>
         </div>
       </div>

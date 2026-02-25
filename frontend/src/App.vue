@@ -56,15 +56,15 @@ const handleLogout = () => {
           
           <template v-if="authStore.isAuthenticated">
              <button @click="handleLogout" class="bg-surface-dark hover:bg-surface-dark/80 text-white text-sm font-bold py-2 px-6 rounded-full border border-white/10 transition-colors">
-                Logout
+                Çıkış Yap
             </button>
           </template>
           <template v-else>
             <router-link to="/login" class="bg-surface-dark hover:bg-surface-dark/80 text-white text-sm font-bold py-2 px-6 rounded-full border border-white/10 transition-colors">
-                Sign In
+                Giriş Yap
             </router-link>
-            <router-link to="/" class="bg-primary hover:bg-blue-600 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/40">
-                Join Free
+            <router-link to="/signup" class="bg-primary hover:bg-blue-600 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/40">
+                Kayıt Ol
             </router-link>
           </template>
         </div>

@@ -11,11 +11,15 @@ class UserService:
                 "hashedPassword": hashed_password,
                 "fullName": user_in.full_name,
                 "phone": user_in.phone,
+                "gender": user_in.gender,
             }
         )
         return user
 
     async def get_user_by_email(self, email: str):
         return await db.user.find_unique(where={"email": email})
+    
+    async def get_user_by_phone(self, phone: str):
+        return await db.user.find_unique(where={"phone": phone})
             
 user_service = UserService()

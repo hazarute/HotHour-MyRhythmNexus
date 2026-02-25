@@ -89,5 +89,7 @@ Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsi
 ## Backlog
 - [X] Admin script'leri oluşturuldu (create_admin.py, list_admins.py, delete_admin.py)
 - [X] Script'ler için test yazıldı (test_scripts_create_admin.py)
-- [ ] Tam cycle simulation (Faz R2 doğrulaması) 
-- [ ] Opsiyonel: Playwright/Cypress görsel regression senaryoları
+- [X] Kayıt Ol sayfası oluşturuldu (SignUpView.vue, `/signup` route)
+- [ ] Kayıt Ol sayfası manuel test (localhost)
+- [ ] Form submit ve backend integration test
+- [ ] Tam cycle simulation (Faz R3 doğrulaması)

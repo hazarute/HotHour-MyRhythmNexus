@@ -1,31 +1,79 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz R2+ Admin Script Suite Tamamlandı** ✅
+**Faz R3.2: User Models Refactor + Token Flow Tamam** ✅
 
-- Yapılan: 3 admin management script yazıldı (create, list, delete)
-- Script'ler: `scripts/create_admin.py`, `scripts/list_admins.py`, `scripts/delete_admin.py`
-- Test'ler: `tests/test_scripts_create_admin.py` (core testler çalışıyor) ✅
-- Durum: Script'ler production-ready, test coverage mevcut
+- Yapılan: app/models/user.py sıfırdan (Prisma schema-aligned)
+- Backend: Auth endpoints Token döner (access_token + user data)
+- Frontend: SignUpView direkt Token kullanır (login çağrısı yok)
+- Syntax: Python ✅ + Vue ✅ + Build ✅
 
-## Son Değişiklikler
-- **create_admin.py:** Email/phone validation, otomatik phone fallback, psasword hashing
-- **list_admins.py:** Tabulate ile güzel tablo formatı, verbose modu
-- **delete_admin.py:** ID veya email ile arama, onay mekanizması, force flag
-- **requirements.txt:** `tabulate>=0.9.0` eklendi
-- **Script refactoring:** Prisma client TestClient compatibility'si ("For testing" mode)
+## 📐 User Models Yeniden Mimarisi
 
-## Sıradaki Adımlar
-1. **Full Cycle Script Test:** Komut satırından scriptleri manuel test etme
-2. **Backend integration:** Admin script'lerini CI/CD pipeline'a entegre etme
-3. **Dokumentasyon:** `/scripts/README.md` tamamlandı ve güncellendi
+### Prisma ↔ Pydantic Field Mappings
+```
+fullName     → full_name
+isVerified   → is_verified
+createdAt    → created_at
+hashedPassword → hashed_password (backend only)
+```
 
-## Son Kararlar
-- Script'ler CLI + async function dual-mode çalışıyor (test uyumlu)
-- Prisma client optional parametresi ile test isolation sağlandı
-- CLI testleri Unicode sorunları nedeniyle minimal tutuldu (help/no-args)
+### Request Models (Built-in Validators)
+**UserCreate:**
+- email: EmailStr (Pydantic auto-validate)
+- full_name: 3+ chars, letters + Turkish (regex)
+- phone: 10+ rakam extracted (regex)
+- gender: Enum (FEMALE | MALE)
+- password: 8+ chars
 
-## Riskler / Notlar
-- Windows Unicode encoding sorunları subprocess'te emoji render etmesini engeller
-- Prisma Python API'si bazı parametreleri (order_by) farklı syntax'la kullanıyor
-- Duplicate phone kontrolü schema'da @unique ile tanımlanmış ancak test'te validate edilmiyor (app logic'e bırakıldı)
+**UserLogin:**
+- email: EmailStr
+- password: str
+
+### Response Models (API Returns)
+**UserResponse:** `{id, email, full_name, phone, gender, role, is_verified, created_at}`
+**UserPublicProfile:** `{id, full_name, created_at}` (privacy)
+**Token:** `{access_token, token_type, user: UserResponse}` 🆕
+
+### Internal Models (Backend-Only)
+**UserInDB:** Hashed password ile (DB operations)
+**TokenData:** JWT içinden extracted {user_id, email}
+
+## 🔐 Validasyon 3-Katmanı
+
+1. **Frontend** (@input handlers): Real-time filtering
+2. **Backend Validators** (@field_validator): Data integrity (422)
+3. **Business Logic** (auth.py): Duplicate checks (400)
+4. **Database**: Unique constraints
+
+## 🔄 Backend Endpoint Changes
+
+### Register (POST /register)
+| Aspect | Before | After |
+|--------|--------|-------|
+| Response | UserResponse | Token {access_token, user} 🆕 |
+| Flow | Register → need login | Register → auto-token |
+| Duplicates | Email only | Email + Phone 🆕 |
+
+### Login (POST /login) 
+| Aspect | Before | After |
+|--------|--------|-------|
+| Response | {access_token, token_type} | Token {access_token, user} 🆕 |
+| User Data | Separate /me call | Immediate return |
+
+### /me (GET /me)
+- Unchanged: UserResponse return
+
+## 📝 Dosyalar Güncellendi
+- ✅ [app/models/user.py](app/models/user.py) - Sıfırdan (docstrings + validators)
+- ✅ [app/api/auth.py](app/api/auth.py) - Token response + field mapping
+- ✅ [app/services/user_service.py](app/services/user_service.py) - get_user_by_phone()
+- ✅ [frontend/src/views/SignUpView.vue](frontend/src/views/SignUpView.vue) - Token handler
+
+## ⏭️ Sıradaki Adımlar (Test)
+1. [ ] Backend sunucu başlatma (uvicorn)
+2. [ ] Registration form submit via localhost
+3. [ ] Token + auto-redirect doğrulama
+4. [ ] Login endpoint test (existing user)
+5. [ ] Error cases (duplicate email/phone, invalid data)
+- [ ] Duplicate email/phone edge cases
