@@ -1,13 +1,19 @@
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import AuctionCard from '../components/AuctionCard.vue'
 
+const router = useRouter()
 const store = useAuctionStore()
 
 onMounted(() => {
   store.fetchAuctions()
 })
+
+const goToAllAuctions = () => {
+  router.push({ name: 'all-auctions' })
+}
 </script>
 
 <template>
@@ -36,7 +42,7 @@ onMounted(() => {
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <button class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-neon-blue transition-all flex items-center justify-center gap-2 active:scale-95">
+                    <button @click="goToAllAuctions" class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-neon-blue transition-all flex items-center justify-center gap-2 active:scale-95">
                         <span class="material-symbols-outlined">gavel</span>
                         Canlı Oturumları Gör
                     </button>

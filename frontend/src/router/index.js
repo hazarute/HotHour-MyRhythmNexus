@@ -23,6 +23,11 @@ const router = createRouter({
       props: true
     },
     {
+      path: '/auctions',
+      name: 'all-auctions',
+      component: () => import('../views/AllAuctionsView.vue')
+    },
+    {
       path: '/my-reservations',
       name: 'my-reservations',
       component: () => import('../views/MyReservationsView.vue'),
