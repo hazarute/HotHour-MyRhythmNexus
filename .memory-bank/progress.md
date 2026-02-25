@@ -46,8 +46,38 @@
 - [X] Admin Reservations ekranı referans dilinden türetildi (`frontend/src/views/AdminReservationsView.vue`)
 
 ### R1.5 Fonksiyonel Regresyon ve Görsel Doğrulama
-- [ ] Kritik kullanıcı yolculukları manuel doğrulanacak
-  - Admin login
+- [X] Kritik kullanıcı yolculukları manuel doğrulandı
+- [X] Türkçe karakter ve UTF-8 encoding sorunları çözüldü
+- [X] AuctionDetailView için "Turbo Mod" tasarımı eklendi
+
+---
+
+## 📅 Faz R2: Responsive Tasarım ve Mobil Uyumluluk (YENİ HEDEF 🎯)
+Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsive tasarım çalışması.
+
+**Genel Hedefler:**
+- Global `hh-section` kullanımı ile tutarlı kenar boşlukları.
+- Mobil öncelikli (mobile-first) yaklaşımın tüm bileşenlere uygulanması.
+- Admin panelinin mobilde kullanılabilir hale getirilmesi (Sidebar -> Drawer).
+
+### 1. Admin Paneli (AdminView.vue & Alt Sayfalar)
+- [X] **Sidebar:** Masaüstünde sabit, mobilde gizlenebilir/açılabilir (Hamburger menü) yapıya geçiş.
+- [X] **Header:** Mobilde içeriklerin dikey dizilmesi veya ikonlaşması.
+- [X] **Tablolar:** Rezervasyon listelerinin mobilde "Kart Görünümü"ne (Card View) dönüşmesi (AdminReservationsView).
+- [X] **Formlar:** "Yeni Oturum Oluştur" modalının mobilde tam ekran veya bottom-sheet gibi davranması.
+
+### 2. Ana Sayfa (HomeView.vue)
+- [X] **Hero Alanı:** Mobilde metin boyutlarının (`text-5xl` -> `text-3xl`) optimize edilmesi.
+- [X] **İstatistik Kartları:** Mobilde gizlenen yan istatistiklerin (Hidden md:flex) accordion veya swipe ile gösterilmesi.
+- [X] **Navigasyon:** Üst menünün mobil uyumlu hale getirilmesi.
+
+### 3. Açık Artırma Detay (AuctionDetailView.vue)
+- [X] **Zamanlayıcı:** Sayaçların mobilde daha kompakt görünmesi (Grid 3-col yerine Flex row veya daha küçük kutular).
+- [X] **Butonlar:** "Hemen Kap" butonunun mobilde ekranın altına sabitlenmesi (Sticky Bottom Action).
+
+### 4. Giriş & Profil (LoginView.vue)
+- [X] **Form Alanı:** Mobilde tam genişlik, masaüstünde ortalanmış kart yapısının korunması.
+- [X] **Görseller:** Arka plan efektlerinin mobilde performansı düşürmeyecek şekilde optimize edilmesi.
   - Auction oluşturma
   - Kullanıcı tarafında canlı görüntüleme
   - Hemen Kap ve rezervasyon kodu
@@ -57,5 +87,7 @@
 - [X] Test tamamlandı: E2E/booking/realtime test senaryoları ve frontend build doğrulaması başarılı (24.02.2026)
 
 ## Backlog
-- [ ] Full Cycle Simulation (yeniden tasarım sonrası tekrar)
+- [X] Admin script'leri oluşturuldu (create_admin.py, list_admins.py, delete_admin.py)
+- [X] Script'ler için test yazıldı (test_scripts_create_admin.py)
+- [ ] Tam cycle simulation (Faz R2 doğrulaması) 
 - [ ] Opsiyonel: Playwright/Cypress görsel regression senaryoları

@@ -70,11 +70,59 @@ export const useAuctionStore = defineStore('auction', () => {
 
             // Simulate fetch
             await new Promise(r => setTimeout(r, 300))
-            const found = auctions.value.find(a => a.id == id)
+            
+            // First check if we have it in store
+            let found = auctions.value.find(a => a.id == id)
+            
+            // If not found in store (e.g. refresh), try to fetch from "backend" (mock data source) again
+            if (!found) {
+                // Mock reliable data source resembling the list in fetchAuctions
+                const mockDb = [
+                    {
+                        id: 1,
+                        title: "Morning Pilates Reformer",
+                        instructor: "Esra Hoca",
+                        startTime: new Date(Date.now() + 3600000).toISOString(),
+                        startPrice: 500.00,
+                        currentPrice: 450.00,
+                        status: "ACTIVE",
+                        turboActive: false
+                    },
+                    {
+                        id: 2,
+                        title: "Advanced Yoga Flow",
+                        instructor: "Can Hoca",
+                        startTime: new Date(Date.now() + 7200000).toISOString(),
+                        startPrice: 400.00,
+                        currentPrice: 400.00,
+                        status: "ACTIVE",
+                        turboActive: false
+                    },
+                    {
+                        id: 3,
+                        title: "HIIT Cardio",
+                        instructor: "Melis Hoca",
+                        startTime: new Date(Date.now() - 3600000).toISOString(),
+                        startPrice: 300.00,
+                        currentPrice: 150.00,
+                        status: "SOLD",
+                        turboActive: true,
+                        nextDropTime: new Date(Date.now() + 15000).toISOString()
+                    }
+                ]
+                found = mockDb.find(a => a.id == id)
+            }
+
             if (found) {
-                currentAuction.value = found
+                // Enhance found object with details if needed (mock detail enrichment)
+                currentAuction.value = {
+                    ...found,
+                    description: found.description || "A comprehensive session to boost your energy.",
+                    floorPrice: found.floorPrice || 200.00,
+                    nextDropTime: found.nextDropTime || new Date(Date.now() + 15000).toISOString()
+                }
             } else {
-                // Mock individual fetch if not in list
+                // Fallback only if ID really doesn't exist in our mock DB
                 currentAuction.value = {
                     id: id,
                     title: "Morning Pilates Reformer (Detail)",
@@ -86,7 +134,7 @@ export const useAuctionStore = defineStore('auction', () => {
                     floorPrice: 200.00,
                     status: "ACTIVE",
                     turboActive: false,
-                    nextDropTime: new Date(Date.now() + 15000).toISOString() // 15 sec later
+                    nextDropTime: new Date(Date.now() + 15000).toISOString()
                 }
             }
         } catch (err) {

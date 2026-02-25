@@ -127,7 +127,7 @@ const mins = '00'
 
   <!-- Main Content -->
   <div v-else-if="auction" 
-       class="layout-container min-h-screen flex flex-col items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative transition-colors duration-700"
+       class="layout-container min-h-screen flex flex-col items-center justify-start md:justify-center pt-20 pb-8 md:py-8 px-4 sm:px-6 lg:px-8 relative transition-colors duration-700 overflow-x-hidden"
        :class="[themeClasses.bgMain]">
        
     <!-- Background Glow Effects -->
@@ -137,59 +137,10 @@ const mins = '00'
          :style="{ backgroundColor: isTurbo ? 'rgba(255, 123, 0, 0.2)' : 'rgba(37, 106, 244, 0.2)' }"></div>
 
     <!-- Details Container -->
-    <div class="layout-content-container flex flex-col w-full max-w-5xl md:flex-row md:items-start md:justify-center gap-6 md:gap-12 relative z-10 font-display transition-all duration-300">
+    <div class="layout-content-container flex flex-col w-full items-center justify-center relative z-10 font-display transition-all duration-300">
         
-        <!-- Left Column: Visual/Timer (Desktop) -->
-        <div class="hidden md:flex flex-col w-full md:w-1/2 gap-6 sticky top-24">
-             <div class="rounded-[2rem] overflow-hidden relative group aspect-square">
-                 <img src="https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=2070&auto=format&fit=crop" class="object-cover w-full h-full opacity-60 group-hover:scale-110 transition-transform duration-700" />
-                 <div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
-                 
-                 <!-- Timer Overlay -->
-                 <div class="absolute bottom-8 left-0 right-0 px-8">
-                     <div class="flex justify-between items-end">
-                         <div>
-                             <p class="text-sm uppercase tracking-widest text-slate-300 mb-2">Başlangıç</p>
-                             <p class="text-3xl font-bold text-white">{{ formatTime(auction.startTime) }}</p>
-                         </div>
-                         <div class="text-right">
-                            <p class="text-sm uppercase tracking-widest text-slate-300 mb-2">Bitiş</p>
-                            <p class="text-3xl font-bold text-white">{{ formatTime(auction.endTime) }}</p>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-
-             <!-- Desktop Live Feed -->
-             <div class="w-full">
-                <p class="text-slate-400 text-sm font-medium mb-3 px-2 uppercase tracking-wider">Canlı Hareketler</p>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-500/20">ED</div>
-                            <div class="flex flex-col">
-                                <span class="text-white text-sm font-bold">Elif D.</span>
-                                <span class="text-slate-400 text-xs">Odaya katıldı</span>
-                            </div>
-                        </div>
-                        <span class="text-slate-500 text-xs font-mono">2sn önce</span>
-                    </div>
-                     <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm opacity-60">
-                        <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-purple-500/20">MK</div>
-                            <div class="flex flex-col">
-                                <span class="text-white text-sm font-bold">Murat K.</span>
-                                <span class="text-slate-400 text-xs">Odaya katıldı</span>
-                            </div>
-                        </div>
-                        <span class="text-slate-500 text-xs font-mono">15sn önce</span>
-                    </div>
-                </div>
-             </div>
-        </div>
-
         <!-- Right Column: Price & Action -->
-        <div class="w-full md:w-1/2 flex flex-col items-center relative">
+        <div class="w-full max-w-lg md:max-w-2xl flex flex-col items-center relative">
             
             <!-- Breadcrumbs (Mobile only) -->
             <nav class="flex md:hidden flex-wrap gap-2 mb-6 items-center justify-center">
@@ -204,13 +155,13 @@ const mins = '00'
             </nav>
 
             <!-- Main Card -->
-            <div class="relative w-full rounded-[2rem] p-[1px] overflow-hidden transition-all duration-500 shadow-2xl"
+            <div class="relative w-full min-h-[550px] md:min-h-[600px] rounded-[2rem] p-[1px] overflow-hidden transition-all duration-500 shadow-2xl"
                  :class="[themeClasses.shadowNeon, isTurbo ? 'border-2 border-[#f20d80]/50' : 'border border-white/10']">
             
                 <!-- Animated Border (Turbo only) -->
                 <div v-if="isTurbo" class="absolute inset-0 bg-gradient-to-r from-[#f20d80] via-[#ff7b00] to-[#f20d80] opacity-20 animate-pulse pointer-events-none"></div>
                 
-                <div class="rounded-[2rem] p-6 sm:p-8 md:p-10 relative overflow-hidden flex flex-col items-center text-center gap-6 md:gap-8 h-full transition-colors duration-500 bg-background-dark/90 backdrop-blur-3xl">
+                <div class="rounded-[2rem] p-6 sm:p-8 md:p-10 relative overflow-hidden flex flex-col items-center text-center gap-4 md:gap-6 h-full justify-between transition-colors duration-500 bg-background-dark/90 backdrop-blur-3xl">
                     
                     <!-- Header -->
                     <div class="w-full flex justify-between items-start">
@@ -293,10 +244,10 @@ const mins = '00'
                         </div>
                     </div>
 
-                    <!-- CTA Button (Desktop - Hidden Mobile Trigger) -->
+                    <!-- CTA Button -->
                     <button @click="handleBook" 
                             :disabled="auction.status !== 'ACTIVE' || bookingLoading"
-                            class="hidden md:flex group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-2"
+                            class="flex group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-2"
                             :class="[themeClasses.gradientBtn, themeClasses.shadowNeon]">
                         
                         <div class="relative flex h-16 w-full items-center justify-center rounded-[14px] px-8 transition-all"
@@ -317,57 +268,11 @@ const mins = '00'
                         </div>
                     </button>
 
-                    <p class="hidden md:block text-slate-500 text-xs">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz.</p>
+                    <p class="block text-slate-500 text-xs">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz.</p>
                 </div>
             </div>
 
-            <!-- Mobile Live Feed -->
-            <div class="md:hidden mt-6 w-full px-1">
-                <p class="text-slate-400 text-xs font-medium mb-3 px-2 uppercase tracking-wider">Canlı Hareketler</p>
-                <div class="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-white/5 backdrop-blur-sm">
-                    <div class="flex items-center gap-3">
-                         <div class="h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-500/20">
-                             ED
-                         </div>
-                         <div class="flex flex-col">
-                             <span class="text-white text-sm font-bold">Elif D.</span>
-                             <span class="text-slate-400 text-[10px]">Odaya katıldı</span>
-                         </div>
-                    </div>
-                    <span class="text-slate-500 text-[10px]">2sn önce</span>
-                </div>
-            </div>
-
-            <!-- Mobile Sticky Bottom Action Bar -->
-            <div class="md:hidden fixed bottom-0 left-0 w-full z-50 p-4 bg-background-dark/80 backdrop-blur-xl border-t border-white/10 safe-area-bottom">
-                 <button @click="handleBook" 
-                        :disabled="auction.status !== 'ACTIVE' || bookingLoading"
-                        class="w-full relative overflow-hidden rounded-xl p-[1px] shadow-lg transition-transform active:scale-95"
-                        :class="[themeClasses.gradientBtn, themeClasses.shadowNeon]">
-                    
-                    <div class="relative flex h-14 w-full items-center justify-center rounded-[11px] px-6"
-                         :class="`bg-gradient-to-r ${themeClasses.gradientBtn}`">
-                        <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse text-lg">
-                             <span class="material-symbols-outlined animate-spin text-xl">sync</span>
-                             İŞLENİYOR...
-                        </span>
-                        <div v-else class="flex items-center justify-between w-full">
-                             <div class="flex flex-col items-start leading-none">
-                                <span class="text-[10px] text-white/80 font-medium uppercase tracking-wider">Son Fiyat</span>
-                                <span class="text-xl font-black text-white">₺{{ formatPrice(auction.currentPrice) }}</span>
-                             </div>
-                             <div class="flex items-center gap-2 pl-4 border-l border-white/20">
-                                <span class="text-lg font-black text-white tracking-wider uppercase">
-                                    {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
-                                </span>
-                                <span class="material-symbols-outlined text-white text-xl font-bold">arrow_forward</span>
-                             </div>
-                        </div>
-                    </div>
-                </button>
-            </div>
-            <!-- Spacer for sticky bottom -->
-            <div class="h-24 md:hidden"></div>
+            <!-- Removed Mobile Sticky Bottom Action Bar -->
 
         </div>
 
