@@ -225,15 +225,56 @@ class BookingService:
                 "id": res.id,
                 "auction_id": res.auctionId,
                 "user_id": res.userId,
-                "user_name": f"{res.user.firstName} {res.user.lastName}" if res.user else "Unknown User",
+                "user_name": res.user.fullName if res.user else "Unknown User",
                 "auction_title": res.auction.title if res.auction else "Unknown Auction",
                 "locked_price": str(res.lockedPrice),
                 "booking_code": res.bookingCode,
-                "status": getattr(res, 'status', 'CONFIRMED'),
+                "status": getattr(res.status, 'name', str(res.status)) if res.status else 'CONFIRMED',
                 "created_at": res.reservedAt.isoformat() if res.reservedAt else None,
             }
             for res in reservations
         ]
+
+    async def get_reservation_with_details(self, reservation_id: int) -> Optional[Dict]:
+        """
+        Get detailed reservation info including User and Auction.
+        """
+        reservation = await db.reservation.find_unique(
+            where={"id": reservation_id},
+            include={
+                "user": True,
+                "auction": True
+            }
+        )
+        if not reservation:
+            return None
+            
+        return {
+            "id": reservation.id,
+            "booking_code": reservation.bookingCode,
+            "status": getattr(reservation.status, 'name', str(reservation.status)),
+            "locked_price": str(reservation.lockedPrice),
+            # Use 'created_at' in response to match frontend expectations if needed, but 'reserved_at' is more accurate to model
+            "reserved_at": reservation.reservedAt.isoformat() if reservation.reservedAt else None,
+            
+            # User Details
+            "user": {
+                "id": reservation.userId,
+                "full_name": reservation.user.fullName if reservation.user else "Unknown User",
+                "email": reservation.user.email if reservation.user else "",
+                "phone": reservation.user.phone if reservation.user else "",
+                "is_verified": reservation.user.isVerified if reservation.user else False,
+            },
+            
+            # Auction Details
+            "auction": {
+                "id": reservation.auctionId,
+                "title": reservation.auction.title if reservation.auction else "Unknown Auction",
+                "start_time": reservation.auction.startTime.isoformat() if reservation.auction else None,
+                "end_time": reservation.auction.endTime.isoformat() if reservation.auction else None,
+                "status": getattr(reservation.auction.status, 'name', str(reservation.auction.status)) if reservation.auction else "UNKNOWN",
+            }
+        }
 
     async def cancel_reservation(self, reservation_id: int) -> bool:
         """
@@ -252,6 +293,26 @@ class BookingService:
         await db.reservation.update(
             where={"id": reservation_id},
             data={"status": "CANCELLED"}
+        )
+        return True
+
+    async def check_in_reservation(self, reservation_id: int) -> bool:
+        """
+        Mark a reservation as CHECKED_IN / COMPLETED.
+        
+        Args:
+            reservation_id: ID of reservation to check in
+        
+        Returns:
+            True if successful, False if not found
+        """
+        reservation = await db.reservation.find_unique(where={"id": reservation_id})
+        if not reservation:
+            return False
+            
+        await db.reservation.update(
+            where={"id": reservation_id},
+            data={"status": "COMPLETED"}
         )
         return True
 

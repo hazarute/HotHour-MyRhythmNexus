@@ -73,7 +73,8 @@ const submitForm = () => {
                             v-model="form.start_time"
                             type="datetime-local"
                             required
-                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
+                            @click="$event.target.showPicker && $event.target.showPicker()"
                         />
                     </div>
                     <div class="space-y-2">
@@ -82,7 +83,8 @@ const submitForm = () => {
                             v-model="form.end_time"
                             type="datetime-local"
                             required
-                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
+                            @click="$event.target.showPicker && $event.target.showPicker()"
                         />
                     </div>
                 </div>

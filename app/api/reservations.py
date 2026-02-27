@@ -159,6 +159,30 @@ async def get_all_reservations(current_user = Depends(get_current_user)):
     return reservations
 
 
+@router.get("/admin/{reservation_id}")
+async def get_admin_reservation_details(
+    reservation_id: int,
+    current_user = Depends(get_current_user)
+):
+    """
+    Get detailed reservation info for admin.
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    
+    reservation = await booking_service.get_reservation_with_details(reservation_id)
+    if not reservation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Reservation {reservation_id} not found"
+        )
+    return reservation
+
+
+
 @router.get("/my/all")
 async def get_my_reservations(current_user = Depends(get_current_user)):
     """
@@ -203,3 +227,49 @@ async def cancel_reservation(
         )
     
     await booking_service.cancel_reservation(reservation_id)
+
+
+@router.post("/admin/{reservation_id}/check-in")
+async def admin_check_in_reservation(
+    reservation_id: int,
+    current_user = Depends(get_current_user)
+):
+    """
+    Admin: Mark a reservation as Checked In (COMPLETED).
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+    
+    success = await booking_service.check_in_reservation(reservation_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reservation not found"
+        )
+    return {"message": "Reservation checked in successfully", "status": "COMPLETED"}
+
+
+@router.post("/admin/{reservation_id}/cancel")
+async def admin_cancel_reservation(
+    reservation_id: int,
+    current_user = Depends(get_current_user)
+):
+    """
+    Admin: Cancel a reservation.
+    """
+    if current_user.role != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required"
+        )
+
+    success = await booking_service.cancel_reservation(reservation_id)
+    if not success:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reservation not found"
+        )
+    return {"message": "Reservation cancelled successfully", "status": "CANCELLED"}

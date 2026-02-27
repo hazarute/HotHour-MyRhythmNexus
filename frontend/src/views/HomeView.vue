@@ -1,11 +1,15 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import AuctionCard from '../components/AuctionCard.vue'
 
 const router = useRouter()
 const store = useAuctionStore()
+
+const activeAuctions = computed(() => {
+  return store.auctions.filter(a => a.status === 'ACTIVE')
+})
 
 onMounted(() => {
   store.fetchAuctions()
@@ -110,7 +114,7 @@ const goToAllAuctions = () => {
                 <span class="w-2 h-6 md:h-8 bg-neon-magenta rounded-full"></span>
                 Canlı Oturumlar
             </h2>
-            <span class="text-slate-500 text-xs md:text-sm">{{ store.auctions.length }} aktif oturum gösteriliyor</span>
+            <span class="text-slate-500 text-xs md:text-sm">{{ activeAuctions.length }} aktif oturum gösteriliyor</span>
         </div>
         
         <div v-if="store.loading" class="flex justify-center items-center h-48 md:h-64">
@@ -121,13 +125,13 @@ const goToAllAuctions = () => {
              <p class="text-red-400 text-sm md:text-base">{{ store.error }}</p>
         </div>
 
-        <div v-else-if="store.auctions.length === 0" class="hh-card text-center text-gray-400 py-10 md:py-12 px-6">
+        <div v-else-if="activeAuctions.length === 0" class="hh-card text-center text-gray-400 py-10 md:py-12 px-6">
             <p class="mb-4 text-sm md:text-base">Şu anda aktif bir oturum yok.</p>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             <AuctionCard 
-                v-for="auction in store.auctions" 
+                v-for="auction in activeAuctions" 
                 :key="auction.id" 
                 :auction="auction" 
             />

@@ -76,11 +76,11 @@ const handleFilterChange = (status) => {
             v-model="filterStatus"
             class="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm md:text-base focus:border-neon-blue focus:outline-none transition-colors cursor-pointer"
           >
-            <option value="ALL">Tümü</option>
-            <option value="ACTIVE">Aktif</option>
-            <option value="DRAFT">Taslak</option>
-            <option value="SOLD">Satıldı</option>
-            <option value="EXPIRED">Süresi Bitti</option>
+            <option class="bg-slate-800 text-white" value="ALL">Tümü</option>
+            <option class="bg-slate-800 text-white" value="ACTIVE">Aktif</option>
+            <option class="bg-slate-800 text-white" value="DRAFT">Taslak</option>
+            <option class="bg-slate-800 text-white" value="SOLD">Satıldı</option>
+            <option class="bg-slate-800 text-white" value="EXPIRED">Süresi Bitti</option>
           </select>
         </div>
       </div>

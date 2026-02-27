@@ -14,44 +14,11 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            // TODO: Replace with actual API call
-            // const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions`)
-            // auctions.value = await response.json()
-            
-            // Mock Data for UI Development
-            await new Promise(r => setTimeout(r, 500)) // Fake latency
-            auctions.value = [
-                {
-                    id: 1,
-                    title: "Morning Pilates Reformer",
-                    instructor: "Esra Hoca",
-                    startTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour later
-                    startPrice: 500.00,
-                    currentPrice: 450.00,
-                    status: "ACTIVE",
-                    turboActive: false
-                },
-                {
-                    id: 2,
-                    title: "Advanced Yoga Flow",
-                    instructor: "Can Hoca",
-                    startTime: new Date(Date.now() + 7200000).toISOString(), // 2 hours later
-                    startPrice: 400.00,
-                    currentPrice: 400.00,
-                    status: "ACTIVE",
-                    turboActive: false
-                },
-                {
-                    id: 3,
-                    title: "HIIT Cardio",
-                    instructor: "Melis Hoca",
-                    startTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-                    startPrice: 300.00,
-                    currentPrice: 150.00,
-                    status: "SOLD",
-                    turboActive: true
-                }
-            ]
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions`)
+            if (!response.ok) {
+                throw new Error('Failed to fetch auctions')
+            }
+            auctions.value = await response.json()
         } catch (err) {
             error.value = err.message
             console.error("Failed to fetch auctions:", err)
@@ -64,79 +31,11 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            // TODO: Replace with actual API call
-            // const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`)
-            // currentAuction.value = await response.json()
-
-            // Simulate fetch
-            await new Promise(r => setTimeout(r, 300))
-            
-            // First check if we have it in store
-            let found = auctions.value.find(a => a.id == id)
-            
-            // If not found in store (e.g. refresh), try to fetch from "backend" (mock data source) again
-            if (!found) {
-                // Mock reliable data source resembling the list in fetchAuctions
-                const mockDb = [
-                    {
-                        id: 1,
-                        title: "Morning Pilates Reformer",
-                        instructor: "Esra Hoca",
-                        startTime: new Date(Date.now() + 3600000).toISOString(),
-                        startPrice: 500.00,
-                        currentPrice: 450.00,
-                        status: "ACTIVE",
-                        turboActive: false
-                    },
-                    {
-                        id: 2,
-                        title: "Advanced Yoga Flow",
-                        instructor: "Can Hoca",
-                        startTime: new Date(Date.now() + 7200000).toISOString(),
-                        startPrice: 400.00,
-                        currentPrice: 400.00,
-                        status: "ACTIVE",
-                        turboActive: false
-                    },
-                    {
-                        id: 3,
-                        title: "HIIT Cardio",
-                        instructor: "Melis Hoca",
-                        startTime: new Date(Date.now() - 3600000).toISOString(),
-                        startPrice: 300.00,
-                        currentPrice: 150.00,
-                        status: "SOLD",
-                        turboActive: true,
-                        nextDropTime: new Date(Date.now() + 15000).toISOString()
-                    }
-                ]
-                found = mockDb.find(a => a.id == id)
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`)
+            if (!response.ok) {
+                throw new Error('Failed to fetch auction details')
             }
-
-            if (found) {
-                // Enhance found object with details if needed (mock detail enrichment)
-                currentAuction.value = {
-                    ...found,
-                    description: found.description || "A comprehensive session to boost your energy.",
-                    floorPrice: found.floorPrice || 200.00,
-                    nextDropTime: found.nextDropTime || new Date(Date.now() + 15000).toISOString()
-                }
-            } else {
-                // Fallback only if ID really doesn't exist in our mock DB
-                currentAuction.value = {
-                    id: id,
-                    title: "Morning Pilates Reformer (Detail)",
-                    description: "A comprehensive energetic morning session to wake up your body.",
-                    instructor: "Esra Hoca",
-                    startTime: new Date(Date.now() + 3600000).toISOString(),
-                    startPrice: 500.00,
-                    currentPrice: 385.50,
-                    floorPrice: 200.00,
-                    status: "ACTIVE",
-                    turboActive: false,
-                    nextDropTime: new Date(Date.now() + 15000).toISOString()
-                }
-            }
+            currentAuction.value = await response.json()
         } catch (err) {
             error.value = err.message
         } finally {

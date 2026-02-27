@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const reservations = ref([])
 const loading = ref(false)
@@ -74,6 +76,60 @@ const getStatusConfig = (status) => {
             return { label: 'İptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
         default:
             return { label: status, class: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300', dot: 'bg-slate-500' }
+    }
+}
+
+const handleCheckIn = async (reservationId) => {
+    if (!confirm('Bu rezervasyonu giriş yapıldı olarak işaretlemek istiyor musunuz?')) return
+    
+    try {
+        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${reservationId}/check-in`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.detail || 'Giriş işlemi başarısız')
+        }
+
+        // Update local state
+        const index = reservations.value.findIndex(r => r.id === reservationId)
+        if (index !== -1) {
+            reservations.value[index].status = 'COMPLETED'
+        }
+    } catch (err) {
+        alert('Hata: ' + err.message)
+    }
+}
+
+const handleCancel = async (reservationId) => {
+    if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?')) return
+    
+    try {
+        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${reservationId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.detail || 'İptal işlemi başarısız')
+        }
+
+        // Update local state
+        const index = reservations.value.findIndex(r => r.id === reservationId)
+        if (index !== -1) {
+            reservations.value[index].status = 'CANCELLED'
+        }
+    } catch (err) {
+        alert('Hata: ' + err.message)
     }
 }
 
@@ -201,11 +257,16 @@ onMounted(() => {
                             </div>
                          </div>
 
-                         <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
-                            <button v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="flex-1 bg-primary hover:bg-blue-600 text-white text-sm font-bold py-2.5 rounded-lg shadow-lg shadow-primary/20 active:scale-95 transition-all">
-                                Girişi Onayla
-                            </button>
-                            <button v-else class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                         <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
+                            <template v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'">
+                                <button @click="handleCancel(res.id)" class="flex-1 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-sm font-medium py-2.5 rounded-lg transition-all">
+                                    İptal Et
+                                </button>
+                                <button @click="handleCheckIn(res.id)" class="flex-1 bg-primary hover:bg-blue-600 text-white text-sm font-bold py-2.5 rounded-lg shadow-lg shadow-primary/20 active:scale-95 transition-all">
+                                    Girişi Onayla
+                                </button>
+                            </template>
+                            <button v-else @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 Detaylar
                             </button>
                          </div>
@@ -263,10 +324,15 @@ onMounted(() => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
-                                    <button v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
-                                        Girişi Onayla
-                                    </button>
-                                    <button v-else class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
+                                    <div v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="flex items-center justify-end gap-2">
+                                        <button @click="handleCancel(res.id)" class="inline-flex items-center justify-center px-4 py-2 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-all">
+                                            İptal
+                                        </button>
+                                        <button @click="handleCheckIn(res.id)" class="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
+                                            Onayla
+                                        </button>
+                                    </div>
+                                    <button v-else @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
                                         Detaylar
                                     </button>
                                 </td>
