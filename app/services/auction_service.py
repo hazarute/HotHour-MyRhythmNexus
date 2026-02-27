@@ -87,6 +87,46 @@ class AuctionService:
 
         return auction
 
+    async def _sync_status_with_reservation(self, auction):
+        if not auction:
+            return None
+
+        auction_id = getattr(auction, "id", None)
+        if auction_id is None:
+            return auction
+
+        reservations = await db.reservation.find_many(where={"auctionId": auction_id})
+        if not reservations:
+            return auction
+
+        reservation = reservations[0]
+
+        reservation_status = str(getattr(reservation, "status", "")).upper()
+        auction_status = str(getattr(auction, "status", "")).upper()
+
+        target_status = None
+        if reservation_status and reservation_status != "CANCELLED" and auction_status != "SOLD":
+            target_status = "SOLD"
+        elif reservation_status == "CANCELLED" and auction_status == "SOLD":
+            now = now_tr()
+            end_time = to_tr_aware(getattr(auction, "endTime", None))
+            start_time = to_tr_aware(getattr(auction, "startTime", None))
+
+            if end_time and now >= end_time:
+                target_status = "EXPIRED"
+            elif start_time and now < start_time:
+                target_status = "DRAFT"
+            else:
+                target_status = "ACTIVE"
+
+        if target_status and target_status != auction_status:
+            auction = await db.auction.update(
+                where={"id": auction.id},
+                data={"status": target_status}
+            )
+
+        return auction
+
     async def create_auction(self, data: dict):
         data = self._apply_backend_pricing_policy(data)
         is_valid, error_msg = auction_validator.validate_auction_create(data)
@@ -120,6 +160,7 @@ class AuctionService:
     async def get_auction(self, auction_id: int):
         auction = await db.auction.find_unique(where={"id": auction_id})
         if auction:
+            auction = await self._sync_status_with_reservation(auction)
             auction = await self._check_and_update_status(auction)
             auction = await self._sync_current_price(auction)
         return auction
@@ -151,7 +192,8 @@ class AuctionService:
 
         updated_items = []
         for item in items:
-            checked = await self._check_and_update_status(item)
+            checked = await self._sync_status_with_reservation(item)
+            checked = await self._check_and_update_status(checked)
             checked = await self._sync_current_price(checked)
             updated_items.append(checked)
         items = updated_items

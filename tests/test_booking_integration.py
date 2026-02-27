@@ -81,6 +81,10 @@ async def test_user_can_book_active_auction():
     assert body["status"] == "PENDING_ON_SITE"
     assert body["booking_code"].startswith("HOT-")
 
+    updated_auction = await db.db.auction.find_unique(where={"id": auction.id})
+    assert updated_auction is not None
+    assert str(updated_auction.status) == "SOLD"
+
 
 @pytest.mark.asyncio
 async def test_duplicate_booking_returns_conflict():

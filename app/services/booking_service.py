@@ -9,6 +9,7 @@ Key Design:
 """
 
 from app.core.db import db
+from app.core.timezone import now_tr, to_tr_aware
 from app.services.price_service import price_service
 from app.utils.booking_utils import generate_booking_code
 from datetime import datetime, timezone
@@ -87,6 +88,11 @@ class BookingService:
             raise AuctionNotFoundError(f"Auction {auction_id} not found")
         
         if auction.status != "ACTIVE":
+            existing_reservations = await db.reservation.find_many(where={"auctionId": auction_id})
+            if existing_reservations:
+                raise AuctionAlreadyBookedError(
+                    f"Auction {auction_id} is already reserved or race condition detected"
+                )
             raise AuctionNotActiveError(
                 f"Auction {auction_id} is not active. Status: {auction.status}"
             )
@@ -116,6 +122,11 @@ class BookingService:
                     "bookingCode": booking_code,
                     "status": "PENDING_ON_SITE",
                 }
+            )
+
+            await db.auction.update(
+                where={"id": auction_id},
+                data={"status": "SOLD"}
             )
             
             result = {
@@ -298,6 +309,25 @@ class BookingService:
             where={"id": reservation_id},
             data={"status": "CANCELLED"}
         )
+
+        auction = await db.auction.find_unique(where={"id": reservation.auctionId})
+        if auction and getattr(auction, "status", None) == "SOLD":
+            now = now_tr()
+            end_time = to_tr_aware(getattr(auction, "endTime", None))
+            start_time = to_tr_aware(getattr(auction, "startTime", None))
+
+            if end_time and now >= end_time:
+                next_status = "EXPIRED"
+            elif start_time and now < start_time:
+                next_status = "DRAFT"
+            else:
+                next_status = "ACTIVE"
+
+            await db.auction.update(
+                where={"id": auction.id},
+                data={"status": next_status}
+            )
+
         return True
 
     async def check_in_reservation(self, reservation_id: int) -> bool:

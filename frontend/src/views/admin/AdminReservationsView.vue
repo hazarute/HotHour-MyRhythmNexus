@@ -352,7 +352,7 @@ onUnmounted(() => {
                                     Girişi Onayla
                                 </button>
                             </template>
-                            <button v-else @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                            <button @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="flex-1 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 Detaylar
                             </button>
                          </div>
@@ -410,17 +410,19 @@ onUnmounted(() => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
-                                    <div v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'" class="flex items-center justify-end gap-2">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <template v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'">
                                         <button @click="handleCancel(res.id)" class="inline-flex items-center justify-center px-4 py-2 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-all">
                                             İptal
                                         </button>
                                         <button @click="handleCheckIn(res.id)" class="inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95">
                                             Onayla
                                         </button>
+                                        </template>
+                                        <button @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
+                                            Detaylar
+                                        </button>
                                     </div>
-                                    <button v-else @click="router.push({ name: 'admin-reservation-detail', params: { id: res.id } })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg transition-all">
-                                        Detaylar
-                                    </button>
                                 </td>
                             </tr>
                         </tbody>

@@ -1,18 +1,26 @@
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue' 
+import { onMounted, computed, ref } from 'vue' 
 import { useRoute, useRouter } from 'vue-router'
 import { useAuctionStore } from '@/stores/auction'
+import { useAuthStore } from '@/stores/auth'
 import CountDownTimer from '@/components/CountDownTimer.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useAuctionStore()
+const authStore = useAuthStore()
+const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
 const auction = computed(() => store.currentAuction)
 const loading = ref(true)
 const error = ref(null)
+const reservationLoading = ref(false)
+const reservationError = ref(null)
+const winningReservation = ref(null)
 
 const activeTab = ref('overview') // overview, reservations, bidders
+
+const hasWinningReservation = computed(() => !!winningReservation.value)
 
 const formatCurrency = (val) => {
     if (val === undefined || val === null) return '₺0.00'
@@ -33,7 +41,10 @@ onMounted(async () => {
     const id = route.params.id
     if (id) {
         try {
-            await store.fetchAuctionById(id)
+            await Promise.all([
+                store.fetchAuctionById(id),
+                fetchWinningReservation(id)
+            ])
         } catch (err) {
             error.value = err.message
         } finally {
@@ -41,6 +52,33 @@ onMounted(async () => {
         }
     }
 })
+
+const fetchWinningReservation = async (auctionId) => {
+    reservationLoading.value = true
+    reservationError.value = null
+
+    try {
+        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/all`, {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error('Rezervasyon bilgileri getirilemedi')
+        }
+
+        const payload = await response.json()
+        const reservations = Array.isArray(payload) ? payload : (payload.reservations || [])
+        winningReservation.value = reservations.find(
+            (item) => String(item.auction_id) === String(auctionId) && item.status !== 'CANCELLED'
+        ) || null
+    } catch (err) {
+        reservationError.value = err.message
+    } finally {
+        reservationLoading.value = false
+    }
+}
 
 </script>
 
@@ -184,9 +222,55 @@ onMounted(async () => {
                     </div>
                 </div>
 
-                <div v-if="activeTab === 'reservations'" class="bg-white dark:bg-[#1a2230] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center py-12">
-                   <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">event_busy</span>
-                   <p class="text-slate-500 dark:text-slate-400">Henüz rezervasyon kaydı bulunmamaktadır.</p>
+                <div v-if="activeTab === 'reservations'" class="bg-white dark:bg-[#1a2230] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div v-if="reservationLoading" class="text-center py-10 text-slate-500 dark:text-slate-400">
+                        Rezervasyon bilgileri yükleniyor...
+                    </div>
+
+                    <div v-else-if="reservationError" class="p-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-900/30 text-sm">
+                        {{ reservationError }}
+                    </div>
+
+                    <div v-else-if="hasWinningReservation" class="flex flex-col gap-5">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Kazanan Rezervasyon</h3>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATIŞ TAMAMLANDI</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-[#111811]/50">
+                                <p class="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Misafir</p>
+                                <p class="mt-2 text-base font-semibold text-slate-900 dark:text-white">{{ winningReservation.user_name || 'Bilinmiyor' }}</p>
+                            </div>
+                            <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-[#111811]/50">
+                                <p class="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Rezervasyon Kodu</p>
+                                <p class="mt-2 text-base font-mono font-semibold text-slate-900 dark:text-white">#{{ winningReservation.booking_code || '-' }}</p>
+                            </div>
+                            <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-[#111811]/50">
+                                <p class="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Kilitlenen Fiyat</p>
+                                <p class="mt-2 text-base font-semibold text-slate-900 dark:text-white">{{ formatCurrency(winningReservation.locked_price) }}</p>
+                            </div>
+                            <div class="rounded-lg border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/70 dark:bg-[#111811]/50">
+                                <p class="text-xs uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">Rezervasyon Tarihi</p>
+                                <p class="mt-2 text-base font-semibold text-slate-900 dark:text-white">{{ formatDate(winningReservation.created_at) }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button
+                                @click="router.push({ name: 'admin-reservation-detail', params: { id: winningReservation.id } })"
+                                class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center"
+                            >
+                                <span class="material-symbols-outlined align-middle mr-1 text-[18px]">open_in_new</span>
+                                Rezervasyon Detayı
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-else class="text-center py-12">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">event_busy</span>
+                        <p class="text-slate-500 dark:text-slate-400">Bu oturum için henüz aktif kazanan rezervasyon bulunamadı.</p>
+                    </div>
                 </div>
 
             </div>
