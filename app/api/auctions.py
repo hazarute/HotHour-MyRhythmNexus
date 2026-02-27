@@ -50,9 +50,12 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "drop_interval_mins": a.dropIntervalMins,
                 "drop_amount": a.dropAmount,
                 "status": a.status,
+                "current_price": a.currentPrice if hasattr(a, 'currentPrice') else a.startPrice
             })
         else:
             # item already contains computed fields from service
+            # If currentPrice or computedPrice is in the dict, map it to current_price
+            current_p = a.get("computedPrice") or a.get("currentPrice") or a.get("start_price")
             mapped.append({
                 "id": a.get("id"),
                 "title": a.get("title"),
@@ -66,6 +69,7 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "status": a.get("status"),
                 "computedPrice": a.get("computedPrice"),
                 "priceDetails": a.get("priceDetails"),
+                "current_price": current_p
             })
     return mapped
 

@@ -1,9 +1,14 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler** 🚀
+**Faz R4: Kod Senkronizasyonu ve Dağıtım** 🚀
 
-Tüm teknik geliştirme fazları tamamlandı. Email doğrulama sistemi başarıyla entegre edildi ve birim testleri (pytest) geçti. Şimdi sistemin bir bütün olarak beklenen davranışı sergilediğini doğrulamak için **manuel testler** yapacağız.
+Admin paneli (Dashboard) iyileştirmelerini ve hata düzeltmelerini tamamladık.
+- **AdminDashboardView:** `current_price` ve sayaç sorunları çözüldü. API'den gelen snake_case veriler ile frontend camelCase uyumsuzluğu giderildi.
+- **API:** `AuctionResponse` modeline `current_price` eklendi.
+- **UI:** Oturum açıklamaları eklendi.
+
+Sıradaki adım, yapılan tüm bu değişiklikleri versiyon kontrol sistemine (GitHub) göndermek ve deploy sürecine hazır hale getirmek.
 
 ## 🔍 Test ve Revizyon Planı
 

@@ -254,10 +254,6 @@ onMounted(() => {
                                 </div>
                             </div>
                         </div>
-
-                         <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                            Stüdyo A - Premium ses ekipmanları ve profesyonel kayıt ortamı. Rezervasyon saatinde stüdyoda hazır bulunulması gerekmektedir.
-                        </div>
                      </div>
                 </div>
             </div>

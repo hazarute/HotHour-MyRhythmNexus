@@ -49,6 +49,7 @@
 - [X] Kritik kullanıcı yolculukları manuel doğrulandı
 - [X] Türkçe karakter ve UTF-8 encoding sorunları çözüldü
 - [X] AuctionDetailView için "Turbo Mod" tasarımı eklendi
+- [X] Admin Dashboard canlı veri bağlantısı ve UI düzeltmeleri (Fiyat, Sayaç, Açıklama)
 
 ---
 

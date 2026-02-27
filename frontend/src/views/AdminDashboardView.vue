@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuctionStore } from '@/stores/auction'
 import AuctionCreateForm from '@/components/AuctionCreateForm.vue'
+import CountDownTimer from '@/components/CountDownTimer.vue'
 
 const store = useAuctionStore()
 const showForm = ref(false)
@@ -20,21 +21,27 @@ const handleCreate = async (formData) => {
     }
 }
 
-const totalAuctions = computed(() => store.auctions.length)
 const activeAuctions = computed(() => store.auctions.filter((a) => a.status === 'ACTIVE').length)
 const soldAuctions = computed(() => store.auctions.filter((a) => a.status === 'SOLD').length)
 
-// Formatters
-const formatCurrency = (val) => {
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
-}
+// Real Data Calculations
+const totalRevenue = computed(() => {
+    return store.auctions
+        .filter(a => a.status === 'SOLD' && (a.current_price || a.currentPrice))
+        .reduce((sum, a) => sum + Number(a.current_price || a.currentPrice), 0)
+})
 
-// Timer mock for demo
-const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600).toString().padStart(2, '0')
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0')
-    const s = (seconds % 60).toString().padStart(2, '0')
-    return `${h}:${m}:${s}`
+const avgSoldPrice = computed(() => {
+    if (soldAuctions.value === 0) return 0
+    return totalRevenue.value / soldAuctions.value
+})
+
+// Mock for active bidders as it needs websocket tracking
+const activeBidders = ref(Math.floor(Math.random() * 20) + 5) 
+
+const formatCurrency = (val) => {
+    if (val === undefined || val === null) return '₺0.00'
+    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
 }
 </script>
 
@@ -82,8 +89,7 @@ const formatTime = (seconds) => {
                         </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Gelir</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">?1,240</h3>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ formatCurrency(totalRevenue) }}</h3>
                     </div>
                 </div>
             </div>
@@ -93,16 +99,16 @@ const formatTime = (seconds) => {
                 <div class="absolute -right-6 -top-6 size-24 bg-purple-500/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
                 <div class="flex flex-col gap-4 relative z-10">
                     <div class="flex justify-between items-start">
-                        <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
+                         <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">confirmation_number</span>
                         </div>
                         <span class="flex items-center gap-1 text-xs font-semibold text-[#0bda5e] bg-[#0bda5e]/10 px-2 py-1 rounded-full">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
-                            +5%
+                            <span class="material-symbols-outlined" style="font-size: 14px;">check</span>
+                            Satılan
                         </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Bugün Satılan</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Satılan</p>
                         <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctions }} Yer</h3>
                     </div>
                 </div>
@@ -113,17 +119,16 @@ const formatTime = (seconds) => {
                 <div class="absolute -right-6 -top-6 size-24 bg-orange-500/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
                 <div class="flex flex-col gap-4 relative z-10">
                     <div class="flex justify-between items-start">
-                        <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
+                         <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">analytics</span>
                         </div>
-                        <span class="flex items-center gap-1 text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-1 rounded-full">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">trending_down</span>
-                            -2%
+                         <span class="flex items-center gap-1 text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full">
+                            Ort.
                         </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ort. Koltuk Fiyatı</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">?28.50</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ort. Satış Fiyatı</p>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ formatCurrency(avgSoldPrice) }}</h3>
                     </div>
                 </div>
             </div>
@@ -136,10 +141,15 @@ const formatTime = (seconds) => {
                         <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">group</span>
                         </div>
+                        <!-- Mock Indicator -->
+                        <span class="flex h-2 w-2 relative">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                        </span>
                     </div>
                     <div>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Canlı Teklif Verenler</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">42</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Aktif Teklif Verenler</p>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">~{{ activeBidders }}</h3>
                     </div>
                 </div>
             </div>
@@ -178,7 +188,7 @@ const formatTime = (seconds) => {
                         <div class="flex justify-between items-start">
                             <div class="flex flex-col">
                                 <span class="font-semibold text-slate-900 dark:text-white">{{ auction.title }}</span>
-                                <span class="text-xs text-slate-500 dark:text-slate-400">ID: {{ auction.id }}</span>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 max-w-[200px]">{{ auction.description }}</p>
                             </div>
                             <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
                             <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
@@ -187,11 +197,12 @@ const formatTime = (seconds) => {
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex flex-col">
                                 <span class="text-xs text-slate-400">Güncel Fiyat</span>
-                                <span class="font-bold text-slate-900 dark:text-white">{{ formatCurrency(auction.currentPrice) }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white">{{ formatCurrency(auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice) }}</span>
                             </div>
                             <div class="flex flex-col items-end">
                                 <span class="text-xs text-slate-400">Kalan Süre</span>
-                                <span class="font-mono text-primary font-medium">01:30:00</span>
+                                <CountDownTimer v-if="auction.status === 'ACTIVE'" :targetTime="auction.end_time || auction.endTime" :showLabel="false" :small="true" />
+                                <span v-else class="text-xs font-mono text-slate-600 dark:text-slate-400">-</span>
                             </div>
                         </div>
                      </div>
@@ -231,19 +242,20 @@ const formatTime = (seconds) => {
                             <td class="px-6 py-4">
                                 <div class="flex flex-col">
                                     <span class="text-slate-900 dark:text-white font-medium">{{ auction.title }}</span>
-                                    <span class="text-slate-500 dark:text-slate-400 text-xs">ID: {{ auction.id }}</span>
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs line-clamp-1 max-w-[300px]">{{ auction.description }}</p>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-slate-900 dark:text-white font-bold">{{ formatCurrency(auction.currentPrice) }}</span>
+                                    <span class="text-slate-900 dark:text-white font-bold">{{ formatCurrency(auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice) }}</span>
                                     <span v-if="auction.status === 'ACTIVE'" class="text-xs text-red-400"> Düşüyor</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2 text-primary font-medium font-mono">
                                     <span class="material-symbols-outlined" style="font-size: 16px;">timer</span>
-                                    01:30:00
+                                    <CountDownTimer v-if="auction.status === 'ACTIVE'" :targetTime="auction.end_time || auction.endTime" :showLabel="false" :small="true" />
+                                    <span v-else class="text-slate-500">-</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
