@@ -5,6 +5,7 @@
 1. **create_admin.py** - Admin hesabı oluşturma
 2. **list_admins.py** - Admin hesaplarını listeleme
 3. **delete_admin.py** - Admin hesabı silme
+4. **delete_user.py** - Herhangi bir kullanıcı hesabı silme
 
 ---
 
@@ -217,6 +218,79 @@ Bu admin hesabını silmek istediğinize emin misiniz? (evet/hayır): evet
 
 ---
 
+## 🗑️ delete_user.py
+
+Herhangi bir kullanıcı hesabı silmek için kullanılır (Admin ve normal kullanıcılar).
+
+### Kullanım
+
+```bash
+python scripts/delete_user.py <user_id_veya_email> [--force]
+```
+
+### Parametreler
+
+| Parametre | Gerekli | Açıklama |
+|-----------|---------|----------|
+| user_id_veya_email | ✅ | Kullanıcı ID'si (sayı) veya Email adresi |
+| --force | ❌ | Onay dialogs'u atla ve direkt sil |
+
+### Örnekler
+
+```bash
+# ID ile silme (onay sorar)
+python scripts/delete_user.py 1
+
+# Email ile silme (onay sorar)
+python scripts/delete_user.py user@example.com
+
+# Onay olmadan silme (--force)
+python scripts/delete_user.py 1 --force
+python scripts/delete_user.py user@example.com --force
+```
+
+### Çıktı Örneği
+
+**Onay ile:**
+```
+⚠️  Silmek üzere olan kullanıcı hesabı:
+   ID: 5
+   Email: user@example.com
+   Ad Soyad: Ahmet Yücel
+   Role: USER
+   Email Doğrulanmış: Evet
+   Oluşturulma: 2026-02-25 10:15:00.123456+00:00
+
+Bu kullanıcı hesabını silmek istediğinize emin misiniz? (evet/hayır): evet
+
+✅ Kullanıcı hesabı başarıyla silindi !
+   ID: 5
+   Email: user@example.com
+   Ad Soyad: Ahmet Yücel
+   Role: USER
+```
+
+**Hata durumunda:**
+```
+❌ Hata: Kullanıcı bulunamadı (ID/Email: 999)
+```
+
+### Özellikler
+
+- ✅ ID veya Email ile arama yapabilir
+- ✅ Silme öncesi onay istenir (--force ile atla)
+- ✅ Silmek üzere olan hesabın tüm detaylarını göster (Role, Email doğrulama durumu, vb)
+- ✅ Başarılı silme mesajı
+- ✅ Admin ve normal kullanıcı ayrımı yapmaz, tüm kullanıcıları silebilir
+
+### ⚠️ Dikkat
+
+- Silme işlemi **geri alınamaz**
+- Admin hesaplarını silmek için `delete_user.py` veya `delete_admin.py` kullanabilirsiniz
+- Kullanıcı ile ilişkili tüm veriler (rezervasyonlar, teklifler, vb) silinecektir
+
+---
+
 ## 🛠️ Genel Gereksinimler
 
 Tüm scriptlerin çalışması için:
@@ -240,6 +314,7 @@ Tüm scriptlerin çalışması için:
 python scripts/create_admin.py
 python scripts/list_admins.py
 python scripts/delete_admin.py
+python scripts/delete_user.py
 ```
 
 ---

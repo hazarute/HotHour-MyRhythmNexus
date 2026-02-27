@@ -157,6 +157,21 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserPasswordUpdate(BaseModel):
+    """
+    Schema for password update requests.
+    """
+    current_password: str
+    new_password: str
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not v or len(v) < 8:
+            raise ValueError('Yeni şifre en az 8 karakter olmalıdır')
+        return v
+
+
 # ============================================================================
 # RESPONSE MODELS (what API returns)
 # ============================================================================

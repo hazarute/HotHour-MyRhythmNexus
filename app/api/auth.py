@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
-from app.models.user import UserCreate, UserResponse, UserLogin, Token
+from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserPasswordUpdate
 from app.services.user_service import user_service
 from app.core import security
 from app.core.deps import get_current_user
@@ -153,6 +153,13 @@ async def login(user_in: UserLogin):
             detail="Email veya şifre hatalı",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    is_verified = getattr(user, 'is_verified', getattr(user, 'isVerified', False))
+    if not is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email adresiniz henüz doğrulanmamış. Lütfen email kutunuzu kontrol edip hesabınızı doğrulayın."
+        )
     
     # Generate JWT token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -201,3 +208,32 @@ async def read_users_me(current_user=Depends(get_current_user)):
         is_verified=getattr(current_user, 'is_verified', getattr(current_user, 'isVerified', False)),
         created_at=getattr(current_user, 'created_at', getattr(current_user, 'createdAt', now_tr())),
     )
+
+
+@router.post("/change-password", status_code=status.HTTP_200_OK)
+async def change_password(
+    password_data: UserPasswordUpdate,
+    current_user=Depends(get_current_user)
+):
+    """
+    Change user password.
+    
+    Verifies current password and updates with new password.
+    
+    Args:
+        password_data: UserPasswordUpdate schema (current_password, new_password)
+        current_user: Authenticated user
+        
+    Raises:
+        HTTPException 400: If current password is incorrect
+    """
+    hashed_password = getattr(current_user, 'hashed_password', getattr(current_user, 'hashedPassword', ''))
+    if not security.verify_password(password_data.current_password, hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mevcut şifreniz hatalı"
+        )
+        
+    await user_service.update_password(current_user.id, password_data.new_password)
+    
+    return {"message": "Şifreniz başarıyla güncellendi"}

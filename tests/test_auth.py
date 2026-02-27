@@ -3,6 +3,7 @@ import asyncio
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core import db
+from app.core import security
 
 
 def test_register_and_login():
@@ -30,6 +31,10 @@ def test_register_and_login():
         user_data = data["user"]
         assert user_data.get("email") == email
         assert "id" in user_data
+
+        verification_token = security.create_verification_token(email)
+        verify_response = client.get(f"/api/v1/auth/verify-email?token={verification_token}")
+        assert verify_response.status_code == 200, verify_response.text
 
         # Login
         r2 = client.post("/api/v1/auth/login", json={"email": email, "password": password})

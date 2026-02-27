@@ -23,7 +23,7 @@ const handleLogin = async () => {
         router.push('/')
       }
     } else {
-      error.value = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.'
+      error.value = authStore.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.'
     }
   } catch (err) {
     error.value = err.message || 'Giriş sırasında bir hata oluştu.'

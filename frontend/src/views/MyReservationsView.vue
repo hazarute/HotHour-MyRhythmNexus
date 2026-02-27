@@ -63,9 +63,19 @@ const fetchMyReservations = async () => {
 
 const formatDate = (dateStr) => {
     if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleString('tr-TR', {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('tr-TR', {
         month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
     })
+}
+
+const getDuration = (start, end) => {
+    if (!start || !end) return ''
+    const s = new Date(start)
+    const e = new Date(end)
+    const diffMs = e - s
+    const diffMins = Math.round(diffMs / 60000)
+    return `${diffMins} dk`
 }
 
 onMounted(() => {
@@ -125,16 +135,20 @@ onMounted(() => {
                                         {{ res.auction_title || 'Pilates Oturumu' }}
                                     </h3>
 
-                                    <div class="text-sm text-slate-400 flex items-center gap-2">
-                                        <span></span>
-                                        <span>Stüdyo Konumu</span>
+                                    <div class="text-sm text-slate-400 flex flex-col gap-1">
+                                        <span v-if="res.auction_description" class="line-clamp-2">{{ res.auction_description }}</span>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="material-symbols-outlined text-xs">schedule</span>
+                                            <span v-if="res.auction_start_time">Açık Artırma Süresi: {{ getDuration(res.auction_start_time, res.auction_end_time) }}</span>
+                                        </div>
                                     </div>
                 </div>
 
                                 <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4 mt-1 text-sm">
                                     <div>
-                                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Tarih & Saat</p>
-                                        <p class="font-medium text-slate-200">{{ formatDate(res.auction_start_time) }}</p>
+                                        <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Hizmet Zamanı</p>
+                                        <p class="font-medium text-slate-200">{{ formatDate(res.scheduled_at || res.auction_start_time) }}</p>
+                                        <p v-if="res.scheduled_at" class="text-[10px] text-slate-500 mt-0.5">(Ders Başlangıcı)</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Kilitlenen Fiyat</p>
@@ -152,11 +166,6 @@ onMounted(() => {
                                 <div class="text-[10px] text-slate-400 text-center max-w-[150px]">
                                         Giriş yapmak için bu kodu resepsiyonda gösterin
                 </div>
-                            </div>
-
-                            <div class="md:w-[180px] p-3 flex flex-col gap-2">
-                                <div class="h-28 w-full rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"></div>
-                                <button class="hh-btn-ghost w-full text-xs uppercase tracking-wide">Fişi Göster</button>
                             </div>
             </div>
         </div>

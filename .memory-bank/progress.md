@@ -140,3 +140,15 @@ Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son rev
 - [ ] GitHub Actions / CI Pipeline kontrolü (Varsa)
 - [ ] Veritabanı (Production) migration planı
 - [ ] `.env` yapılandırmasının production için ayrıştırılması
+
+## Faz R4: Hizmet Başlangıç Saati Entegrasyonu (Scheduled At)
+Oturumun (açık artırmanın) başlangıç saati ile hizmetin (pilates dersinin) başlangıç saati ayrıştırılmalı.
+
+- [X] **Veritabanı Şeması:** `schema.prisma` güncellendi (`scheduledAt` alanı eklendi).
+- [X] **Backend Test:** `test_auctions.py` testlerinin yeni alan ile uyumlu hale getirilmesi.
+- [X] **Backend Modelleri:** `app/models/auction.py` güncellenmesi (`scheduledAt` alanı Pydantic şemasına eklendi).
+- [X] **Backend Servisleri:** `app/services/auction_service.py` güncellenmesi (Varsayılan değer atama mantığı).
+- [X] **Frontend Admin Formu:** `AuctionCreateForm.vue` güncellenmesi (Yeni tarih-saat seçici girişi).
+- [X] **Frontend Kart Görünümü:** `AuctionCard.vue` güncellenmesi (Hizmet saatini göster).
+- [X] **Frontend Detay Görünümü:** `AuctionDetailView.vue` güncellenmesi (Hizmet saati ve süresi).
+- [X] **Frontend Rezervasyon Görünümü:** `MyReservationsView.vue` güncellenmesi (Hizmet saati öncelikli gösterim).

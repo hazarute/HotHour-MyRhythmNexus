@@ -56,6 +56,14 @@ const bgImage = computed(() => {
     return props.auction.image_url || props.auction.imageUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBzQLXU7vvnTRdJ4MV4keULwtXLs9kob4G3VxrcVseAk9_7W6-DUBymCB389nrrP0dv4LJqbZPibtOIZqpJ9yCQvNBLY2ztMD3KkVCkR2XvJwaIwzi2eB_wRlZzNGkSJZmZLPEdMRxfXvNFb72QNivwO4mePlhNA9dhZkAvHkb21evrbK53XO7qPWYyZzgh8VkDCIxPYOC96choIVf7SgvFPtKGfXOPTBZNDR33gdq4vd0kJIgRgGyLwK64lz8TKvGQh8Zi878Q65k'
 })
 
+const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('tr-TR', {
+        weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit'
+    })
+}
+
 const studioName = computed(() => props.auction.description || 'Açıklama bilgisi yok')
 </script>
 
@@ -100,6 +108,10 @@ const studioName = computed(() => props.auction.description || 'Açıklama bilgi
             <div>
                 <h3 class="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">{{ props.auction.title }}</h3>
                 <p class="text-slate-400 text-xs">{{ studioName }}</p>
+                <div v-if="props.auction.scheduled_at" class="flex items-center gap-1 mt-1 text-neon-blue text-xs font-semibold">
+                    <span class="material-symbols-outlined text-[14px]">event</span>
+                    <span>{{ formatDate(props.auction.scheduled_at) }}</span>
+                </div>
             </div>
             <div class="bg-white/5 p-1.5 rounded-lg border border-white/10">
                 <span class="material-symbols-outlined text-white text-lg">bookmark</span>

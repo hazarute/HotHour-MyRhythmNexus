@@ -107,6 +107,7 @@ class AuctionService:
                 "currentPrice": data.get("start_price"),
                 "startTime": data.get("start_time"),
                 "endTime": data.get("end_time"),
+                "scheduledAt": data.get("scheduled_at") or data.get("end_time"),
                 "dropIntervalMins": data.get("drop_interval_mins", 60),
                 "dropAmount": drop_amount if drop_amount is not None else Decimal("0.00"),
                 "turboEnabled": data.get("turbo_enabled", False),

@@ -27,6 +27,7 @@ async def create_user_in_db(email: str, phone: str, full_name: str, password: st
             "hashedPassword": hashed,
             "role": role,
             "gender": gender,
+            "isVerified": True,
         }
     )
 

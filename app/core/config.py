@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     
     # CORS Configuration
     BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = ["http://localhost:3000", "http://localhost:8000"]
+    FRONTEND_URL: str = "http://localhost:3000"  # Frontend URL for email links
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str] | str:

@@ -18,6 +18,7 @@ const showSuccessModal = ref(false)
 const reservation = ref(null)
 const bookingLoading = ref(false)
 const nowMs = ref(Date.now())
+const copyFeedback = ref(false)
 let timerId = null
 
 const startPriceValue = computed(() => getAuctionStartPrice(auction.value))
@@ -117,6 +118,18 @@ const formatPrice = (val) => {
     }).format(Number(val || 0))
 }
 
+const formatDate = (val) => {
+    if (!val) return ''
+    return new Date(val).toLocaleDateString('tr-TR', {
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit'
+    })
+}
+
 const handleBook = async () => {
     if (!auction.value) return
 
@@ -138,6 +151,22 @@ const handleBook = async () => {
         alert(err.message)
     } finally {
         bookingLoading.value = false
+    }
+}
+
+const copyBookingCode = async () => {
+    if (!reservation.value?.booking_code) return
+    
+    try {
+        await navigator.clipboard.writeText(reservation.value.booking_code)
+        copyFeedback.value = true
+        
+        // 2 saniye sonra geri bildirim mesajını kaldır
+        setTimeout(() => {
+            copyFeedback.value = false
+        }, 2000)
+    } catch (err) {
+        console.error('Kopyalama hatası:', err)
     }
 }
 
@@ -214,6 +243,14 @@ onUnmounted(() => {
                             </div>
                             <h1 class="text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight mt-1 text-left">{{ auction.title }}</h1>
                             <p class="text-slate-400 text-xs sm:text-sm text-left">{{ auction.description || 'Bu oturum için açıklama bilgisi bulunmuyor.' }}</p>
+                            
+                            <div v-if="auction.scheduled_at" class="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
+                                <span class="material-symbols-outlined text-neon-blue text-lg">event</span>
+                                <div class="flex flex-col items-start leading-tight">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ders Zamanı</span>
+                                    <span class="text-white text-sm font-bold">{{ formatDate(auction.scheduled_at) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -311,8 +348,27 @@ onUnmounted(() => {
                 
                 <div class="bg-white/10 p-4 rounded-lg mb-6 border border-white/10">
                     <div class="text-sm text-slate-400 uppercase tracking-wider mb-1">Rezervasyon Kodunuz</div>
-                    <div class="text-4xl font-bold tracking-widest font-mono" :class="themeClasses.textAccent">
+                    <div 
+                        @click="copyBookingCode"
+                        class="text-4xl font-bold tracking-widest font-mono cursor-pointer px-3 py-2 rounded transition-all duration-300 relative group" 
+                        :class="[
+                            themeClasses.textAccent,
+                            copyFeedback ? 'bg-green-500/20' : 'hover:bg-white/5'
+                        ]"
+                        :title="copyFeedback ? 'Kopyalandı!' : 'Kodunu kopyalamak için tıklayın'"
+                    >
                         {{ reservation?.booking_code || 'HOT-XXXX' }}
+                        
+                        <!-- Copy Icon -->
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            {{ copyFeedback ? 'done' : 'content_copy' }}
+                        </span>
+                    </div>
+                    
+                    <!-- Copy Feedback -->
+                    <div v-if="copyFeedback" class="mt-3 flex items-center gap-2 text-green-400 text-sm animate-in fade-in duration-300">
+                        <span class="material-symbols-outlined text-base">check_circle</span>
+                        <span>Kod kopyalandı!</span>
                     </div>
                 </div>
                 

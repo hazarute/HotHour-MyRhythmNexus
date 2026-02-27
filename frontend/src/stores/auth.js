@@ -77,6 +77,35 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    async function changePassword(currentPassword, newPassword) {
+        loading.value = true
+        error.value = null
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const response = await fetch(`${baseUrl}/api/v1/auth/change-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token.value}`
+                },
+                body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+            })
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.detail || 'Password update failed')
+            }
+            
+            return true
+        } catch (err) {
+            console.error("Password change error:", err)
+            error.value = err.message
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     function logout() {
         user.value = null
         token.value = null
@@ -94,6 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
         isAdmin,
         login,
         logout,
-        fetchUserProfile
+        fetchUserProfile,
+        changePassword
     }
 })

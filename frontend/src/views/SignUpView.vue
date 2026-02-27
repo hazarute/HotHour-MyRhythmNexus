@@ -17,6 +17,7 @@ const formData = ref({
 
 const loading = ref(false)
 const error = ref('')
+const success = ref('')
 const passwordError = ref('')
 const showGenderDropdown = ref(false)
 const genderDropdownRef = ref(null)
@@ -166,19 +167,14 @@ const handleSignUp = async () => {
       throw new Error(errData.detail || 'Kayıt başarısız')
     }
 
-    // Register endpoint returns Token with access_token and user
-    const data = await response.json()
+    // Kayıt başarılı - email doğrulaması gerektir
+    success.value = 'Kayıt başarılı! Lütfen email adresinizi doğrulamak için gelen kutuyu kontrol edin. Giriş sayfasına yönlendiriliyorsunuz...'
+    error.value = ''
     
-    // Set auth state with returned token and user data
-    authStore.token = data.access_token
-    authStore.user = data.user
-    
-    // Persist to localStorage
-    localStorage.setItem('token', data.access_token)
-    localStorage.setItem('user', JSON.stringify(data.user))
-    
-    // Navigate to home
-    router.push('/')
+    // 3 saniye sonra login sayfasına yönlendir
+    setTimeout(() => {
+      router.push('/login')
+    }, 3000)
   } catch (err) {
     error.value = err.message || 'Kayıt sırasında bir hata oluştu'
     console.error('Sign up error:', err)
@@ -234,6 +230,10 @@ onUnmounted(() => {
             <form @submit.prevent="handleSignUp" class="space-y-4">
               <div v-if="error" class="bg-red-500/10 border border-red-500 text-red-300 p-3 rounded-lg text-sm text-center">
                 {{ error }}
+              </div>
+
+              <div v-if="success" class="bg-green-500/10 border border-green-500 text-green-300 p-3 rounded-lg text-sm text-center">
+                {{ success }}
               </div>
 
               <!-- Full Name -->

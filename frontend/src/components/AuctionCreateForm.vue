@@ -27,6 +27,7 @@ const form = reactive({
     description: '',
     start_time: '',
     end_time: '',
+    scheduled_at: '',
     start_price: null,
     floor_price: null,
     drop_interval_mins: null,
@@ -173,6 +174,9 @@ const populateForm = (data) => {
     if (newData.end_time || newData.endTime) {
         newData.end_time = formatDateForInput(newData.end_time || newData.endTime)
     }
+    if (newData.scheduled_at || newData.scheduledAt) {
+        newData.scheduled_at = formatDateForInput(newData.scheduled_at || newData.scheduledAt)
+    }
 
     Object.assign(form, {
         ...newData,
@@ -242,6 +246,13 @@ const submitForm = () => {
         }
     }
 
+    if (payload.scheduled_at && payload.scheduled_at.length === 16) {
+        const d = new Date(payload.scheduled_at)
+        if (!isNaN(d.getTime())) {
+            payload.scheduled_at = d.toISOString()
+        }
+    }
+
     if (props.isEdit) {
         emit('update-auction', { ...payload, id: props.initialData.id })
     } else {
@@ -288,6 +299,19 @@ const submitForm = () => {
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
                 <h4 class="text-white font-semibold">Zamanlama</h4>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-slate-300">Hizmet Zamanı (Ders Saati)</label>
+                        <input
+                            v-model="form.scheduled_at"
+                            type="datetime-local"
+                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
+                            @click="$event.target.showPicker && $event.target.showPicker()"
+                            @focus="$event.target.showPicker && $event.target.showPicker()"
+                        />
+                        <p class="text-xs text-slate-400">Hizmetin fiilen gerçekleşeceği zaman. Boş bırakılırsa Bitiş Zamanı kullanılır.</p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-300">Başlangıç Zamanı</label>

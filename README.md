@@ -97,7 +97,56 @@ pip install -r requirements.txt
 
 
 3. **Çevresel Değişkenler (.env):**
+
+Copy `.env.example` to `.env` and fill in your configuration:
+
 ```bash
+cp .env.example .env
+```
+
+**Temel Ayarlar (.env):**
+
+```dotenv
+# Development
+APP_ENV=development
+DEBUG=true
+SECRET_KEY=change-me-locally
+
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/hothour_db
+
+# Frontend URL (Email links içinde kullanılır)
+FRONTEND_URL=http://localhost:3000
+
+# Email (Gmail örneği)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_user=your-email@gmail.com
+SMTP_PASSWORD=your-app-password  # Gmail App Password (2FA gereklidir)
+EMAILS_FROM_EMAIL=noreply@hothour.com
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+```
+
+**Production Deployment için:**
+
+```dotenv
+APP_ENV=production
+DEBUG=false
+SECRET_KEY=your-secure-random-key
+
+# Production database
+DATABASE_URL=postgresql://user:secure-password@prod-host:5432/hothour_db
+
+# Production Frontend URL
+FRONTEND_URL=https://your-domain.com
+
+# Production SMTP (SendGrid, AWS SES, vb)
+SMTP_HOST=smtp.sendgrid.net
+SMTP_user=apikey
+SMTP_PASSWORD=your-sendgrid-api-key
+```
 cp .env.example .env
 # .env dosyasındaki DATABASE_URL bilgisini düzenleyin
 

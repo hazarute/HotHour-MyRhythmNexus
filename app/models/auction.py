@@ -20,6 +20,7 @@ class AuctionBase(BaseModel):
     floor_price: Decimal
     start_time: datetime
     end_time: datetime
+    scheduled_at: Optional[datetime] = None
     drop_interval_mins: Optional[int] = 60
     drop_amount: Optional[Decimal] = None
     turbo_enabled: Optional[bool] = False
@@ -38,6 +39,7 @@ class AuctionUpdate(BaseModel):
     status: Optional[AuctionStatus] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    scheduled_at: Optional[datetime] = None
     start_price: Optional[Decimal] = None
     floor_price: Optional[Decimal] = None
     drop_interval_mins: Optional[int] = None
@@ -53,6 +55,7 @@ class AuctionResponse(AuctionBase):
     status: AuctionStatus
     computedPrice: Optional[Decimal] = None
     priceDetails: Optional[dict] = None
+    scheduled_at: Optional[datetime] = None
     turbo_started_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

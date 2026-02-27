@@ -113,6 +113,7 @@ class AuctionValidator:
         turbo_enabled: bool = False,
         turbo_trigger_mins: Optional[int] = None,
         turbo_interval_mins: Optional[int] = None,
+        scheduled_at: Optional[datetime] = None,
     ) -> None:
         """
         Validate timing-related constraints.
@@ -124,6 +125,7 @@ class AuctionValidator:
             turbo_enabled: Whether turbo mode is active
             turbo_trigger_mins: Turbo trigger threshold in minutes
             turbo_interval_mins: Turbo mode interval in minutes
+            scheduled_at: When the service actually takes place
             
         Raises:
             ValidationError: If any timing constraint is violated
@@ -134,6 +136,8 @@ class AuctionValidator:
         # Normalize start/end into Turkey timezone aware datetimes
         start_time_aware = to_tr_aware(start_time)
         end_time_aware = to_tr_aware(end_time)
+        scheduled_at_aware = to_tr_aware(scheduled_at) if scheduled_at else None
+
         if start_time_aware is None or end_time_aware is None:
             raise ValidationError("start_time and end_time are required")
         start_time = start_time_aware
@@ -151,6 +155,13 @@ class AuctionValidator:
             raise ValidationError(
                 f"end_time ({end_time}) must be in the future (now: {now})"
             )
+            
+        # Rule 2.1: Scheduled time must be after auction end time
+        if scheduled_at_aware:
+            if scheduled_at_aware < end_time:
+                raise ValidationError(
+                    f"scheduled_at ({scheduled_at_aware}) must be after or equal to end_time ({end_time})"
+                )
 
         # Rule 3: Drop interval must be positive
         if drop_interval_mins <= 0:
@@ -233,7 +244,8 @@ class AuctionValidator:
             # Validate timing
             AuctionValidator.validate_timing(
                 start_time, end_time, drop_interval_mins,
-                turbo_enabled, turbo_trigger_mins, turbo_interval_mins
+                turbo_enabled, turbo_trigger_mins, turbo_interval_mins,
+                scheduled_at=data.get("scheduled_at")
             )
 
             return True, ""
