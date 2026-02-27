@@ -13,16 +13,20 @@ Bu yeniden planlama ile ana hedef, mevcut çalışan fonksiyonları bozmadan tü
 
 ## Güncel Kapsam
 
+### Mevcut Durum (Özet)
+Backend ve Frontend geliştirme fazları (R1, R2, R3) tamamlanmıştır. Proje şu anda **Canlıya Geçiş Öncesi Doğrulama (R4)** aşamasındadır.
+
 ### Dahil Olanlar
-- Kullanıcı ve admin için mevcut akışların görsel yeniden tasarımı
-- Public ekranlar: Home, Auction Detail, My Reservations
-- Admin ekranlar: Login, Dashboard, Auction Create, Reservations
-- Global layout/navigation ve ortak bileşen stili
-- Mevcut API/store/socket entegrasyonunun korunması
+- Kullanıcı ve admin için mevcut akışların görsel yeniden tasarımı (Tamamlandı)
+- Public ekranlar: Home, Auction Detail, My Reservations (Tamamlandı)
+- Admin ekranlar: Login, Dashboard, Auction Create, Reservations (Tamamlandı)
+- Global layout/navigation ve ortak bileşen stili (Tamamlandı)
+- Mevcut API/store/socket entegrasyonunun korunması (Tamamlandı)
+- **Manuel Testler ve Bug Fix:** Canlıya alma öncesi son kontroller.
 
 ### Dahil Olmayanlar
 - Yeni ürün özelliği ekleme (ödeme gateway, yeni business rule vb.)
-- Backend domain model değişiklikleri
+- Backend domain model değişiklikleri (Zorunlu olmadıkça)
 - Mevcut kapsam dışı analitik/raporlama modülleri
 
 ## Başarı Kriterleri

@@ -103,41 +103,40 @@ Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsi
 - [X] 3-Katmanlı validasyon: Frontend → Pydantic → Business Logic
 - [X] GitHub commit + push: Commit ID 9356949
 
-## 🚀 Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler (YENİ HEDEF)
-Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son revizyonlar.
+## 🚀 Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler
+Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son revizyonlar. Bu aşamada kod geliştirmesinden ziyade, doğrulama ve hata gidermeye odaklanılacaktır.
 
-### R4.1 Kimlik Doğrulama (Auth) Revizyonu
+### R4.1 Kimlik Doğrulama (Auth) Doğrulaması
 - [X] Kayıt Ol (Sign Up) akışı ve validasyonların canlı testi
 - [ ] Giriş Yap (Login) ve Token saklama (LocalStorage) kontrolü
-- [ ] Otomatik oturum açma ve güvenli çıkış (Logout) testi
-- [X] **E-posta Doğrulama Sistemi (Email Verification) Entegrasyonu** 🆕
-    - [X] Backend: SMTP/Email Service yapılandırması (`app/core/email.py`)
-    - [X] DB: `User` tablosunda token yönetimi (JWT `type="verification"`)
-    - [X] API: `/auth/verify-email` endpoint'inin yazılması
-    - [X] Frontend: Doğrulama bekleme ve sonuç sayfası (`VerifyEmailView.vue`)
-    - [X] Flowupdate: Kayıt sonrası "Lütfen e-postanızı doğrulayın" uyarısı
-    - [X] Test: `tests/test_email_verification.py` başarıyla geçti
+- [ ] Otomatik oturum açma (Persist Auth) ve güvenli çıkış (Logout) testi
+- [X] **E-posta Doğrulama Sistemi (Email Verification) Entegrasyonu**
+    - [X] Backend: SMTP/Email Service yapılandırması
+    - [X] Frontend: Doğrulama bekleme ve sonuç sayfası
+    - [X] Flow: Kayıt sonrası doğrulama akışı
 
-### R4.2 Açık Artırma (Auction) Modülü Revizyonu
-- [ ] Ana sayfa listeleme performansı ve filtreler
+### R4.2 Açık Artırma (Auction) Modülü Doğrulaması
+- [ ] Ana sayfa listeleme performansı ve filtreler (Socket.io verisi)
 - [ ] Detay sayfası görsel bütünlüğü ve sayaç (Timer) doğruluğu
-- [ ] Socket.io ile gerçek zamanlı fiyat güncelleme testi
+- [ ] Teklif verme (Bid) ve fiyat güncelleme testi (Socket.io)
+- [ ] Açık artırma tamamlanma (Expired/Sold) durumlarının UI yansıması
 
-### R4.3 Rezervasyon (Reservation) Modülü Revizyonu
-- [ ] Hemen Al (Buy Now) butonu ve ödeme/rezervasyon simülasyonu
+### R4.3 Rezervasyon (Reservation) Modülü Doğrulaması
+- [ ] Hemen Al (Buy Now) butonu ve rezervasyon oluşturma testi
 - [ ] "Rezervasyonlarım" sayfasında QR/Access Code görüntüleme
+- [ ] Çakışan rezervasyon (Race Condition) testi (Manuel)
 - [ ] Geçmiş ve gelecek rezervasyonların ayrımı
 
-### R4.4 Admin Paneli Revizyonu
-- [ ] Yeni açık artırma oluşturma formu ve validasyonları
-- [ ] Rezervasyon listesi ve detay görüntüleme
-- [ ] Mobil görünümde admin panelinin kullanılabilirliği
+### R4.4 Admin Paneli Doğrulaması (Tamamlanan: R1.6)
+- [X] Yeni açık artırma oluşturma formu (Validasyon ve POST işlemi)
+- [X] Açık artırma düzenleme (Edit) ve detay (Detail) görüntüleme
+- [ ] Rezervasyon listesi ve detay görüntüleme (AdminReservationsView)
+- [ ] Mobil görünümde admin panelinin kullanılabilirliği (Responsive Test)
 
-### R4.5 Son Kontroller
+### R4.5 Deployment ve Son Kontroller
 - [ ] Tüm sayfalarda responsive tasarım (Mobil/Tablet/Desktop) kontrolü
-- [ ] Konsol hatalarının temizlenmesi
+- [ ] Konsol hatalarının temizlenmesi (Console logs)
 - [ ] Production build (`npm run build`) son kontrolü
-- [ ] Login flow test
-- [ ] Duplicate email/phone edge cases
-- [ ] Password recovery flow (opsiyonel)
-- [ ] Email verification (opsiyonel)
+- [ ] GitHub Actions / CI Pipeline kontrolü (Varsa)
+- [ ] Veritabanı (Production) migration planı
+- [ ] `.env` yapılandırmasının production için ayrıştırılması

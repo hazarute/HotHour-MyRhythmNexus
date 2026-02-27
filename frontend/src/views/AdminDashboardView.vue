@@ -15,7 +15,8 @@ onMounted(() => {
 })
 
 const filteredAuctions = computed(() => {
-    let result = store.auctions
+    // Create a copy to avoid mutating the store directly
+    let result = [...store.auctions]
     
     // Status Filter
     if (statusFilter.value !== 'ALL') {
@@ -31,6 +32,13 @@ const filteredAuctions = computed(() => {
             String(a.id).includes(query)
         )
     }
+
+    // Sort by updated_at (or created_at) descending to show most recent first
+    result.sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.created_at || a.updatedAt || a.createdAt || 0)
+        const dateB = new Date(b.updated_at || b.created_at || b.updatedAt || b.createdAt || 0)
+        return dateB - dateA
+    })
     
     return result
 })
@@ -56,6 +64,14 @@ const activeBidders = ref(Math.floor(Math.random() * 20) + 5)
 const formatCurrency = (val) => {
     if (val === undefined || val === null) return '₺0.00'
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
+}
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleString('tr-TR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    })
 }
 </script>
 
@@ -90,12 +106,9 @@ const formatCurrency = (val) => {
                         <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">attach_money</span>
                         </div>
-                        <span class="flex items-center gap-1 text-xs font-semibold text-[#0bda5e] bg-[#0bda5e]/10 px-2 py-1 rounded-full">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span>
-                            +12%
-                        </span>
                     </div>
                     <div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Ciro</p>
                         <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ formatCurrency(totalRevenue) }}</h3>
                     </div>
                 </div>
@@ -109,10 +122,6 @@ const formatCurrency = (val) => {
                          <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">confirmation_number</span>
                         </div>
-                        <span class="flex items-center gap-1 text-xs font-semibold text-[#0bda5e] bg-[#0bda5e]/10 px-2 py-1 rounded-full">
-                            <span class="material-symbols-outlined" style="font-size: 14px;">check</span>
-                            Satılan
-                        </span>
                     </div>
                     <div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Satılan</p>
@@ -129,9 +138,6 @@ const formatCurrency = (val) => {
                          <div class="p-2 bg-slate-100 dark:bg-[#232d3f] rounded-lg text-slate-600 dark:text-slate-400">
                             <span class="material-symbols-outlined">analytics</span>
                         </div>
-                         <span class="flex items-center gap-1 text-xs font-semibold text-orange-500 bg-orange-500/10 px-2 py-1 rounded-full">
-                            Ort.
-                        </span>
                     </div>
                     <div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Ort. Satış Fiyatı</p>
@@ -235,6 +241,8 @@ const formatCurrency = (val) => {
                         <tr class="bg-slate-50 dark:bg-background-dark/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>
                             <th class="px-6 py-4 font-semibold">Oturum Adı</th>
+                            <th class="px-6 py-4 font-semibold w-36">Başlangıç</th>
+                            <th class="px-6 py-4 font-semibold w-36">Bitiş</th>
                             <th class="px-6 py-4 font-semibold">Güncel Fiyat</th>
                             <th class="px-6 py-4 font-semibold">Kalan Süre</th>
                             <th class="px-6 py-4 font-semibold text-right">İşlem</th>
@@ -265,6 +273,16 @@ const formatCurrency = (val) => {
                                     <span class="text-slate-900 dark:text-white font-medium">{{ auction.title }}</span>
                                     <p class="text-slate-500 dark:text-slate-400 text-xs line-clamp-1 max-w-[300px]">{{ auction.description }}</p>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-600 dark:text-slate-300 font-mono">
+                                    {{ formatDate(auction.start_time || auction.startTime) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-600 dark:text-slate-300 font-mono">
+                                    {{ formatDate(auction.end_time || auction.endTime) }}
+                                </span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">

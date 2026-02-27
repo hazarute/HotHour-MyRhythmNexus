@@ -1,26 +1,104 @@
-from app.core.db import db
-from app.services.price_service import price_service
-from app.utils.validators import auction_validator, ValidationError
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from decimal import Decimal
+from typing import Optional
+
+from app.core.db import db
+from app.core.timezone import now_tr, to_tr_aware
 from app.services import socket_service
+from app.services.price_service import price_service
+from app.utils.validators import ValidationError, auction_validator
 
 
 class AuctionService:
+    def _apply_backend_pricing_policy(self, data: dict) -> dict:
+        normalized = dict(data)
+        turbo_enabled = bool(normalized.get("turbo_enabled", False))
+
+        if turbo_enabled:
+            normalized["turbo_trigger_mins"] = auction_validator.TURBO_TRIGGER_MINS_FIXED
+            normalized["turbo_interval_mins"] = auction_validator.TURBO_INTERVAL_MINS_FIXED
+        else:
+            normalized["turbo_trigger_mins"] = auction_validator.TURBO_TRIGGER_MINS_FIXED
+            normalized["turbo_interval_mins"] = auction_validator.TURBO_INTERVAL_MINS_FIXED
+            normalized["turbo_drop_amount"] = Decimal("0.00")
+
+        return normalized
+
+    async def _sync_current_price(self, auction, now: Optional[datetime] = None, emit_event: bool = False):
+        if not auction:
+            return None
+
+        if getattr(auction, "status", None) != "ACTIVE":
+            return auction
+
+        mapping = await self._to_mapping(auction)
+        now_value = to_tr_aware(now) if now else now_tr()
+        if now_value is None:
+            now_value = now_tr()
+
+        computed_price, details = price_service.compute_current_price(mapping, now=now_value)
+        current_price = mapping.get("currentPrice")
+        auction_id = getattr(auction, "id", None)
+
+        if auction_id is not None and (current_price is None or Decimal(str(current_price)) != Decimal(str(computed_price))):
+            auction = await db.auction.update(
+                where={"id": auction_id},
+                data={"currentPrice": computed_price}
+            )
+
+            if emit_event and auction is not None:
+                await socket_service.emit_price_update(
+                    auction_id=getattr(auction, "id", auction_id),
+                    current_price=str(computed_price),
+                    details=details or {},
+                )
+
+        return auction
+
+    async def _check_and_update_status(self, auction) -> object:
+        if not auction:
+            return None
+
+        now = now_tr()
+        start_time = to_tr_aware(getattr(auction, "startTime", None))
+        end_time = to_tr_aware(getattr(auction, "endTime", None))
+
+        if not start_time or not end_time:
+            return auction
+
+        updated = False
+        new_status = auction.status
+
+        if auction.status == "DRAFT" and start_time <= now < end_time:
+            new_status = "ACTIVE"
+            updated = True
+        elif auction.status == "ACTIVE" and now >= end_time:
+            new_status = "EXPIRED"
+            updated = True
+        elif auction.status == "DRAFT" and now >= end_time:
+            new_status = "EXPIRED"
+            updated = True
+
+        if updated:
+            auction = await db.auction.update(
+                where={"id": auction.id},
+                data={"status": new_status}
+            )
+
+        return auction
+
     async def create_auction(self, data: dict):
-        # Validate auction data before creation
+        data = self._apply_backend_pricing_policy(data)
         is_valid, error_msg = auction_validator.validate_auction_create(data)
         if not is_valid:
             raise ValidationError(error_msg)
-        
-        # Map incoming keys to Prisma model fields
+
         drop_amount = data.get("drop_amount")
         turbo_drop = data.get("turbo_drop_amount")
         if turbo_drop is None:
-            # Default to drop_amount if not provided
             turbo_drop = drop_amount if drop_amount is not None else Decimal("0.00")
 
-        auction = await db.auction.create(
+        return await db.auction.create(
             data={
                 "title": data.get("title"),
                 "description": data.get("description"),
@@ -34,68 +112,111 @@ class AuctionService:
                 "turboEnabled": data.get("turbo_enabled", False),
                 "turboTriggerMins": data.get("turbo_trigger_mins", 120),
                 "turboDropAmount": turbo_drop,
-                "turboIntervalMins": data.get("turbo_interval_mins", 5),
+                "turboIntervalMins": data.get("turbo_interval_mins", 10),
             }
         )
-        return auction
-    
+
     async def get_auction(self, auction_id: int):
         auction = await db.auction.find_unique(where={"id": auction_id})
+        if auction:
+            auction = await self._check_and_update_status(auction)
+            auction = await self._sync_current_price(auction)
         return auction
 
-    async def list_auctions(self, include_computed: bool = False):
+    async def check_pending_auctions(self):
+        try:
+            items = await db.auction.find_many(
+                where={
+                    "status": {
+                        "in": ["DRAFT", "ACTIVE"]
+                    }
+                }
+            )
+            for item in items:
+                checked = await self._check_and_update_status(item)
+                await self._sync_current_price(checked, emit_event=True)
+            return len(items)
+        except Exception as e:
+            print(f"Error checking pending auctions: {e}")
+            return 0
+
+    async def list_auctions(self, include_computed: bool = False, now=None):
         try:
             items = await db.auction.find_many(order={"startTime": "asc"})
         except TypeError:
-            # Fallback for older prisma client which might not support order arg this way
             items = await db.auction.find_many()
+
+        normalized_now = to_tr_aware(now) if now else None
+
+        updated_items = []
+        for item in items:
+            checked = await self._check_and_update_status(item)
+            checked = await self._sync_current_price(checked)
+            updated_items.append(checked)
+        items = updated_items
 
         if not include_computed:
             return items
 
-        results = []
+        out = []
         for item in items:
-            # Convert Prisma object to dict
-            mapping = {
-                "id": item.id,
-                "title": item.title,
-                "description": item.description,
-                "start_price": item.startPrice,
-                "floor_price": item.floorPrice,
-                "start_time": item.startTime,
-                "end_time": item.endTime,
-                "drop_interval_mins": item.dropIntervalMins,
-                "drop_amount": item.dropAmount,
-                "turbo_enabled": item.turboEnabled,
-                "turbo_trigger_mins": item.turboTriggerMins,
-                "turbo_drop_amount": item.turboDropAmount,
-                "turbo_interval_mins": item.turboIntervalMins,
+            mapping = await self._to_mapping(item)
+            price, details = price_service.compute_current_price(mapping, now=normalized_now)
+            out.append({
+                "id": mapping.get("id"),
+                "title": mapping.get("title"),
+                "description": mapping.get("description"),
+                "start_price": mapping.get("startPrice"),
+                "floor_price": mapping.get("floorPrice"),
+                "start_time": mapping.get("startTime"),
+                "end_time": mapping.get("endTime"),
+                "drop_interval_mins": mapping.get("dropIntervalMins"),
+                "drop_amount": mapping.get("dropAmount"),
+                "turbo_enabled": mapping.get("turboEnabled"),
+                "turbo_trigger_mins": mapping.get("turboTriggerMins"),
+                "turbo_drop_amount": mapping.get("turboDropAmount"),
+                "turbo_interval_mins": mapping.get("turboIntervalMins"),
                 "status": item.status,
-                "currentPrice": item.currentPrice
-            }
-            
-            try:
-                # Calculate current price based on time
-                calc = price_service.calculate_current_price(mapping)
-                current_p = calc["current_price"]
-                details = calc["details"]
-
-                # Update in-memory dict with computed values
-                mapping["computedPrice"] = current_p
-                mapping["priceDetails"] = details
-                results.append(mapping)
-            except Exception:
-                # If calculation fails, fallback to DB values
-                mapping["computedPrice"] = item.currentPrice
-                results.append(mapping)
-        
-        return results
+                "computedPrice": str(price),
+                "priceDetails": details,
+                "currentPrice": mapping.get("currentPrice"),
+                "created_at": getattr(item, "createdAt", None),
+                "updated_at": getattr(item, "updatedAt", None),
+            })
+        return out
 
     async def update_auction(self, auction_id: int, data: dict):
+        existing = await db.auction.find_unique(where={"id": auction_id})
+        if not existing:
+            return None
+
+        merged_for_validation = {
+            "title": getattr(existing, "title", None),
+            "description": getattr(existing, "description", None),
+            "start_price": getattr(existing, "startPrice", None),
+            "floor_price": getattr(existing, "floorPrice", None),
+            "start_time": getattr(existing, "startTime", None),
+            "end_time": getattr(existing, "endTime", None),
+            "drop_interval_mins": getattr(existing, "dropIntervalMins", None),
+            "drop_amount": getattr(existing, "dropAmount", None),
+            "turbo_enabled": getattr(existing, "turboEnabled", False),
+            "turbo_trigger_mins": getattr(existing, "turboTriggerMins", auction_validator.TURBO_TRIGGER_MINS_FIXED),
+            "turbo_drop_amount": getattr(existing, "turboDropAmount", None),
+            "turbo_interval_mins": getattr(existing, "turboIntervalMins", auction_validator.TURBO_INTERVAL_MINS_FIXED),
+        }
+        for key, value in data.items():
+            if value is not None:
+                merged_for_validation[key] = value
+
+        merged_for_validation = self._apply_backend_pricing_policy(merged_for_validation)
+        is_valid, error_msg = auction_validator.validate_auction_create(merged_for_validation)
+        if not is_valid:
+            raise ValidationError(error_msg)
+
         mapping = {
             "title": "title",
             "description": "description",
-            "start_time": "startTime", 
+            "start_time": "startTime",
             "end_time": "endTime",
             "start_price": "startPrice",
             "floor_price": "floorPrice",
@@ -104,27 +225,30 @@ class AuctionService:
             "turbo_enabled": "turboEnabled",
             "turbo_trigger_mins": "turboTriggerMins",
             "turbo_interval_mins": "turboIntervalMins",
-            "turbo_drop_amount": "turboDropAmount"
+            "turbo_drop_amount": "turboDropAmount",
         }
-        
+
         update_data = {}
-        for k, v in data.items():
-            if k in mapping and v is not None:
-                update_data[mapping[k]] = v
-                
-        # Special handling for decimal fields if needed, but prisma usually handles if passed correctly
-        
+        for key, value in data.items():
+            if key in mapping and value is not None:
+                update_data[mapping[key]] = value
+
+        # Enforce backend fixed turbo policy in persisted data as well
+        turbo_enabled = merged_for_validation.get("turbo_enabled", False)
+        update_data["turboTriggerMins"] = auction_validator.TURBO_TRIGGER_MINS_FIXED
+        update_data["turboIntervalMins"] = auction_validator.TURBO_INTERVAL_MINS_FIXED
+        if not turbo_enabled:
+            update_data["turboDropAmount"] = Decimal("0.00")
+
         if not update_data:
             return None
 
-        updated = await db.auction.update(
+        return await db.auction.update(
             where={"id": auction_id},
             data=update_data
         )
-        return updated
 
     async def _to_mapping(self, auction_obj) -> dict:
-        # Convert DB auction object (attribute access) to a dict expected by price_service
         def g(attr):
             return getattr(auction_obj, attr, None)
 
@@ -146,111 +270,66 @@ class AuctionService:
         }
 
     async def get_current_price(self, auction_id: int, now=None):
-        """Fetch auction by id and compute current price using `price_service`.
-
-        Returns dict: `{"price": str, "details": {...}}` or None if auction not found.
-        """
         auction = await db.auction.find_unique(where={"id": auction_id})
         if not auction:
             return None
         mapping = await self._to_mapping(auction)
-        price, details = price_service.compute_current_price(mapping, now=now)
+        normalized_now = to_tr_aware(now) if now else None
+        price, details = price_service.compute_current_price(mapping, now=normalized_now)
         return {"price": str(price), "details": details}
 
-    async def check_and_trigger_turbo(self, auction_id: int, now: datetime = None):
-        """Check if turbo mode should be triggered and update auction if needed.
-        
-        Args:
-            auction_id: The auction ID to check
-            now: Current time (default: now UTC)
-            
-        Returns:
-            dict: {"triggered": bool, "reason": str, "turbo_started_at": datetime or None}
-        """
-        now = now or datetime.now(timezone.utc)
-        
+    async def check_and_trigger_turbo(self, auction_id: int, now: Optional[datetime] = None):
+        now_value = to_tr_aware(now) if now else now_tr()
+        if now_value is None:
+            now_value = now_tr()
+
         auction = await db.auction.find_unique(where={"id": auction_id})
         if not auction:
             return {"triggered": False, "reason": "auction_not_found", "turbo_started_at": None}
-        
-        # Check if turbo is enabled
-        if not getattr(auction, "turboEnabled", False) and not getattr(auction, "turbo_enabled", False):
+
+        turbo_enabled = getattr(auction, "turboEnabled", False) or getattr(auction, "turbo_enabled", False)
+        if not turbo_enabled:
             return {"triggered": False, "reason": "turbo_not_enabled", "turbo_started_at": None}
-        
-        # Already triggered
-        if getattr(auction, "turboStartedAt", None) is not None:
-            return {"triggered": False, "reason": "turbo_already_triggered", "turbo_started_at": getattr(auction, "turboStartedAt")}
-        
-        # Check if auction has ended
+
+        turbo_started_at = getattr(auction, "turboStartedAt", None)
+        if turbo_started_at is not None:
+            return {
+                "triggered": False,
+                "reason": "turbo_already_triggered",
+                "turbo_started_at": turbo_started_at,
+            }
+
         end_time = getattr(auction, "endTime", None) or getattr(auction, "end_time", None)
+        end_time = to_tr_aware(end_time)
         if end_time is None:
             return {"triggered": False, "reason": "invalid_end_time", "turbo_started_at": None}
-        
-        # Ensure end_time is timezone-aware
-        if end_time.tzinfo is None:
-            end_time = end_time.replace(tzinfo=timezone.utc)
-        
-        # Calculate remaining time
-        remaining_min = (end_time - now).total_seconds() / 60
-        
-        # Get turbo trigger threshold
+
+        remaining_min = (end_time - now_value).total_seconds() / 60
         turbo_trigger_mins = getattr(auction, "turboTriggerMins", None) or getattr(auction, "turbo_trigger_mins", 120)
-        
-        # Check if trigger condition is met
+
         if remaining_min <= turbo_trigger_mins:
-            # Trigger turbo mode
-            updated_auction = await db.auction.update(
+            await db.auction.update(
                 where={"id": auction_id},
-                data={"turboStartedAt": now}
+                data={"turboStartedAt": now_value}
             )
-            # Broadcast turbo activation to all auction subscribers
             await socket_service.emit_turbo_triggered(
                 auction_id=auction_id,
-                turbo_started_at=now,
+                turbo_started_at=now_value,
                 remaining_minutes=round(remaining_min, 2),
             )
             return {
                 "triggered": True,
                 "reason": "turbo_condition_met",
-                "turbo_started_at": now,
-                "remaining_minutes": round(remaining_min, 2)
+                "turbo_started_at": now_value,
+                "remaining_minutes": round(remaining_min, 2),
             }
-        
+
         return {
             "triggered": False,
             "reason": "turbo_condition_not_met",
             "turbo_started_at": None,
-            "remaining_minutes": round(remaining_min, 2)
+            "remaining_minutes": round(remaining_min, 2),
         }
-
-    async def list_auctions(self, include_computed: bool = False, now=None):
-        """If `include_computed` is True, returns list of dicts with `computedPrice`.
-        Otherwise returns DB objects (default, preserves existing behavior).
-        """
-        items = await db.auction.find_many()
-        if not include_computed:
-            return items
-        out = []
-        for a in items:
-            mapping = await self._to_mapping(a)
-            price, details = price_service.compute_current_price(mapping, now=now)
-            # build a shallow mapping for API consumers
-            record = {
-                "id": mapping.get("id"),
-                "title": mapping.get("title"),
-                "description": mapping.get("description"),
-                "start_price": mapping.get("startPrice"),
-                "floor_price": mapping.get("floorPrice"),
-                "start_time": mapping.get("startTime"),
-                "end_time": mapping.get("endTime"),
-                "drop_interval_mins": mapping.get("dropIntervalMins"),
-                "drop_amount": mapping.get("dropAmount"),
-                "status": getattr(a, "status", None),
-                "computedPrice": str(price),
-                "priceDetails": details,
-            }
-            out.append(record)
-        return out
 
 
 auction_service = AuctionService()

@@ -8,12 +8,13 @@ All emit helpers follow the same convention:
 Import and call these helpers from AuctionService / BookingService / API endpoints.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from app.core.socket import sio
+from app.core.timezone import now_tr
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return now_tr().isoformat()
 
 
 async def emit_price_update(auction_id: int, current_price: str, details: dict = None) -> None:

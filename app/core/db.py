@@ -4,7 +4,8 @@ in-memory fake Prisma suitable for local tests (no external deps).
 """
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
+from app.core.timezone import TR_TIMEZONE, now_tr
 
 # Detect test environment (pytest sets `PYTEST_CURRENT_TEST`) or explicit env var.
 _force_fake = os.getenv("ENABLE_FAKE_PRISMA", "").lower() in ("1", "true", "yes")
@@ -132,7 +133,7 @@ if _use_fake:
                         raise Exception("Unique constraint failed on fields: (`auctionId`)")
 
             obj = dict(data)
-            now = datetime.now(timezone.utc)
+            now = now_tr()
             obj.setdefault("reservedAt", now)
             obj.setdefault("createdAt", now)
             return await super().create(data=obj)
@@ -146,9 +147,9 @@ if _use_fake:
                 ]
 
             if order and order.get("createdAt") == "desc":
-                records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+                records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)
             if order and order.get("reservedAt") == "desc":
-                records.sort(key=lambda item: item.get("reservedAt") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
+                records.sort(key=lambda item: item.get("reservedAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)
 
             response = []
             for item in records:

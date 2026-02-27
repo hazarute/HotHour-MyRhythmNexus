@@ -139,12 +139,13 @@ async def test_turbo_mode_validation_api():
         "start_price": "100.00",
         "floor_price": "50.00",
         "start_time": (now + timedelta(hours=1)).isoformat(),
-        "end_time": (now + timedelta(hours=2)).isoformat(),
+        "end_time": (now + timedelta(hours=5)).isoformat(),
         "drop_interval_mins": 30,
         "drop_amount": "10.00",
         "turbo_enabled": True,
         "turbo_drop_amount": "60.00",
-        "turbo_interval_mins": 5,
+        "turbo_interval_mins": 10,
+        "turbo_trigger_mins": 120,
     }
 
     transport = ASGITransport(app=app)
@@ -176,12 +177,13 @@ async def test_valid_turbo_auction_api():
         "start_price": "100.00",
         "floor_price": "50.00",
         "start_time": (now + timedelta(hours=1)).isoformat(),
-        "end_time": (now + timedelta(hours=2)).isoformat(),
+        "end_time": (now + timedelta(hours=5)).isoformat(),
         "drop_interval_mins": 30,
-        "drop_amount": "5.00",
+        "drop_amount": "10.00",
         "turbo_enabled": True,
-        "turbo_drop_amount": "10.00",
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": "5.00",
+        "turbo_interval_mins": 10,
+        "turbo_trigger_mins": 120,
     }
 
     transport = ASGITransport(app=app)

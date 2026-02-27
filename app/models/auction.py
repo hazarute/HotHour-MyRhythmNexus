@@ -16,7 +16,7 @@ class AuctionBase(BaseModel):
     turbo_enabled: Optional[bool] = False
     turbo_trigger_mins: Optional[int] = 120
     turbo_drop_amount: Optional[Decimal] = None
-    turbo_interval_mins: Optional[int] = 5
+    turbo_interval_mins: Optional[int] = 10
     current_price: Optional[Decimal] = None
 
 
@@ -43,6 +43,8 @@ class AuctionResponse(AuctionBase):
     status: str
     computedPrice: Optional[Decimal] = None
     priceDetails: Optional[dict] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     # Allow camelCase aliasing for frontend ease if needed, but standard is keep consistency
     # For now, let's add current_price to AuctionBase so it gets picked up from DB model

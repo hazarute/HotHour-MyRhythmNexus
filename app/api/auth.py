@@ -4,8 +4,9 @@ from app.services.user_service import user_service
 from app.core import security
 from app.core.deps import get_current_user
 from app.core.email import send_verification_email
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from app.core.config import settings
+from app.core.timezone import now_tr
 
 router = APIRouter()
 
@@ -75,7 +76,7 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
             gender=getattr(user, 'gender', 'FEMALE'),  # Default if missing
             role=getattr(user, 'role', 'USER'),
             is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
-            created_at=getattr(user, 'created_at', getattr(user, 'createdAt', datetime.now(timezone.utc))),
+            created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
         )
         
         return {
@@ -168,7 +169,7 @@ async def login(user_in: UserLogin):
         gender=getattr(user, 'gender', 'FEMALE'),
         role=getattr(user, 'role', 'USER'),
         is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
-        created_at=getattr(user, 'created_at', getattr(user, 'createdAt', datetime.now(timezone.utc))),
+        created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
     )
     
     return {
@@ -198,5 +199,5 @@ async def read_users_me(current_user=Depends(get_current_user)):
         gender=getattr(current_user, 'gender', 'FEMALE'),
         role=getattr(current_user, 'role', 'USER'),
         is_verified=getattr(current_user, 'is_verified', getattr(current_user, 'isVerified', False)),
-        created_at=getattr(current_user, 'created_at', getattr(current_user, 'createdAt', datetime.now(timezone.utc))),
+        created_at=getattr(current_user, 'created_at', getattr(current_user, 'createdAt', now_tr())),
     )

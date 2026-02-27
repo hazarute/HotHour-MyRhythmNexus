@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional, Tuple
+from app.core.timezone import now_tr, to_tr_aware
 
 
 def _to_dt(value) -> Optional[datetime]:
     if value is None:
         return None
     if isinstance(value, datetime):
-        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+        return to_tr_aware(value)
     # assume ISO string
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return to_tr_aware(parsed)
     except Exception:
         return None
 
@@ -30,7 +32,9 @@ class PriceService:
         `dropAmount`, `startTime`, `endTime`, and optional turbo keys:
         `turboEnabled`, `turboTriggerMins`, `turboDropAmount`, `turboIntervalMins`.
         """
-        now = now or datetime.now(timezone.utc)
+        now_dt = to_tr_aware(now) if now else now_tr()
+        if now_dt is None:
+            now_dt = now_tr()
 
         start_price = cls._to_decimal(auction.get("startPrice") or auction.get("start_price"))
         floor_price = cls._to_decimal(auction.get("floorPrice") or auction.get("floor_price") or "0.00")
@@ -44,14 +48,14 @@ class PriceService:
             # no schedule -> return start price
             return (start_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), {})
 
-        if now < start_dt:
+        if now_dt < start_dt:
             return (start_price.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), {"reason": "not_started"})
 
         price = start_price
 
         # normal drops
         if drop_interval > 0:
-            elapsed_min = int((now - start_dt).total_seconds() // 60)
+            elapsed_min = int((now_dt - start_dt).total_seconds() // 60)
             normal_drops = elapsed_min // drop_interval
             price -= drop_amount * normal_drops
         else:
@@ -64,12 +68,12 @@ class PriceService:
             turbo_drop = cls._to_decimal(auction.get("turboDropAmount") or auction.get("turbo_drop_amount") or "0.00")
             turbo_interval = int(auction.get("turboIntervalMins") or auction.get("turbo_interval_mins") or 1)
             if end_dt is not None:
-                remaining_min = int((end_dt - now).total_seconds() // 60)
+                remaining_min = int((end_dt - now_dt).total_seconds() // 60)
                 if remaining_min <= turbo_trigger:
                     # turbo start time
                     turbo_start = end_dt - timedelta(minutes=turbo_trigger)
-                    if now > turbo_start:
-                        elapsed_turbo_min = int((now - turbo_start).total_seconds() // 60)
+                    if now_dt > turbo_start:
+                        elapsed_turbo_min = int((now_dt - turbo_start).total_seconds() // 60)
                         turbo_applied = elapsed_turbo_min // max(1, turbo_interval)
                         price -= turbo_drop * turbo_applied
 

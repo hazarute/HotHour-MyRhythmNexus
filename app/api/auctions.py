@@ -23,6 +23,8 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
             "drop_interval_mins": auction.dropIntervalMins,
             "drop_amount": auction.dropAmount,
             "status": auction.status,
+            "created_at": getattr(auction, "createdAt", None),
+            "updated_at": getattr(auction, "updatedAt", None)
         }
     except ValidationError as e:
         raise HTTPException(
@@ -33,8 +35,8 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
 
 @router.put("/{auction_id}", response_model=AuctionResponse)
 async def update_auction(
+    auction_in: AuctionUpdate,
     auction_id: int = Path(..., gt=0),
-    auction_in: AuctionUpdate = None,
     admin=Depends(get_current_admin_user)
 ):
     try:
@@ -57,7 +59,9 @@ async def update_auction(
             "turbo_drop_amount": updated.turboDropAmount,
             "turbo_interval_mins": updated.turboIntervalMins,
             "status": updated.status,
-            "current_price": updated.currentPrice
+            "current_price": updated.currentPrice,
+            "created_at": getattr(updated, "createdAt", None),
+            "updated_at": getattr(updated, "updatedAt", None)
         }
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -84,7 +88,9 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "drop_interval_mins": a.dropIntervalMins,
                 "drop_amount": a.dropAmount,
                 "status": a.status,
-                "current_price": a.currentPrice if hasattr(a, 'currentPrice') else a.startPrice
+                "current_price": a.currentPrice if hasattr(a, 'currentPrice') else a.startPrice,
+                "created_at": a.createdAt,
+                "updated_at": a.updatedAt
             })
         else:
             # item already contains computed fields from service
@@ -103,7 +109,9 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "status": a.get("status"),
                 "computedPrice": a.get("computedPrice"),
                 "priceDetails": a.get("priceDetails"),
-                "current_price": current_p
+                "current_price": current_p,
+                "created_at": a.get("created_at"),
+                "updated_at": a.get("updated_at")
             })
     return mapped
 
@@ -129,7 +137,9 @@ async def get_auction(auction_id: int = Path(..., gt=0)):
         "turbo_drop_amount": auction.turboDropAmount,
         "turbo_interval_mins": auction.turboIntervalMins,
         "status": auction.status,
-        "current_price": auction.currentPrice
+        "current_price": auction.currentPrice,
+        "created_at": getattr(auction, "createdAt", None),
+        "updated_at": getattr(auction, "updatedAt", None)
     }
 
 
@@ -181,7 +191,7 @@ async def broadcast_current_price(
     await socket_service.emit_price_update(
         auction_id=auction_id,
         current_price=price_result["price"],
-        details=price_result.get("details"),
+        details=price_result.get("details") or {},
     )
 
     return {

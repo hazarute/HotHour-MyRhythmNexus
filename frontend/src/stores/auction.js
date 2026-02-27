@@ -14,7 +14,7 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions`)
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions?include_computed=true`)
             if (!response.ok) {
                 throw new Error('Failed to fetch auctions')
             }
