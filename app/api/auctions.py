@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, Query, HTTPException, Path
-from app.models.auction import AuctionCreate, AuctionResponse
+from app.models.auction import AuctionCreate, AuctionUpdate, AuctionResponse
 from app.services.auction_service import auction_service
 from app.services import socket_service
 from app.core.deps import get_current_admin_user
@@ -29,6 +29,40 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.put("/{auction_id}", response_model=AuctionResponse)
+async def update_auction(
+    auction_id: int = Path(..., gt=0),
+    auction_in: AuctionUpdate = None,
+    admin=Depends(get_current_admin_user)
+):
+    try:
+        updated = await auction_service.update_auction(auction_id, auction_in.model_dump())
+        if not updated:
+            raise HTTPException(status_code=404, detail="Auction not found")
+            
+        return {
+            "id": updated.id,
+            "title": updated.title,
+            "description": updated.description,
+            "start_time": updated.startTime,
+            "end_time": updated.endTime,
+            "start_price": updated.startPrice,
+            "floor_price": updated.floorPrice,
+            "drop_interval_mins": updated.dropIntervalMins,
+            "drop_amount": updated.dropAmount,
+            "turbo_enabled": updated.turboEnabled,
+            "turbo_trigger_mins": updated.turboTriggerMins,
+            "turbo_drop_amount": updated.turboDropAmount,
+            "turbo_interval_mins": updated.turboIntervalMins,
+            "status": updated.status,
+            "current_price": updated.currentPrice
+        }
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/", response_model=list[AuctionResponse])
@@ -72,6 +106,31 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "current_price": current_p
             })
     return mapped
+
+
+@router.get("/{auction_id}", response_model=AuctionResponse)
+async def get_auction(auction_id: int = Path(..., gt=0)):
+    auction = await auction_service.get_auction(auction_id)
+    if not auction:
+        raise HTTPException(status_code=404, detail="Auction not found")
+        
+    return {
+        "id": auction.id,
+        "title": auction.title,
+        "description": auction.description,
+        "start_price": auction.startPrice,
+        "floor_price": auction.floorPrice,
+        "start_time": auction.startTime,
+        "end_time": auction.endTime,
+        "drop_interval_mins": auction.dropIntervalMins,
+        "drop_amount": auction.dropAmount,
+        "turbo_enabled": auction.turboEnabled,
+        "turbo_trigger_mins": auction.turboTriggerMins,
+        "turbo_drop_amount": auction.turboDropAmount,
+        "turbo_interval_mins": auction.turboIntervalMins,
+        "status": auction.status,
+        "current_price": auction.currentPrice
+    }
 
 
 @router.post("/{auction_id}/trigger-turbo", status_code=status.HTTP_200_OK)

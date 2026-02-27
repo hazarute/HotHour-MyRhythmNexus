@@ -23,6 +23,20 @@ class AuctionBase(BaseModel):
 class AuctionCreate(AuctionBase):
     pass
 
+class AuctionUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    start_price: Optional[Decimal] = None
+    floor_price: Optional[Decimal] = None
+    drop_interval_mins: Optional[int] = None
+    drop_amount: Optional[Decimal] = None
+    turbo_enabled: Optional[bool] = None
+    turbo_trigger_mins: Optional[int] = None
+    turbo_drop_amount: Optional[Decimal] = None
+    turbo_interval_mins: Optional[int] = None
+
 
 class AuctionResponse(AuctionBase):
     id: int

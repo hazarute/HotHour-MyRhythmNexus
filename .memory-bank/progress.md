@@ -48,6 +48,13 @@
 ### R1.5 Fonksiyonel Regresyon ve Görsel Doğrulama
 - [X] Kritik kullanıcı yolculukları manuel doğrulandı
 - [X] Türkçe karakter ve UTF-8 encoding sorunları çözüldü
+
+### R1.6 Admin Paneli İyileştirmeleri (Refactor)
+- [X] Admin Dashboard Filtreleme (Active, Sold, Expired, Cancelled)
+- [X] Admin Auction Create/Edit Form Ayrımı (`AdminAuctionFormView`)
+- [X] Admin Auction Detail Sayfası (`AdminAuctionDetailView`)
+- [X] Router Yapılandırması (Admin alt rotaları)
+- [X] API: Get Single Auction Endpoint (`GET /auctions/{id}`)
 - [X] AuctionDetailView için "Turbo Mod" tasarımı eklendi
 - [X] Admin Dashboard canlı veri bağlantısı ve UI düzeltmeleri (Fiyat, Sayaç, Açıklama)
 

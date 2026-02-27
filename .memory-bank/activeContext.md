@@ -1,14 +1,15 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz R4: Kod Senkronizasyonu ve Dağıtım** 🚀
+**Faz R4: Admin Dashboard Geliştirmeleri ve UI/UX İyileştirmeleri** 🚀
 
-Admin paneli (Dashboard) iyileştirmelerini ve hata düzeltmelerini tamamladık.
-- **AdminDashboardView:** `current_price` ve sayaç sorunları çözüldü. API'den gelen snake_case veriler ile frontend camelCase uyumsuzluğu giderildi.
-- **API:** `AuctionResponse` modeline `current_price` eklendi.
-- **UI:** Oturum açıklamaları eklendi.
+Admin paneli (Dashboard) navigasyon yapısı ve filtreleme özellikleri tamamlandı.
+- **Yönlendirme:** Admin Dashboard üzerindeki "Oturum Oluştur" ve "Düzenle" butonları ayrı sayfalara (`AdminAuctionFormView`) taşındı.
+- **Detay Sayfası:** `AdminAuctionDetailView` oluşturularak oturum detayları görüntülenebilir hale getirildi.
+- **Filtreler:** Durum filtreleri (Tümü, Aktif, Satıldı, Süresi Dolan, İptal Edildi) eklendi ve Türkçe etiketler ile güncellendi.
+- **API:** Tekil oturum çekme (`GET /api/v1/auctions/{id}`) uç noktası eklendi.
 
-Sıradaki adım, yapılan tüm bu değişiklikleri versiyon kontrol sistemine (GitHub) göndermek ve deploy sürecine hazır hale getirmek.
+Sıradaki adım, bu değişiklikleri github üzerine işlemek ve deploy sürecine hazırlamak.
 
 ## 🔍 Test ve Revizyon Planı
 

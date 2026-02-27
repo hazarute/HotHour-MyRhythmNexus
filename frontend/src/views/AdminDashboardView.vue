@@ -1,25 +1,39 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuctionStore } from '@/stores/auction'
-import AuctionCreateForm from '@/components/AuctionCreateForm.vue'
 import CountDownTimer from '@/components/CountDownTimer.vue'
 
+const router = useRouter()
 const store = useAuctionStore()
-const showForm = ref(false)
+const searchQuery = ref('')
+const statusFilter = ref('ALL') // ALL, ACTIVE, SOLD, DRAFT
+const showFilterDropdown = ref(false)
 
 onMounted(() => {
   store.fetchAuctions()
 })
 
-const handleCreate = async (formData) => {
-    try {
-        await store.createAuction(formData)
-        showForm.value = false
-        await store.fetchAuctions()
-    } catch (err) {
-        alert('Oturum oluşturulurken hata: ' + err.message)
+const filteredAuctions = computed(() => {
+    let result = store.auctions
+    
+    // Status Filter
+    if (statusFilter.value !== 'ALL') {
+        result = result.filter(a => a.status === statusFilter.value)
     }
-}
+    
+    // Search Filter
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase()
+        result = result.filter(a => 
+            a.title.toLowerCase().includes(query) || 
+            (a.description && a.description.toLowerCase().includes(query)) ||
+            String(a.id).includes(query)
+        )
+    }
+    
+    return result
+})
 
 const activeAuctions = computed(() => store.auctions.filter((a) => a.status === 'ACTIVE').length)
 const soldAuctions = computed(() => store.auctions.filter((a) => a.status === 'SOLD').length)
@@ -57,22 +71,15 @@ const formatCurrency = (val) => {
             <button class="flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
                 <span class="material-symbols-outlined">notifications</span>
             </button>
-            <button @click="showForm = !showForm" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
-                <span class="material-symbols-outlined" style="font-size: 20px;">{{ showForm ? 'close' : 'add' }}</span>
-                <span class="font-medium">{{ showForm ? 'Kapat' : 'Oturum Oluştur' }}</span>
+            <button @click="router.push({ name: 'admin-auction-create' })" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
+                <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                <span class="font-medium">Oturum Oluştur</span>
             </button>
         </div>
     </header>
 
     <div class="p-8 flex flex-col gap-8">
         
-        <!-- Create Form (Conditionally rendered) -->
-        <transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform -translate-y-4 opacity-0" enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="transform translate-y-0 opacity-100" leave-to-class="transform -translate-y-4 opacity-0">
-            <div v-if="showForm" class="bg-white dark:bg-[#1a2230] p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative z-20">
-                <AuctionCreateForm @create-auction="handleCreate" />
-            </div>
-        </transition>
-
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Total Revenue Card -->
@@ -109,7 +116,7 @@ const formatCurrency = (val) => {
                     </div>
                     <div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Satılan</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctions }} Yer</h3>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctions }} Oturum</h3>
                     </div>
                 </div>
             </div>
@@ -163,17 +170,31 @@ const formatCurrency = (val) => {
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">
                         <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
                     </span>
-                    <input class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-slate-400 dark:placeholder-slate-600 text-sm" placeholder="Oturum ara..." type="text">
+                    <input v-model="searchQuery" class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-slate-400 dark:placeholder-slate-600 text-sm" placeholder="Oturum ara..." type="text">
                 </div>
-                <div class="flex items-center gap-2">
-                    <button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
+                <div class="flex items-center gap-2 relative">
+                    <button @click="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
                         <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
-                        Filtrele
+                        {{ 
+                            {
+                                'ALL': 'Tümü',
+                                'DRAFT': 'Taslak',
+                                'ACTIVE': 'Aktif',
+                                'SOLD': 'Satıldı',
+                                'EXPIRED': 'Süresi Dolan',
+                                'CANCELLED': 'İptal Edildi'
+                            }[statusFilter] || statusFilter
+                        }}
                     </button>
-                    <button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">download</span>
-                        Dışa Aktar
-                    </button>
+                    <!-- Filter Dropdown -->
+                    <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-50 py-1">
+                        <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
+                        <button @click="statusFilter = 'DRAFT'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Taslak</button>
+                        <button @click="statusFilter = 'ACTIVE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Aktif</button>
+                        <button @click="statusFilter = 'SOLD'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Satıldı</button>
+                        <button @click="statusFilter = 'EXPIRED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Süresi Dolan</button>
+                        <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal Edildi</button>
+                    </div>
                 </div>
             </div>
 
@@ -181,10 +202,10 @@ const formatCurrency = (val) => {
             <div class="overflow-x-auto">
                 <!-- Mobile List View -->
                 <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
-                     <div v-if="store.auctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
-                        Aktif oturum bulunamadı.
+                     <div v-if="filteredAuctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
+                        Kriterlere uygun oturum bulunamadı.
                      </div>
-                     <div v-for="auction in store.auctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
+                     <div v-for="auction in filteredAuctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
                         <div class="flex justify-between items-start">
                             <div class="flex flex-col">
                                 <span class="font-semibold text-slate-900 dark:text-white">{{ auction.title }}</span>
@@ -221,13 +242,13 @@ const formatCurrency = (val) => {
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
                         
-                        <tr v-if="store.auctions.length === 0">
+                        <tr v-if="filteredAuctions.length === 0">
                             <td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
-                                Aktif oturum bulunamadı. Başlamak için yeni bir tane oluşturun.
+                                Kriterlere uygun oturum bulunamadı.
                             </td>
                         </tr>
 
-                        <tr v-for="auction in store.auctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
+                        <tr v-for="auction in filteredAuctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
                             <td class="px-6 py-4">
                                 <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_rgba(37,106,244,0.15)] backdrop-blur-sm">
                                     AKTİF
@@ -259,9 +280,14 @@ const formatCurrency = (val) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
-                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
-                                </button>
+                                <div class="flex items-center justify-end gap-2">
+                                    <button v-if="['ACTIVE', 'DRAFT'].includes(auction.status)" @click="router.push({ name: 'admin-auction-edit', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Düzenle">
+                                        <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
+                                    </button>
+                                    <button @click="router.push({ name: 'admin-auction-detail', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Detaylar">
+                                        <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -270,7 +296,7 @@ const formatCurrency = (val) => {
             
             <!-- Pagination (Static for demo) -->
             <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Toplam {{ store.auctions.length }} sonuçtan 1 - {{ store.auctions.length }} arası gösteriliyor</span>
+                <span>Toplam {{ filteredAuctions.length }} sonuçtan 1 - {{ filteredAuctions.length }} arası gösteriliyor</span>
                 <div class="flex gap-2">
                     <button disabled class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50">
                         <span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span>

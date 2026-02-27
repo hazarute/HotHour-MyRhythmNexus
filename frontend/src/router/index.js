@@ -57,7 +57,17 @@ const router = createRouter({
         {
           path: '', // Default to dashboard
           name: 'admin-dashboard',
-          component: () => import('../views/AdminDashboardView.vue') // Assuming this exists or I need to create it?
+          component: () => import('../views/AdminDashboardView.vue')
+        },
+        {
+          path: 'auctions/create',
+          name: 'admin-auction-create',
+          component: () => import('../views/AdminAuctionFormView.vue')
+        },
+        {
+          path: 'auctions/:id/edit',
+          name: 'admin-auction-edit',
+          component: () => import('../views/AdminAuctionFormView.vue')
         },
         {
           path: 'reservations',
@@ -68,6 +78,11 @@ const router = createRouter({
           path: 'reservations/:id',
           name: 'admin-reservation-detail',
           component: () => import('../views/AdminReservationDetailView.vue')
+        },
+        {
+          path: 'auctions/:id',
+          name: 'admin-auction-detail',
+          component: () => import('../views/AdminAuctionDetailView.vue')
         }
       ]
     }

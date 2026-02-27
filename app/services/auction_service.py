@@ -39,9 +39,89 @@ class AuctionService:
         )
         return auction
     
-    async def list_auctions(self):
-        items = await db.auction.find_many()
-        return items
+    async def get_auction(self, auction_id: int):
+        auction = await db.auction.find_unique(where={"id": auction_id})
+        return auction
+
+    async def list_auctions(self, include_computed: bool = False):
+        try:
+            items = await db.auction.find_many(order={"startTime": "asc"})
+        except TypeError:
+            # Fallback for older prisma client which might not support order arg this way
+            items = await db.auction.find_many()
+
+        if not include_computed:
+            return items
+
+        results = []
+        for item in items:
+            # Convert Prisma object to dict
+            mapping = {
+                "id": item.id,
+                "title": item.title,
+                "description": item.description,
+                "start_price": item.startPrice,
+                "floor_price": item.floorPrice,
+                "start_time": item.startTime,
+                "end_time": item.endTime,
+                "drop_interval_mins": item.dropIntervalMins,
+                "drop_amount": item.dropAmount,
+                "turbo_enabled": item.turboEnabled,
+                "turbo_trigger_mins": item.turboTriggerMins,
+                "turbo_drop_amount": item.turboDropAmount,
+                "turbo_interval_mins": item.turboIntervalMins,
+                "status": item.status,
+                "currentPrice": item.currentPrice
+            }
+            
+            try:
+                # Calculate current price based on time
+                calc = price_service.calculate_current_price(mapping)
+                current_p = calc["current_price"]
+                details = calc["details"]
+
+                # Update in-memory dict with computed values
+                mapping["computedPrice"] = current_p
+                mapping["priceDetails"] = details
+                results.append(mapping)
+            except Exception:
+                # If calculation fails, fallback to DB values
+                mapping["computedPrice"] = item.currentPrice
+                results.append(mapping)
+        
+        return results
+
+    async def update_auction(self, auction_id: int, data: dict):
+        mapping = {
+            "title": "title",
+            "description": "description",
+            "start_time": "startTime", 
+            "end_time": "endTime",
+            "start_price": "startPrice",
+            "floor_price": "floorPrice",
+            "drop_interval_mins": "dropIntervalMins",
+            "drop_amount": "dropAmount",
+            "turbo_enabled": "turboEnabled",
+            "turbo_trigger_mins": "turboTriggerMins",
+            "turbo_interval_mins": "turboIntervalMins",
+            "turbo_drop_amount": "turboDropAmount"
+        }
+        
+        update_data = {}
+        for k, v in data.items():
+            if k in mapping and v is not None:
+                update_data[mapping[k]] = v
+                
+        # Special handling for decimal fields if needed, but prisma usually handles if passed correctly
+        
+        if not update_data:
+            return None
+
+        updated = await db.auction.update(
+            where={"id": auction_id},
+            data=update_data
+        )
+        return updated
 
     async def _to_mapping(self, auction_obj) -> dict:
         # Convert DB auction object (attribute access) to a dict expected by price_service

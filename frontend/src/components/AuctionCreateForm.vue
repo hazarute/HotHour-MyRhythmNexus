@@ -1,7 +1,18 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 
-const emit = defineEmits(['create-auction'])
+const props = defineProps({
+    initialData: {
+        type: Object,
+        default: null
+    },
+    isEdit: {
+        type: Boolean,
+        default: false
+    }
+})
+
+const emit = defineEmits(['create-auction', 'update-auction', 'cancel'])
 
 const form = reactive({
     title: '',
@@ -18,14 +29,82 @@ const form = reactive({
     turbo_drop_amount: 100
 })
 
+// If initialData is provided, populate the form
+onMounted(() => {
+    if (props.initialData) {
+        populateForm(props.initialData)
+    }
+})
+
+// Watch for changes in initialData if it changes dynamically
+watch(() => props.initialData, (newVal) => {
+    if (newVal) {
+        populateForm(newVal)
+    }
+}, { deep: true })
+
 const loading = ref(false)
+
+const formatDateForInput = (isoString) => {
+    if (!isoString) return ''
+    const date = new Date(isoString)
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return ''
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+const populateForm = (data) => {
+    // Clone object to avoid mutation issues
+    const newData = { ...data }
+    
+    // Format dates specifically
+    if (newData.start_time) newData.start_time = formatDateForInput(newData.start_time)
+    if (newData.end_time) newData.end_time = formatDateForInput(newData.end_time)
+    
+    Object.assign(form, newData)
+}
+
+// If initialData is provided, populate the form
+onMounted(() => {
+    if (props.initialData) {
+        populateForm(props.initialData)
+    }
+})
 
 const submitForm = () => {
     loading.value = true
-    // Basic formatting or validation if needed
-    // Emit the payload
-    emit('create-auction', { ...form })
-    // Reset or handle success in parent
+    
+    // Create copy of form data
+    const payload = { ...form }
+    
+    // Convert local time strings back to ISO if they are in 'YYYY-MM-DDTHH:mm' format
+    if (payload.start_time && payload.start_time.length === 16) {
+        const d = new Date(payload.start_time)
+        if (!isNaN(d.getTime())) {
+             payload.start_time = d.toISOString()
+        }
+    }
+    
+    if (payload.end_time && payload.end_time.length === 16) {
+        const d = new Date(payload.end_time)
+        if (!isNaN(d.getTime())) {
+             payload.end_time = d.toISOString()
+        }
+    }
+
+    if (props.isEdit) {
+        emit('update-auction', { ...payload, id: props.initialData.id })
+    } else {
+        emit('create-auction', { ...payload })
+    }
     loading.value = false
 }
 </script>

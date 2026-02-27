@@ -57,7 +57,74 @@ export const useAuctionStore = defineStore('auction', () => {
 
     async function createAuction(payload) {
         const authStore = useAuthStore()
-        // ... (existing code)
+        
+        loading.value = true
+        error.value = null
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const response = await fetch(`${baseUrl}/api/v1/auctions/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authStore.token}`
+                },
+                body: JSON.stringify(payload)
+            })
+
+            if (!response.ok) {
+                const errData = await response.json()
+                throw new Error(errData.detail || 'Failed to create auction')
+            }
+
+            const newAuction = await response.json()
+            auctions.value.push(newAuction)
+            return newAuction
+        } catch (err) {
+            error.value = err.message
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function updateAuction(payload) {
+        const authStore = useAuthStore()
+        loading.value = true
+        error.value = null
+        
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            // Extract id from payload
+            const { id, ...data } = payload
+            if (!id) throw new Error("Auction ID is required for update")
+
+            const response = await fetch(`${baseUrl}/api/v1/auctions/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authStore.token}`
+                },
+                body: JSON.stringify(data)
+            })
+
+            if (!response.ok) {
+                const errData = await response.json()
+                throw new Error(errData.detail || 'Failed to update auction')
+            }
+
+            const updated = await response.json()
+            // Update local list
+            const index = auctions.value.findIndex(a => a.id === id)
+            if (index !== -1) {
+                auctions.value[index] = { ...auctions.value[index], ...updated }
+            }
+            return updated
+        } catch (err) {
+            error.value = err.message
+            throw err
+        } finally {
+            loading.value = false
+        }
     }
 
     async function bookAuction(auctionId) {
