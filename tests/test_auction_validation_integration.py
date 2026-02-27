@@ -33,6 +33,7 @@ async def create_admin_user(email: str, phone: str, full_name: str, password: st
             "hashedPassword": hashed,
             "role": "ADMIN",
             "gender": gender,
+            "isVerified": True,
         }
     )
 

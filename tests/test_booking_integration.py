@@ -28,6 +28,7 @@ async def create_user(email: str, phone: str, password: str, full_name: str = "B
             "hashedPassword": hashed_password,
             "role": "USER",
             "gender": gender,
+            "isVerified": True,
         }
     )
 
