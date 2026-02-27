@@ -22,6 +22,8 @@ const selectedDiscountRate = ref(null)
 const showDiscountDropdown = ref(false)
 const loading = ref(false)
 
+const minDateTime = ref('')
+
 const form = reactive({
     title: '',
     description: '',
@@ -194,6 +196,11 @@ const populateForm = (data) => {
 }
 
 onMounted(() => {
+    // Set minimal date to current time
+    const now = new Date()
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+    minDateTime.value = now.toISOString().slice(0, 16)
+
     if (props.initialData) {
         populateForm(props.initialData)
     }
@@ -304,13 +311,13 @@ const submitForm = () => {
                         <input
                             v-model="form.scheduled_at"
                             type="datetime-local"
+                            :min="minDateTime"
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
                             @click="$event.target.showPicker && $event.target.showPicker()"
                             @focus="$event.target.showPicker && $event.target.showPicker()"
                         />
                         <p class="text-xs text-slate-400">Hizmetin fiilen gerçekleşeceği zaman. Boş bırakılırsa Bitiş Zamanı kullanılır.</p>
                     </div>
-                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
@@ -319,6 +326,7 @@ const submitForm = () => {
                             v-model="form.start_time"
                             type="datetime-local"
                             required
+                            :min="minDateTime"
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
                             @click="$event.target.showPicker && $event.target.showPicker()"
                             @focus="$event.target.showPicker && $event.target.showPicker()"
@@ -333,6 +341,7 @@ const submitForm = () => {
                             v-model="form.end_time"
                             type="datetime-local"
                             required
+                            :min="form.start_time || minDateTime"
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
                             @click="$event.target.showPicker && $event.target.showPicker()"
                             @focus="$event.target.showPicker && $event.target.showPicker()"
