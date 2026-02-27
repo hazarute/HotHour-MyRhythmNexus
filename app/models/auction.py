@@ -1,7 +1,16 @@
 from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 from typing import Optional
+
+
+class AuctionStatus(str, Enum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    SOLD = "SOLD"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
 
 
 class AuctionBase(BaseModel):
@@ -26,6 +35,7 @@ class AuctionCreate(AuctionBase):
 class AuctionUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    status: Optional[AuctionStatus] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     start_price: Optional[Decimal] = None
@@ -40,9 +50,10 @@ class AuctionUpdate(BaseModel):
 
 class AuctionResponse(AuctionBase):
     id: int
-    status: str
+    status: AuctionStatus
     computedPrice: Optional[Decimal] = None
     priceDetails: Optional[dict] = None
+    turbo_started_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     

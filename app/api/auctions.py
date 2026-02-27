@@ -23,6 +23,7 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
             "drop_interval_mins": auction.dropIntervalMins,
             "drop_amount": auction.dropAmount,
             "status": auction.status,
+            "turbo_started_at": getattr(auction, "turboStartedAt", None),
             "created_at": getattr(auction, "createdAt", None),
             "updated_at": getattr(auction, "updatedAt", None)
         }
@@ -60,6 +61,7 @@ async def update_auction(
             "turbo_interval_mins": updated.turboIntervalMins,
             "status": updated.status,
             "current_price": updated.currentPrice,
+            "turbo_started_at": getattr(updated, "turboStartedAt", None),
             "created_at": getattr(updated, "createdAt", None),
             "updated_at": getattr(updated, "updatedAt", None)
         }
@@ -67,6 +69,20 @@ async def update_auction(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{auction_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_auction(
+    auction_id: int = Path(..., gt=0),
+    admin=Depends(get_current_admin_user)
+):
+    try:
+        deleted = await auction_service.delete_auction(auction_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Auction not found")
+        return
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/", response_model=list[AuctionResponse])
@@ -87,10 +103,15 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "end_time": a.endTime,
                 "drop_interval_mins": a.dropIntervalMins,
                 "drop_amount": a.dropAmount,
+                "turbo_enabled": getattr(a, "turboEnabled", False),
+                "turbo_trigger_mins": getattr(a, "turboTriggerMins", 120),
+                "turbo_drop_amount": getattr(a, "turboDropAmount", None),
+                "turbo_interval_mins": getattr(a, "turboIntervalMins", 10),
                 "status": a.status,
                 "current_price": a.currentPrice if hasattr(a, 'currentPrice') else a.startPrice,
-                "created_at": a.createdAt,
-                "updated_at": a.updatedAt
+                "turbo_started_at": getattr(a, "turboStartedAt", None),
+                "created_at": getattr(a, "createdAt", None),
+                "updated_at": getattr(a, "updatedAt", None)
             })
         else:
             # item already contains computed fields from service
@@ -106,10 +127,15 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "end_time": a.get("end_time"),
                 "drop_interval_mins": a.get("drop_interval_mins"),
                 "drop_amount": a.get("drop_amount"),
+                "turbo_enabled": a.get("turbo_enabled") if a.get("turbo_enabled") is not None else a.get("turboEnabled"),
+                "turbo_trigger_mins": a.get("turbo_trigger_mins") if a.get("turbo_trigger_mins") is not None else a.get("turboTriggerMins"),
+                "turbo_drop_amount": a.get("turbo_drop_amount") if a.get("turbo_drop_amount") is not None else a.get("turboDropAmount"),
+                "turbo_interval_mins": a.get("turbo_interval_mins") if a.get("turbo_interval_mins") is not None else a.get("turboIntervalMins"),
                 "status": a.get("status"),
                 "computedPrice": a.get("computedPrice"),
                 "priceDetails": a.get("priceDetails"),
                 "current_price": current_p,
+                "turbo_started_at": a.get("turbo_started_at") if a.get("turbo_started_at") is not None else a.get("turboStartedAt"),
                 "created_at": a.get("created_at"),
                 "updated_at": a.get("updated_at")
             })
@@ -136,6 +162,7 @@ async def get_auction(auction_id: int = Path(..., gt=0)):
         "turbo_trigger_mins": auction.turboTriggerMins,
         "turbo_drop_amount": auction.turboDropAmount,
         "turbo_interval_mins": auction.turboIntervalMins,
+        "turbo_started_at": getattr(auction, "turboStartedAt", None),
         "status": auction.status,
         "current_price": auction.currentPrice,
         "created_at": getattr(auction, "createdAt", None),

@@ -51,38 +51,38 @@ const router = createRouter({
     {
       path: '/admin',
       name: 'admin',
-      component: () => import('../views/AdminView.vue'),
+      component: () => import('../views/admin/AdminView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
       children: [
         {
           path: '', // Default to dashboard
           name: 'admin-dashboard',
-          component: () => import('../views/AdminDashboardView.vue')
+          component: () => import('../views/admin/AdminDashboardView.vue')
         },
         {
           path: 'auctions/create',
           name: 'admin-auction-create',
-          component: () => import('../views/AdminAuctionFormView.vue')
+          component: () => import('../views/admin/AdminAuctionFormView.vue')
         },
         {
           path: 'auctions/:id/edit',
           name: 'admin-auction-edit',
-          component: () => import('../views/AdminAuctionFormView.vue')
+          component: () => import('../views/admin/AdminAuctionFormView.vue')
         },
         {
           path: 'reservations',
           name: 'admin-reservations',
-          component: () => import('../views/AdminReservationsView.vue')
+          component: () => import('../views/admin/AdminReservationsView.vue')
         },
         {
           path: 'reservations/:id',
           name: 'admin-reservation-detail',
-          component: () => import('../views/AdminReservationDetailView.vue')
+          component: () => import('../views/admin/AdminReservationDetailView.vue')
         },
         {
           path: 'auctions/:id',
           name: 'admin-auction-detail',
-          component: () => import('../views/AdminAuctionDetailView.vue')
+          component: () => import('../views/admin/AdminAuctionDetailView.vue')
         }
       ]
     }

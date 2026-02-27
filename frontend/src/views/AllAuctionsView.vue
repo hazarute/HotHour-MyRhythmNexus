@@ -2,12 +2,11 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
-import { useAuthStore } from '../stores/auth'
 import AuctionCard from '../components/AuctionCard.vue'
+import { getAuctionStatus } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
-const authStore = useAuthStore()
 
 const searchQuery = ref('')
 const filterStatus = ref('ACTIVE')
@@ -16,7 +15,7 @@ const filteredAuctions = computed(() => {
   let result = store.auctions
   
   if (filterStatus.value !== 'ALL') {
-    result = result.filter(a => a.status === filterStatus.value)
+    result = result.filter(a => getAuctionStatus(a) === filterStatus.value)
   }
   
   if (searchQuery.value.trim()) {

@@ -155,6 +155,33 @@ onMounted(async () => {
                              </ul>
                         </div>
                     </div>
+
+                    <div class="mt-6 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/70 dark:bg-[#111811]/50">
+                        <h4 class="text-sm font-medium text-slate-900 dark:text-white mb-3">Turbo Mod</h4>
+                        <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                            <li class="flex justify-between">
+                                <span>Durum:</span>
+                                <span v-if="auction?.turboEnabled || auction?.turbo_enabled" class="font-medium text-primary">Aktif</span>
+                                <span v-else class="font-medium text-slate-500">Kapalı</span>
+                            </li>
+                            <li v-if="auction?.turboEnabled || auction?.turbo_enabled" class="flex justify-between">
+                                <span>Tetikleyici:</span>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ auction?.turboTriggerMins || auction?.turbo_trigger_mins || '-' }} dk</span>
+                            </li>
+                            <li v-if="auction?.turboEnabled || auction?.turbo_enabled" class="flex justify-between">
+                                <span>Turbo Aralığı:</span>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ auction?.turboIntervalMins || auction?.turbo_interval_mins || '-' }} dk</span>
+                            </li>
+                            <li v-if="auction?.turboEnabled || auction?.turbo_enabled" class="flex justify-between">
+                                <span>Turbo Düşüş Miktarı:</span>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ formatCurrency(auction?.turboDropAmount || auction?.turbo_drop_amount) }}</span>
+                            </li>
+                            <li v-if="auction?.turboEnabled || auction?.turbo_enabled" class="flex justify-between">
+                                <span>Turbo Başlangıç:</span>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.turboStartedAt || auction?.turbo_started_at) }}</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div v-if="activeTab === 'reservations'" class="bg-white dark:bg-[#1a2230] p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center py-12">

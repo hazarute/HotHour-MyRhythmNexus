@@ -1,9 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue' 
+import { onMounted, onUnmounted, computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import { useSocketStore } from '../stores/socket'
 import { useAuthStore } from '../stores/auth'
+import HemenKapButton from '../components/HemenKapButton.vue'
+import { getAuctionField, getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, getAuctionStatus } from '../utils/auction'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,11 +17,42 @@ const auction = computed(() => auctionStore.currentAuction)
 const showSuccessModal = ref(false)
 const reservation = ref(null)
 const bookingLoading = ref(false)
+const nowMs = ref(Date.now())
+let timerId = null
 
-// Turbo Mode Logic
-const isTurbo = computed(() => auction.value?.turboActive || false)
+const startPriceValue = computed(() => getAuctionStartPrice(auction.value))
+const currentPriceValue = computed(() => getAuctionCurrentPrice(auction.value))
+const endTimeValue = computed(() => getAuctionEndTime(auction.value))
+const statusValue = computed(() => getAuctionStatus(auction.value))
 
-// Dynamic Theme Classes
+const discountPercent = computed(() => {
+    if (startPriceValue.value <= 0) return 0
+    const discount = ((startPriceValue.value - currentPriceValue.value) / startPriceValue.value) * 100
+    return Math.max(0, Math.round(discount))
+})
+
+const countdown = computed(() => {
+    if (!endTimeValue.value) return { hours: '00', mins: '00', secs: '00' }
+
+    const end = new Date(endTimeValue.value).getTime()
+    const diff = end - nowMs.value
+
+    if (diff <= 0) return { hours: '00', mins: '00', secs: '00' }
+
+    const totalSeconds = Math.floor(diff / 1000)
+    const hours = Math.floor(totalSeconds / 3600)
+    const mins = Math.floor((totalSeconds % 3600) / 60)
+    const secs = totalSeconds % 60
+
+    return {
+        hours: String(hours).padStart(2, '0'),
+        mins: String(mins).padStart(2, '0'),
+        secs: String(secs).padStart(2, '0')
+    }
+})
+
+const isTurbo = computed(() => Boolean(getAuctionField(auction.value, 'turbo_started_at', 'turboStartedAt')))
+
 const themeClasses = computed(() => {
     if (isTurbo.value) {
         return {
@@ -32,53 +65,67 @@ const themeClasses = computed(() => {
             shadowNeon: 'shadow-[0_0_20px_rgba(242,13,128,0.5),0_0_40px_rgba(255,42,42,0.3)]',
             glowColor: 'rgba(242, 13, 128, 0.5)'
         }
-    } else {
-        return {
-            bgMain: 'bg-background-dark',
-            bgCard: 'bg-[#1a1f2e]/60', // glass-card default
-            borderAccent: 'border-neon-blue',
-            textAccent: 'text-neon-blue',
-            textTurbo: 'text-neon-orange',
-            gradientBtn: 'from-primary via-blue-600 to-neon-blue',
-            shadowNeon: 'shadow-neon-blue',
-            glowColor: 'rgba(0, 240, 255, 0.5)'
-        }
+    }
+
+    return {
+        bgMain: 'bg-background-dark',
+        bgCard: 'bg-[#1a1f2e]/60',
+        borderAccent: 'border-neon-blue',
+        textAccent: 'text-neon-blue',
+        textTurbo: 'text-neon-orange',
+        gradientBtn: 'from-primary via-blue-600 to-neon-blue',
+        shadowNeon: 'shadow-neon-blue',
+        glowColor: 'rgba(0, 240, 255, 0.5)'
     }
 })
+
+const onPriceUpdate = (data) => {
+    if (data.auction_id == route.params.id) {
+        auctionStore.updatePrice(route.params.id, data.current_price)
+    }
+}
+
+const onAuctionBooked = (data) => {
+    if (data.auction_id == route.params.id && auction.value) {
+        auction.value.status = 'SOLD'
+    }
+}
 
 onMounted(async () => {
     const id = route.params.id
+
     if (!socketStore.isConnected) {
         socketStore.connect()
     }
+
     socketStore.subscribeAuction(id)
     await auctionStore.fetchAuctionById(id)
 
-    socketStore.on('price_update', (data) => {
-        if (data.auction_id == id) {
-             auctionStore.updatePrice(id, data.current_price)
-        }
-    })
+    socketStore.on('price_update', onPriceUpdate)
+    socketStore.on('auction_booked', onAuctionBooked)
 
-    socketStore.on('auction_booked', (data) => {
-        if (data.auction_id == id) {
-            console.log('Auction booked by another user:', data)
-            if (auction.value) {
-                auction.value.status = 'SOLD'
-            }
-        }
-    })
+    timerId = setInterval(() => {
+        nowMs.value = Date.now()
+    }, 1000)
 })
 
+const formatPrice = (val) => {
+    return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        maximumFractionDigits: 0
+    }).format(Number(val || 0))
+}
+
 const handleBook = async () => {
-    if (!auction.value) return;
+    if (!auction.value) return
 
     if (!authStore.isAuthenticated) {
         router.push({ name: 'login', query: { redirect: route.fullPath } })
         return
     }
 
-    if (!confirm(`${auction.value.currentPrice} TL tutarındaki bu oturumu rezerve etmek istediğinize emin misiniz?`)) {
+    if (!confirm(`${formatPrice(currentPriceValue.value)} tutarındaki bu oturumu rezerve etmek istediğinize emin misiniz?`)) {
         return
     }
 
@@ -88,7 +135,7 @@ const handleBook = async () => {
         reservation.value = result
         showSuccessModal.value = true
     } catch (err) {
-        alert(err.message) 
+        alert(err.message)
     } finally {
         bookingLoading.value = false
     }
@@ -98,25 +145,15 @@ onUnmounted(() => {
     if (route.params.id) {
         socketStore.unsubscribeAuction(route.params.id)
     }
-    socketStore.off('price_update')
+
+    socketStore.off('price_update', onPriceUpdate)
+    socketStore.off('auction_booked', onAuctionBooked)
+
+    if (timerId) {
+        clearInterval(timerId)
+        timerId = null
+    }
 })
-
-// Format helpers
-const formatPrice = (val) => Math.floor(val)
-const formatTime = (isoString) => {
-    if(!isoString) return '--';
-    const d = new Date(isoString);
-    const now = new Date();
-    const diff = Math.floor((d - now) / 1000);
-    if(diff < 0) return '00';
-    return String(diff % 60).padStart(2, '0');
-}
-
-// Mock countdown parts for the visual design
-const hours = '00'
-const mins = '00'
-// We'll use a simple reactive counter for seconds for the visual effect if needed, 
-// but for now let's just rely on the static design or simple update logic if we want.
 </script>
 
 <template>
@@ -176,10 +213,7 @@ const mins = '00'
                                 </p>
                             </div>
                             <h1 class="text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight mt-1 text-left">{{ auction.title }}</h1>
-                            <p class="text-slate-400 text-xs sm:text-sm text-left">{{ auction.studioName || 'Zenith Stüdyo' }}</p>
-                        </div>
-                        <div class="px-2 py-1 sm:px-3 sm:py-1 rounded-lg border border-white/10" :class="isTurbo ? 'bg-[#392830]' : 'bg-white/5'">
-                            <span class="text-slate-300 text-[10px] sm:text-xs font-mono">#{{ auction.id }}</span>
+                            <p class="text-slate-400 text-xs sm:text-sm text-left">{{ auction.description || 'Bu oturum için açıklama bilgisi bulunmuyor.' }}</p>
                         </div>
                     </div>
 
@@ -190,7 +224,7 @@ const mins = '00'
                         <div class="relative">
                             <h1 class="text-white text-[72px] sm:text-[100px] md:text-[120px] font-mono font-black leading-none tracking-tighter transition-all duration-300 transform"
                                 :class="{ 'drop-shadow-[0_0_25px_rgba(242,13,128,0.5)]': isTurbo }">
-                                ?{{ formatPrice(auction.currentPrice) }}
+                                {{ formatPrice(currentPriceValue) }}
                             </h1>
                             <!-- Glitch bg -->
                             <div v-if="isTurbo" class="absolute -inset-1 bg-[#f20d80]/20 blur-xl -z-10 animate-pulse"></div>
@@ -210,13 +244,13 @@ const mins = '00'
                         <!-- Hours -->
                         <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
                             :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ hours }}</span>
+                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ countdown.hours }}</span>
                             <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Saat</span>
                         </div>
                         <!-- Mins -->
                         <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
                             :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ mins }}</span>
+                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ countdown.mins }}</span>
                             <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Dk</span>
                         </div>
                         <!-- Secs (Active) -->
@@ -224,7 +258,7 @@ const mins = '00'
                             :class="isTurbo ? 'bg-[#2a1621] border-[#ff2a2a]/30 shadow-[0_0_15px_rgba(255,42,42,0.15)]' : 'bg-white/5 border-neon-blue/30'">
                             <div v-if="isTurbo" class="absolute inset-0 bg-[#ff2a2a]/5 animate-pulse"></div>
                             <span class="text-xl sm:text-3xl font-bold font-mono relative z-10" :class="themeClasses.textTurbo">
-                                {{ formatTime(auction.nextDropTime) }}
+                                {{ countdown.secs }}
                             </span>
                             <span class="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider relative z-10" :class="themeClasses.textTurbo">Sn</span>
                         </div>
@@ -234,39 +268,27 @@ const mins = '00'
                     <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-2 sm:mb-4">
                         <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
                             <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Başlangıç</p>
-                            <p class="text-white font-bold line-through decoration-slate-500 text-sm sm:text-base">₺{{ auction.startPrice }}</p>
+                            <p class="text-white font-bold line-through decoration-slate-500 text-sm sm:text-base">{{ formatPrice(startPriceValue) }}</p>
                         </div>
                         <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
                             <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Kazanç</p>
                             <p class="font-bold text-green-400 text-sm sm:text-base">
-                                %{{ Math.round(((auction.startPrice - auction.currentPrice) / auction.startPrice) * 100) }} İndirim
+                                %{{ discountPercent }} İndirim
                             </p>
                         </div>
                     </div>
 
                     <!-- CTA Button -->
-                    <button @click="handleBook" 
-                            :disabled="auction.status !== 'ACTIVE' || bookingLoading"
-                            class="flex group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-2"
-                            :class="[themeClasses.gradientBtn, themeClasses.shadowNeon]">
-                        
-                        <div class="relative flex h-16 w-full items-center justify-center rounded-[14px] px-8 transition-all"
-                            :class="`bg-gradient-to-r ${themeClasses.gradientBtn}`">
-                            
-                            <span class="absolute right-0 -mt-12 -mr-12 h-32 w-32 translate-x-1/2 rotate-45 bg-white opacity-10 blur-xl transition-all duration-1000 group-hover:-translate-x-full"></span>
-                            
-                            <span v-if="bookingLoading" class="flex items-center gap-2 text-white font-bold animate-pulse">
-                                <span class="material-symbols-outlined animate-spin">sync</span>
-                                İŞLENİYOR...
-                            </span>
-                            <div v-else class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-white text-3xl font-bold" :class="{'animate-pulse': isTurbo}">shopping_bag</span>
-                                <span class="text-2xl font-black text-white tracking-wider uppercase">
-                                    {{ auction.status === 'ACTIVE' ? 'HEMEN KAP' : 'TÜKENDİ' }}
-                                </span>
-                            </div>
-                        </div>
-                    </button>
+                    <HemenKapButton
+                        variant="detail"
+                        :loading="bookingLoading"
+                        :disabled="statusValue !== 'ACTIVE'"
+                        :is-active="statusValue === 'ACTIVE'"
+                        :animate-icon="isTurbo"
+                        :gradient-class="themeClasses.gradientBtn"
+                        :shadow-class="themeClasses.shadowNeon"
+                        @click="handleBook"
+                    />
 
                     <p class="block text-slate-500 text-xs">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz.</p>
                 </div>

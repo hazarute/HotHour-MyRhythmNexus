@@ -127,6 +127,39 @@ export const useAuctionStore = defineStore('auction', () => {
         }
     }
 
+    async function cancelAuction(auctionId) {
+        return await updateAuction({ id: auctionId, status: 'CANCELLED' })
+    }
+
+    async function deleteAuction(auctionId) {
+        const authStore = useAuthStore()
+        loading.value = true
+        error.value = null
+
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const response = await fetch(`${baseUrl}/api/v1/auctions/${auctionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            })
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.detail || 'Failed to delete auction')
+            }
+
+            auctions.value = auctions.value.filter(a => a.id !== auctionId)
+            return true
+        } catch (err) {
+            error.value = err.message
+            throw err
+        } finally {
+            loading.value = false
+        }
+    }
+
     async function bookAuction(auctionId) {
         const authStore = useAuthStore()
         
@@ -184,6 +217,9 @@ export const useAuctionStore = defineStore('auction', () => {
         fetchAuctions,
         fetchAuctionById,
         createAuction,
+        updateAuction,
+        cancelAuction,
+        deleteAuction,
         bookAuction,
         updatePrice
     }

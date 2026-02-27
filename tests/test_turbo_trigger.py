@@ -63,8 +63,8 @@ async def test_check_and_trigger_turbo_not_enabled():
         "drop_amount": Decimal("5.00"),
         "turbo_enabled": False,  # Explicitly disabled
         "turbo_trigger_mins": 120,
-        "turbo_drop_amount": Decimal("10.00"),
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": Decimal("4.00"),
+        "turbo_interval_mins": 10,
     }
     
     auction = await auction_service.create_auction(test_data)
@@ -99,11 +99,11 @@ async def test_check_and_trigger_turbo_condition_not_met():
         "start_time": now,
         "end_time": now + timedelta(hours=4),  # 4 hours left
         "drop_interval_mins": 60,
-        "drop_amount": Decimal("5.00"),
+        "drop_amount": Decimal("10.00"),
         "turbo_enabled": True,
         "turbo_trigger_mins": 120,  # Trigger when 120 mins left
-        "turbo_drop_amount": Decimal("10.00"),
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": Decimal("5.00"),
+        "turbo_interval_mins": 10,
     }
     
     auction = await auction_service.create_auction(test_data)
@@ -131,11 +131,11 @@ async def test_check_and_trigger_turbo_success():
         "start_time": now - timedelta(hours=2),  # Started 2 hours ago
         "end_time": now + timedelta(minutes=100),  # 100 minutes left
         "drop_interval_mins": 60,
-        "drop_amount": Decimal("5.00"),
+        "drop_amount": Decimal("10.00"),
         "turbo_enabled": True,
         "turbo_trigger_mins": 120,  # Trigger when 120 mins left
-        "turbo_drop_amount": Decimal("10.00"),
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": Decimal("5.00"),
+        "turbo_interval_mins": 10,
     }
     
     auction = await auction_service.create_auction(test_data)
@@ -163,11 +163,11 @@ async def test_check_and_trigger_turbo_multiple_calls():
         "start_time": now - timedelta(hours=2),
         "end_time": now + timedelta(minutes=100),
         "drop_interval_mins": 60,
-        "drop_amount": Decimal("5.00"),
+        "drop_amount": Decimal("10.00"),
         "turbo_enabled": True,
         "turbo_trigger_mins": 120,
-        "turbo_drop_amount": Decimal("10.00"),
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": Decimal("5.00"),
+        "turbo_interval_mins": 10,
     }
     
     auction = await auction_service.create_auction(test_data)
@@ -198,11 +198,11 @@ async def test_turbo_trigger_boundary_condition():
         "start_time": now - timedelta(hours=2),
         "end_time": now + timedelta(minutes=120),  # Exactly 120 minutes left
         "drop_interval_mins": 60,
-        "drop_amount": Decimal("5.00"),
+        "drop_amount": Decimal("10.00"),
         "turbo_enabled": True,
         "turbo_trigger_mins": 120,  # Exact match
-        "turbo_drop_amount": Decimal("10.00"),
-        "turbo_interval_mins": 5,
+        "turbo_drop_amount": Decimal("5.00"),
+        "turbo_interval_mins": 10,
     }
     
     auction = await auction_service.create_auction(test_data)

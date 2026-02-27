@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -18,11 +18,20 @@ const formData = ref({
 const loading = ref(false)
 const error = ref('')
 const passwordError = ref('')
+const showGenderDropdown = ref(false)
+const genderDropdownRef = ref(null)
 const formErrors = ref({
   email: '',
   full_name: '',
   phone: '',
   gender: ''
+})
+
+const genderLabel = computed(() => {
+  return {
+    FEMALE: 'Kadın',
+    MALE: 'Erkek'
+  }[formData.value.gender] || 'Seçiniz'
 })
 
 // Telefon input handler - sadece sayı ve tanınan karakterler
@@ -177,6 +186,27 @@ const handleSignUp = async () => {
     loading.value = false
   }
 }
+
+const selectGender = (gender) => {
+  formData.value.gender = gender
+  formErrors.value.gender = ''
+  showGenderDropdown.value = false
+}
+
+const handleDocumentClick = (event) => {
+  if (!showGenderDropdown.value) return
+  if (genderDropdownRef.value && !genderDropdownRef.value.contains(event.target)) {
+    showGenderDropdown.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
 </script>
 
 <template>
@@ -256,17 +286,24 @@ const handleSignUp = async () => {
               <!-- Gender -->
               <div>
                 <label for="gender" class="block text-sm font-medium text-slate-300 mb-1.5">Cinsiyet</label>
-                <select
-                  v-model="formData.gender"
-                  id="gender"
-                  required
-                  class="block w-full bg-dark-bg/60 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-1 transition"
-                  :class="formErrors.gender ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-700 focus:border-neon-blue focus:ring-neon-blue'"
-                >
-                  <option :value="null">Seçiniz</option>
-                  <option value="FEMALE">Kadın</option>
-                  <option value="MALE">Erkek</option>
-                </select>
+                <div ref="genderDropdownRef" class="relative" @click.stop>
+                  <button
+                    id="gender"
+                    type="button"
+                    @click="showGenderDropdown = !showGenderDropdown"
+                    class="w-full flex items-center justify-between bg-dark-bg/60 border rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-1 transition"
+                    :class="formErrors.gender ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-700 focus:border-neon-blue focus:ring-neon-blue'"
+                  >
+                    <span :class="formData.gender ? 'text-white' : 'text-slate-400'">{{ genderLabel }}</span>
+                    <span class="material-symbols-outlined text-slate-300" style="font-size: 18px;">expand_more</span>
+                  </button>
+
+                  <div v-if="showGenderDropdown" class="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-50 py-1">
+                    <button type="button" @click="selectGender(null)" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Seçiniz</button>
+                    <button type="button" @click="selectGender('FEMALE')" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Kadın</button>
+                    <button type="button" @click="selectGender('MALE')" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Erkek</button>
+                  </div>
+                </div>
                 <div v-if="formErrors.gender" class="text-red-400 text-xs mt-1">{{ formErrors.gender }}</div>
               </div>
 
@@ -341,7 +378,7 @@ const handleSignUp = async () => {
             </form>
 
             <div class="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
-              <span>Şifreleme ile korunan kayıt</span>
+              <span>Eğer hesabın varsa giriş yapabilirsin.</span>
               <router-link to="/login" class="text-neon-blue hover:text-white transition-colors">Giriş Yap</router-link>
             </div>
           </div>

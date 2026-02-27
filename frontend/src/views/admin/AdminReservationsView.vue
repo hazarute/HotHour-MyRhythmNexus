@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '@/stores/auth'
+import { sortReservationsByNewest } from '@/utils/sorting'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -9,6 +10,11 @@ const reservations = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 const error = ref(null)
+const statusFilter = ref('ALL')
+const showFilterDropdown = ref(false)
+const filterDropdownRef = ref(null)
+const currentPage = ref(1)
+const pageSize = 15
 
 const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -39,15 +45,65 @@ const fetchReservations = async () => {
 
 // Filtered list
 const filteredReservations = computed(() => {
-    if (!searchQuery.value) return reservations.value
-    
+    let result = [...reservations.value]
+
+    if (statusFilter.value !== 'ALL') {
+        result = result.filter(res => String(res.status || '').toUpperCase() === statusFilter.value)
+    }
+
+    if (!searchQuery.value) return sortReservationsByNewest(result)
+
     const query = searchQuery.value.toLowerCase()
-    return reservations.value.filter(res => 
+    const filtered = result.filter(res => 
         String(res.booking_code || '').toLowerCase().includes(query) ||
         String(res.user_name || '').toLowerCase().includes(query) ||
         String(res.auction_title || '').toLowerCase().includes(query)
     )
+    return sortReservationsByNewest(filtered)
 })
+
+const totalPages = computed(() => {
+    const pages = Math.ceil(filteredReservations.value.length / pageSize)
+    return pages > 0 ? pages : 1
+})
+
+const paginatedReservations = computed(() => {
+    const start = (currentPage.value - 1) * pageSize
+    const end = start + pageSize
+    return filteredReservations.value.slice(start, end)
+})
+
+const shownStart = computed(() => {
+    if (filteredReservations.value.length === 0) return 0
+    return (currentPage.value - 1) * pageSize + 1
+})
+
+const shownEnd = computed(() => {
+    if (filteredReservations.value.length === 0) return 0
+    return Math.min(currentPage.value * pageSize, filteredReservations.value.length)
+})
+
+watch([searchQuery, statusFilter], () => {
+    currentPage.value = 1
+})
+
+watch(filteredReservations, () => {
+    if (currentPage.value > totalPages.value) {
+        currentPage.value = totalPages.value
+    }
+})
+
+const goToPrevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value -= 1
+    }
+}
+
+const goToNextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value += 1
+    }
+}
 
 const formatDate = (value) => {
     if (!value) return '-'
@@ -133,9 +189,20 @@ const handleCancel = async (reservationId) => {
     }
 }
 
+const handleDocumentClick = (event) => {
+    if (!showFilterDropdown.value) return
+    if (filterDropdownRef.value && !filterDropdownRef.value.contains(event.target)) {
+        showFilterDropdown.value = false
+    }
+}
 
 onMounted(() => {
     fetchReservations()
+    document.addEventListener('click', handleDocumentClick)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleDocumentClick)
 })
 </script>
 
@@ -143,16 +210,35 @@ onMounted(() => {
   <div class="flex flex-col h-full w-full bg-background-light dark:bg-background-dark overflow-hidden relative">
     
     <!-- Header -->
-    <header class="sticky top-0 z-10 flex flex-col md:flex-row md:items-center justify-between px-4 py-3 md:px-8 md:py-5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111811]/80 backdrop-blur-md gap-4">
+    <header class="sticky top-0 z-30 flex flex-col md:flex-row md:items-center justify-between px-4 py-3 md:px-8 md:py-5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111811]/80 backdrop-blur-md gap-4 overflow-visible">
         <div class="flex flex-col gap-1">
             <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Rezervasyon Yönetimi</h2>
             <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Rezervasyonları yönet ve misafir girişlerini kontrol et.</p>
         </div>
-        <div class="flex gap-3 w-full md:w-auto justify-end">
-            <button class="flex items-center gap-2 bg-slate-100 dark:bg-[#232d3f] hover:bg-slate-200 dark:hover:bg-[#344a34] text-slate-900 dark:text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-medium">
-                <span class="material-symbols-outlined text-[18px] md:text-[20px]">filter_list</span>
-                Filtrele
-            </button>
+        <div class="flex gap-3 w-full md:w-auto justify-end relative z-40 overflow-visible">
+            <div ref="filterDropdownRef" class="relative z-50" @click.stop>
+                <button @click.stop="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+                    {{
+                        {
+                            'ALL': 'Tümü',
+                            'PENDING_ON_SITE': 'Bekliyor',
+                            'CONFIRMED': 'Onaylandı',
+                            'COMPLETED': 'Giriş Yapıldı',
+                            'CHECKED_IN': 'Giriş Yapıldı',
+                            'CANCELLED': 'İptal'
+                        }[statusFilter] || statusFilter
+                    }}
+                </button>
+                <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-[70] py-1 pointer-events-auto">
+                    <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
+                    <button @click="statusFilter = 'PENDING_ON_SITE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Bekliyor</button>
+                    <button @click="statusFilter = 'CONFIRMED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Onaylandı</button>
+                    <button @click="statusFilter = 'COMPLETED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Giriş Yapıldı</button>
+                    <button @click="statusFilter = 'CHECKED_IN'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Check-in</button>
+                    <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal</button>
+                </div>
+            </div>
             <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
                 <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">autorenew</span> Yenile
             </button>
@@ -229,11 +315,11 @@ onMounted(() => {
                 <!-- Mobile List View -->
                 <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
                     <div v-if="loading" class="p-6 text-center text-slate-400 animate-pulse">Yükleniyor...</div>
-                    <div v-else-if="filteredReservations.length === 0" class="p-8 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
+                    <div v-else-if="paginatedReservations.length === 0" class="p-8 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
                         <span class="material-symbols-outlined text-4xl opacity-50">inbox</span>
                         <p>Kayıt bulunamadı.</p>
                     </div>
-                    <div v-else v-for="res in filteredReservations" :key="'mobile-'+res.id" class="p-4 flex flex-col gap-4 bg-white dark:bg-[#1a2230]">
+                    <div v-else v-for="res in paginatedReservations" :key="'mobile-'+res.id" class="p-4 flex flex-col gap-4 bg-white dark:bg-[#1a2230]">
                          <div class="flex justify-between items-start">
                              <div>
                                  <div class="font-mono font-bold text-lg text-slate-900 dark:text-white" :class="{'line-through opacity-50': res.status === 'CANCELLED'}">
@@ -291,14 +377,14 @@ onMounted(() => {
                                 <td colspan="5" class="px-6 py-8 text-center text-slate-400">Yükleniyor...</td>
                             </tr>
                             
-                            <tr v-else-if="filteredReservations.length === 0">
+                            <tr v-else-if="paginatedReservations.length === 0">
                                 <td colspan="5" class="px-6 py-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
                                     <span class="material-symbols-outlined text-4xl opacity-50">inbox</span>
                                     <p>Aramanızla eşleşen rezervasyon bulunamadı.</p>
                                 </td>
                             </tr>
 
-                            <tr v-for="res in filteredReservations" :key="res.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
+                            <tr v-for="res in paginatedReservations" :key="res.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-lg font-bold text-slate-900 dark:text-white font-mono tracking-tight decoration-slate-400" :class="{'line-through opacity-50': res.status === 'CANCELLED'}">
                                         #{{ res.booking_code }}
@@ -344,13 +430,13 @@ onMounted(() => {
                 <!-- Use simple pagination for now (static as API doesn't fully support it yet in this view) -->
                 <div class="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-background-dark/30">
                     <div class="text-sm text-slate-500 dark:text-slate-400">
-                        Toplam <span class="font-medium text-slate-900 dark:text-white">{{ reservations.length }}</span> kayıttan <span class="font-medium text-slate-900 dark:text-white">1</span> - <span class="font-medium text-slate-900 dark:text-white">{{ filteredReservations.length }}</span> arası gösteriliyor
+                        Toplam <span class="font-medium text-slate-900 dark:text-white">{{ filteredReservations.length }}</span> kayıttan <span class="font-medium text-slate-900 dark:text-white">{{ shownStart }}</span> - <span class="font-medium text-slate-900 dark:text-white">{{ shownEnd }}</span> arası gösteriliyor
                     </div>
                     <div class="flex gap-2">
-                        <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <button @click="goToPrevPage" :disabled="currentPage === 1" class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             Önceki
                         </button>
-                        <button disabled class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <button @click="goToNextPage" :disabled="currentPage === totalPages" class="px-3 py-1 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                             Sonraki
                         </button>
                     </div>

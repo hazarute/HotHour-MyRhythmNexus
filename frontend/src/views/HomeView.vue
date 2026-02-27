@@ -3,12 +3,13 @@ import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import AuctionCard from '../components/AuctionCard.vue'
+import { isAuctionActive } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
 
 const activeAuctions = computed(() => {
-  return store.auctions.filter(a => a.status === 'ACTIVE')
+    return store.auctions.filter(isAuctionActive)
 })
 
 onMounted(() => {
@@ -63,7 +64,7 @@ const goToAllAuctions = () => {
                         <span class="text-slate-400 text-xs uppercase tracking-wider">Aktif Teklif Verenler</span>
                         <span class="material-symbols-outlined text-neon-magenta">groups</span>
                     </div>
-                    <div class="text-3xl font-bold text-white">{{ store.auctions.length > 0 ? store.auctions.length * 137 : 1248 }}</div>
+                    <div class="text-3xl font-bold text-white">{{ activeAuctions.length }}</div>
                     <div class="text-xs text-green-400 flex items-center gap-1 mt-1">
                         <span class="material-symbols-outlined text-sm">trending_up</span> Bu saatte +%12
                     </div>
@@ -88,7 +89,7 @@ const goToAllAuctions = () => {
                         <span class="text-slate-400 text-[10px] uppercase tracking-wider">Aktif Teklif Verenler</span>
                         <span class="material-symbols-outlined text-neon-magenta text-lg">groups</span>
                     </div>
-                    <div class="text-2xl font-bold text-white">{{ store.auctions.length > 0 ? store.auctions.length * 137 : 1248 }}</div>
+                    <div class="text-2xl font-bold text-white">{{ activeAuctions.length }}</div>
                     <div class="text-[10px] text-green-400 flex items-center gap-1 mt-1">
                         <span class="material-symbols-outlined text-[12px]">trending_up</span> Bu saatte +%12
                     </div>

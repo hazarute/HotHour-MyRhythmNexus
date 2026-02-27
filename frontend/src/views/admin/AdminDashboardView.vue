@@ -1,14 +1,17 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '@/stores/auction'
 import CountDownTimer from '@/components/CountDownTimer.vue'
+import { sortAuctionsByNewest } from '@/utils/sorting'
 
 const router = useRouter()
 const store = useAuctionStore()
 const searchQuery = ref('')
 const statusFilter = ref('ALL') // ALL, ACTIVE, SOLD, DRAFT
 const showFilterDropdown = ref(false)
+const currentPage = ref(1)
+const pageSize = 15
 
 onMounted(() => {
   store.fetchAuctions()
@@ -33,15 +36,65 @@ const filteredAuctions = computed(() => {
         )
     }
 
-    // Sort by updated_at (or created_at) descending to show most recent first
-    result.sort((a, b) => {
-        const dateA = new Date(a.updated_at || a.created_at || a.updatedAt || a.createdAt || 0)
-        const dateB = new Date(b.updated_at || b.created_at || b.updatedAt || b.createdAt || 0)
-        return dateB - dateA
-    })
-    
-    return result
+    return sortAuctionsByNewest(result)
 })
+
+const totalPages = computed(() => {
+    const pages = Math.ceil(filteredAuctions.value.length / pageSize)
+    return pages > 0 ? pages : 1
+})
+
+const paginatedAuctions = computed(() => {
+    const start = (currentPage.value - 1) * pageSize
+    const end = start + pageSize
+    return filteredAuctions.value.slice(start, end)
+})
+
+watch([searchQuery, statusFilter], () => {
+    currentPage.value = 1
+})
+
+watch(totalPages, (newTotal) => {
+    if (currentPage.value > newTotal) {
+        currentPage.value = newTotal
+    }
+})
+
+const goNextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value += 1
+    }
+}
+
+const goPrevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value -= 1
+    }
+}
+
+const handleCancelAuction = async (auction) => {
+    const ok = confirm(`"${auction.title}" oturumunu iptal etmek istiyor musun?`)
+    if (!ok) return
+
+    try {
+        await store.cancelAuction(auction.id)
+        await store.fetchAuctions()
+    } catch (error) {
+        alert(error?.message || 'Oturum iptal edilirken bir hata oluştu.')
+    }
+}
+
+const handleDeleteDraftAuction = async (auction) => {
+    const ok = confirm(`"${auction.title}" taslak oturumu silinsin mi? Bu işlem geri alınamaz.`)
+    if (!ok) return
+
+    try {
+        await store.deleteAuction(auction.id)
+        await store.fetchAuctions()
+    } catch (error) {
+        alert(error?.message || 'Taslak oturum silinirken bir hata oluştu.')
+    }
+}
 
 const activeAuctions = computed(() => store.auctions.filter((a) => a.status === 'ACTIVE').length)
 const soldAuctions = computed(() => store.auctions.filter((a) => a.status === 'SOLD').length)
@@ -80,7 +133,7 @@ const formatDate = (dateStr) => {
     <!-- Header Area -->
     <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Aktif Oturumlar</h2>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Tüm Oturumlar</h2>
             <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
         </div>
         <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
@@ -208,10 +261,10 @@ const formatDate = (dateStr) => {
             <div class="overflow-x-auto">
                 <!-- Mobile List View -->
                 <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
-                     <div v-if="filteredAuctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
+                            <div v-if="paginatedAuctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
                         Kriterlere uygun oturum bulunamadı.
                      </div>
-                     <div v-for="auction in filteredAuctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
+                            <div v-for="auction in paginatedAuctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
                         <div class="flex justify-between items-start">
                             <div class="flex flex-col">
                                 <span class="font-semibold text-slate-900 dark:text-white">{{ auction.title }}</span>
@@ -250,13 +303,13 @@ const formatDate = (dateStr) => {
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
                         
-                        <tr v-if="filteredAuctions.length === 0">
+                        <tr v-if="paginatedAuctions.length === 0">
                             <td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                                 Kriterlere uygun oturum bulunamadı.
                             </td>
                         </tr>
 
-                        <tr v-for="auction in filteredAuctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
+                        <tr v-for="auction in paginatedAuctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
                             <td class="px-6 py-4">
                                 <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_rgba(37,106,244,0.15)] backdrop-blur-sm">
                                     AKTİF
@@ -302,6 +355,12 @@ const formatDate = (dateStr) => {
                                     <button v-if="['ACTIVE', 'DRAFT'].includes(auction.status)" @click="router.push({ name: 'admin-auction-edit', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Düzenle">
                                         <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
                                     </button>
+                                    <button v-if="auction.status === 'ACTIVE'" @click="handleCancelAuction(auction)" class="p-2 rounded-lg text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" title="İptal Et">
+                                        <span class="material-symbols-outlined" style="font-size: 20px;">block</span>
+                                    </button>
+                                    <button v-if="auction.status === 'DRAFT'" @click="handleDeleteDraftAuction(auction)" class="p-2 rounded-lg text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Sil">
+                                        <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                    </button>
                                     <button @click="router.push({ name: 'admin-auction-detail', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Detaylar">
                                         <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
                                     </button>
@@ -314,12 +373,16 @@ const formatDate = (dateStr) => {
             
             <!-- Pagination (Static for demo) -->
             <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span>Toplam {{ filteredAuctions.length }} sonuçtan 1 - {{ filteredAuctions.length }} arası gösteriliyor</span>
+                <span>
+                    Toplam {{ filteredAuctions.length }} sonuçtan
+                    {{ filteredAuctions.length === 0 ? 0 : (currentPage - 1) * pageSize + 1 }} -
+                    {{ Math.min(currentPage * pageSize, filteredAuctions.length) }} arası gösteriliyor
+                </span>
                 <div class="flex gap-2">
-                    <button disabled class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50">
+                    <button @click="goPrevPage" :disabled="currentPage === 1" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50">
                         <span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span>
                     </button>
-                    <button class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <button @click="goNextPage" :disabled="currentPage === totalPages" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50">
                         <span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span>
                     </button>
                 </div>

@@ -176,6 +176,7 @@ class AuctionService:
                 "turbo_trigger_mins": mapping.get("turboTriggerMins"),
                 "turbo_drop_amount": mapping.get("turboDropAmount"),
                 "turbo_interval_mins": mapping.get("turboIntervalMins"),
+                "turbo_started_at": getattr(item, "turboStartedAt", None),
                 "status": item.status,
                 "computedPrice": str(price),
                 "priceDetails": details,
@@ -216,6 +217,7 @@ class AuctionService:
         mapping = {
             "title": "title",
             "description": "description",
+            "status": "status",
             "start_time": "startTime",
             "end_time": "endTime",
             "start_price": "startPrice",
@@ -247,6 +249,16 @@ class AuctionService:
             where={"id": auction_id},
             data=update_data
         )
+
+    async def delete_auction(self, auction_id: int):
+        existing = await db.auction.find_unique(where={"id": auction_id})
+        if not existing:
+            return None
+
+        if getattr(existing, "status", None) != "DRAFT":
+            raise ValidationError("Only DRAFT auctions can be deleted")
+
+        return await db.auction.delete(where={"id": auction_id})
 
     async def _to_mapping(self, auction_obj) -> dict:
         def g(attr):

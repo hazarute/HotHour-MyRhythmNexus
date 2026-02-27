@@ -7,6 +7,20 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.db import db
 
+
+def _deleted_count(result) -> int:
+    if isinstance(result, int):
+        return result
+    return int(getattr(result, "count", 0) or 0)
+
+
+async def _delete_all(model_name: str) -> int:
+    model = getattr(db, model_name, None)
+    if model is None or not hasattr(model, "delete_many"):
+        return 0
+    result = await model.delete_many(where={})
+    return _deleted_count(result)
+
 async def clear_database():
     print("Veritabanına bağlanılıyor...")
     await db.connect()
@@ -24,25 +38,26 @@ async def clear_database():
         await db.disconnect()
         return
 
-    print("\nTemizlik başlıyor...")
+    try:
+        print("\nTemizlik başlıyor...")
 
-    # 1. Önce bağımlı tabloları sil (Foreign Key kısıtlamaları yüzünden)
-    deleted_reservations = await db.reservation.delete_many(where={})
-    print(f"✅ {deleted_reservations.count} rezervasyon silindi.")
+        # 1. Önce bağımlı tabloları sil (Foreign Key kısıtlamaları yüzünden)
+        deleted_reservations = await _delete_all("reservation")
+        print(f"✅ {deleted_reservations} rezervasyon silindi.")
 
-    deleted_notifications = await db.notification.delete_many(where={})
-    print(f"✅ {deleted_notifications.count} bildirim silindi.")
+        deleted_notifications = await _delete_all("notification")
+        print(f"✅ {deleted_notifications} bildirim silindi.")
 
-    # 2. Ana tabloları sil
-    deleted_auctions = await db.auction.delete_many(where={})
-    print(f"✅ {deleted_auctions.count} açık artırma silindi.")
+        # 2. Ana tabloları sil
+        deleted_auctions = await _delete_all("auction")
+        print(f"✅ {deleted_auctions} açık artırma silindi.")
 
-    deleted_users = await db.user.delete_many(where={})
-    print(f"✅ {deleted_users.count} kullanıcı silindi.")
+        deleted_users = await _delete_all("user")
+        print(f"✅ {deleted_users} kullanıcı silindi.")
 
-    print("\n✨ Veritabanı başarıyla temizlendi.")
-    
-    await db.disconnect()
+        print("\n✨ Veritabanı başarıyla temizlendi.")
+    finally:
+        await db.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(clear_database())

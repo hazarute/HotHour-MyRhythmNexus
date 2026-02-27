@@ -98,6 +98,13 @@ const handleLogin = async () => {
                 </span>
                 <span v-else>Giriş Yap</span>
               </button>
+
+              <div class="text-center text-sm text-slate-400">
+                Hesabın yok mu?
+                <router-link to="/signup" class="ml-1 font-medium text-neon-blue hover:text-white transition-colors">
+                  Hemen Kayıt Ol
+                </router-link>
+              </div>
             </form>
 
             <div class="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
