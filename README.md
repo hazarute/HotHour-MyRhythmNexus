@@ -4,7 +4,7 @@
 [![Python Version](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![ORM](https://img.shields.io/badge/Prisma-Client-blueviolet?style=flat-square&logo=prisma)](https://prisma.io)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Noncommercial-orange.svg?style=flat-square)](./LICENSE)
 
 > **"Boş Seans Yok, Maksimum Verim."**
 > Pilates stüdyoları ve randevu bazlı işletmeler için "Dinamik Hollanda Açık Artırması" (Dutch Auction) ve "Fırsat Yönetimi" (Yield Management) platformu.
@@ -81,7 +81,7 @@ Geliştirme ortamını kurmak için aşağıdaki adımları izleyin.
 
 1. **Repoyu Klonlayın:**
 ```bash
-git clone [https://github.com/hothour/core.git](https://github.com/hothour/core.git)
+git clone [https://github.com/hazarute/HotHour-MyRhythmNexus.git](https://github.com/hazarute/HotHour-MyRhythmNexus.git)
 cd hothour
 
 ```
@@ -132,20 +132,19 @@ uvicorn main:app --reload
 
 ## ⚖️ Lisans (License)
 
-Bu proje **Apache License 2.0** altında lisanslanmıştır.
+Bu proje, varsayılan olarak **yalnızca ticari olmayan kullanım** için lisanslanmıştır.
 
-Bu lisans şunlara izin verir:
+- ✅ Bireysel öğrenme, inceleme, deneme ve açık kaynak katkı amaçlı kullanım
+- ✅ Ticari olmayan projelerde uyarlama
+- ❌ Ticari kullanım, gelir elde etme amacıyla kullanım, SaaS/ürün içinde kullanım
 
-* ✅ Ticari kullanım
-* ✅ Değiştirme ve Dağıtım
-* ✅ Patent kullanımı
+Ticari kullanım için özel lisans gereklidir. Bu durumda lütfen benimle iletişime geçin:
 
-Şunları gerektirir:
+- 👤 Ad Soyad: `Hazar Üte`
+- 📩 E-mail: `kayraspaceinc@gmail.com`
+- 📄 Detay: `COMMERCIAL-LICENSE.md`
 
-* ❗ Lisans ve telif hakkı bildiriminin korunması
-* ❗ Değişikliklerin belirtilmesi
-
-Detaylar için `LICENSE` dosyasına bakınız.
+Yasal metin için `LICENSE` dosyasına bakınız.
 
 ---
 
