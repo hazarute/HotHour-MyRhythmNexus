@@ -69,3 +69,31 @@ flowchart LR
   - Akış: `POST /register` -> Background Task (Send Mail) -> `GET /verify-email`.
   - Token: Özel `type='verification'` claim'li JWT.
   - State: `user.isVerified` varsayılan `False`.
+
+### Rezervasyon Yetki ve Yarış Koşulu (Race) Pattern
+- **Backend Authority:** Rezervasyon kabul/red kararı backend service katmanında verilir.
+- **Unique Constraint Lock:** `reservation.auctionId` tekil kısıtı ile aynı oturuma tek rezervasyon garantilenir.
+- **Conflict Contract:** Yarış kaybeden kullanıcı `409 Conflict` alır.
+- **Role Gate:** `ADMIN` rolü için rezervasyon işlemi service-level kural ile engellenir (`403`).
+
+### Frontend Çok Katmanlı Guard Pattern
+- **UI Guard:** `AuctionCard` ve `AuctionDetail` CTA disable kuralları (status + role + eligibility).
+- **Store Guard:** `auctionStore.bookAuction` içinde merkezi rol kontrolü.
+- **Server Guard:** Frontend koruması atlatılsa dahi backend nihai engeli uygular.
+
+### Realtime Disable/State Sync Pattern
+- **Room Scope:** `auction:{id}` odasına yayın.
+- **`auction_booked` Event:** Tüm izleyicilerde status anında `SOLD` olur; CTA dinamik kullanım dışı kalır.
+- **`turbo_triggered` Event:** Tüm izleyicilerde `turboStartedAt` state’i canlı güncellenir.
+
+### Turbo Senkronizasyon Pattern
+- Turbo tetikleme sadece manuel endpoint’e bırakılmaz.
+- Listeleme/detay/periyodik kontrol akışında `ensure_turbo_triggered` adımı çalışır.
+- Böylece backend state (`turboStartedAt`) ve frontend görünümü tutarlı kalır.
+
+### DB Engine Dayanıklılık Pattern
+- `list_auctions` çağrısında transient Prisma engine bağlantı kopmalarında:
+  1) hata yakalama,
+  2) `connect_db()` ile reconnect,
+  3) tek sefer retry
+  uygulanır.

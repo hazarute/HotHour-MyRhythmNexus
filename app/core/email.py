@@ -1,6 +1,6 @@
 from typing import List
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-from pydantic import EmailStr
+from pydantic import EmailStr, NameEmail, SecretStr
 from app.core.config import settings
 from app.core.security import create_verification_token
 import logging
@@ -15,7 +15,11 @@ if settings.EMAILS_ENABLED:
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.SMTP_user if settings.SMTP_user else "",
-    MAIL_PASSWORD=settings.SMTP_PASSWORD if settings.SMTP_PASSWORD else "",
+    MAIL_PASSWORD=(
+        settings.SMTP_PASSWORD
+        if isinstance(settings.SMTP_PASSWORD, SecretStr)
+        else SecretStr(settings.SMTP_PASSWORD if settings.SMTP_PASSWORD else "")
+    ),
     MAIL_FROM=settings.EMAILS_FROM_EMAIL if settings.EMAILS_FROM_EMAIL else "noreply@hothour.com",
     MAIL_PORT=settings.SMTP_PORT if settings.SMTP_PORT else 587,
     MAIL_SERVER=settings.SMTP_HOST if settings.SMTP_HOST else "smtp.gmail.com",
@@ -32,9 +36,12 @@ async def send_email(email_to: EmailStr, subject_template: str, html_template: s
         logger.info(f"Emails disabled. Skipping email to {email_to}")
         return
 
+    recipient_email = str(email_to)
+    recipient = NameEmail(name=recipient_email, email=recipient_email)
+
     message = MessageSchema(
         subject=subject_template,
-        recipients=[email_to],
+        recipients=[recipient],
         body=html_template,
         subtype=MessageType.html
     )
@@ -58,12 +65,12 @@ async def send_verification_email(email_to: str, token: str) -> None:
 
     project_name = settings.PROJECT_NAME
     display_project_name = project_name.replace(" Core", "").replace("Core ", "").replace("Core", "").strip()
-    subject = f"✨ {project_name} - Hesabınızı Doğrulayın"
+    subject = f"🔥 {display_project_name} - Arenaya Giriş İçin Son Bir Adım"
     
     # Email link - Frontend verify sayfasına yönlendir (URL .env'den okunur)
     verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
     logo_url = f"{settings.FRONTEND_URL}/logo_marka_adi_var.png"
-    logo_html = f'<img src="{logo_url}" alt="{display_project_name} Logo" class="logo-img" />'
+    logo_html = f'<img src="{logo_url}" alt="{display_project_name} Logo" class="logo-img" style="max-height: 60px; width: auto;" />'
     
     html_content = f"""
     <!DOCTYPE html>
@@ -72,225 +79,176 @@ async def send_verification_email(email_to: str, token: str) -> None:
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            * {{
+            /* E-posta istemcileri için güvenli CSS sıfırlaması */
+            body, table, td, a {{ -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }}
+            table, td {{ mso-table-lspace: 0pt; mso-table-rspace: 0pt; }}
+            img {{ -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }}
+            
+            body {{
                 margin: 0;
                 padding: 0;
-                box-sizing: border-box;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                background-color: #050505; /* Deep Black */
+                color: #e2e8f0;
+                width: 100% !important;
             }}
-            body {{
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 20px;
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .wrapper {{
+                width: 100%;
+                background-color: #050505;
+                padding: 40px 20px;
             }}
             .container {{
                 max-width: 600px;
-                width: 100%;
-                background: white;
+                margin: 0 auto;
+                background-color: #0a0f1a; /* Dark Blue/Black Card */
+                border: 1px solid #1e293b;
                 border-radius: 16px;
                 overflow: hidden;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             }}
             .header {{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                padding: 40px 30px;
+                padding: 40px 30px 20px;
                 text-align: center;
-                color: white;
-            }}
-            .logo-section {{
-                margin-bottom: 0;
-            }}
-            .logo {{
-                font-size: 48px;
-                margin-bottom: 0;
-            }}
-            .logo-img {{
-                width: 220px;
-                max-width: 100%;
-                height: auto;
-                display: inline-block;
+                border-bottom: 1px solid #1e293b;
             }}
             .header h1 {{
-                font-size: 28px;
-                font-weight: 700;
-                margin-bottom: 5px;
-                letter-spacing: -0.5px;
+                color: #ffffff;
+                font-size: 24px;
+                font-weight: 900;
+                margin: 20px 0 5px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
             }}
             .header p {{
-                font-size: 14px;
-                opacity: 0.9;
-                font-weight: 500;
+                color: #00BFFF; /* Neon Blue */
+                font-size: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                margin: 0;
             }}
             .content {{
                 padding: 40px 30px;
             }}
             .greeting {{
+                color: #ffffff;
                 font-size: 18px;
-                font-weight: 600;
-                color: #1a1a1a;
+                font-weight: 700;
                 margin-bottom: 20px;
             }}
             .message {{
+                color: #94a3b8;
                 font-size: 15px;
                 line-height: 1.6;
-                color: #555;
                 margin-bottom: 30px;
+            }}
+            .button-container {{
+                text-align: center;
+                margin: 35px 0;
             }}
             .cta-button {{
                 display: inline-block;
-                background: #2f5eff;
-                color: #ffffff !important;
-                padding: 14px 40px;
-                border-radius: 8px;
+                background-color: #00BFFF; /* Neon Blue */
+                color: #000000 !important;
+                padding: 16px 40px;
+                border-radius: 12px;
                 text-decoration: none;
-                font-weight: 700;
+                font-weight: 900;
                 font-size: 16px;
-                transition: transform 0.2s, box-shadow 0.2s;
-                box-shadow: 0 10px 25px rgba(47, 94, 255, 0.45);
-                border: 1px solid #2147d9;
-                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-            }}
-            .cta-button:hover {{
-                transform: translateY(-2px);
-                box-shadow: 0 15px 35px rgba(47, 94, 255, 0.6);
-            }}
-            .link-section {{
-                margin-top: 30px;
-                padding-top: 30px;
-                border-top: 1px solid #f0f0f0;
-                text-align: center;
-            }}
-            .link-label {{
-                font-size: 12px;
-                color: #999;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 10px;
+                letter-spacing: 2px;
             }}
-            .link-text {{
+            .info-box {{
+                background-color: #050505;
+                border-left: 4px solid #f20d80; /* Neon Magenta */
+                padding: 16px 20px;
+                border-radius: 0 8px 8px 0;
+                margin-bottom: 20px;
+            }}
+            .info-box p {{
+                margin: 0;
                 font-size: 13px;
-                color: #666;
-                word-break: break-all;
-                font-family: 'Courier New', monospace;
-                background: #f8f8f8;
-                padding: 12px;
-                border-radius: 6px;
-            }}
-            .timer {{
-                background: #fff9e6;
-                border-left: 4px solid #ffa500;
-                padding: 15px;
-                margin: 25px 0;
-                border-radius: 4px;
-                font-size: 14px;
-                color: #666;
-            }}
-            .footer {{
-                background: #f8f8f8;
-                padding: 30px;
-                text-align: center;
-                border-top: 1px solid #e0e0e0;
-                font-size: 12px;
-                color: #999;
-            }}
-            .footer p {{
-                margin-bottom: 10px;
+                color: #cbd5e1;
                 line-height: 1.5;
             }}
-            .footer-links {{
-                font-size: 11px;
-                margin-top: 15px;
+            .link-box {{
+                background-color: #000000;
+                border: 1px solid #1e293b;
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+                margin-top: 30px;
+            }}
+            .link-box p {{
+                margin: 0;
+                font-family: 'Courier New', Courier, monospace;
+                color: #00BFFF;
+                font-size: 12px;
+                word-break: break-all;
+            }}
+            .footer {{
+                background-color: #050505;
+                padding: 30px;
+                text-align: center;
+                border-top: 1px solid #1e293b;
+            }}
+            .footer p {{
+                color: #64748b;
+                font-size: 12px;
+                margin: 0 0 10px;
+                line-height: 1.5;
             }}
             .footer-links a {{
-                color: #667eea;
+                color: #f20d80; /* Neon Magenta */
                 text-decoration: none;
+                font-weight: 600;
                 margin: 0 10px;
-            }}
-            .security-note {{
-                background: #e3f2fd;
-                border-left: 4px solid #2196F3;
-                padding: 12px;
-                margin: 20px 0;
-                border-radius: 4px;
-                font-size: 13px;
-                color: #1565c0;
-            }}
-            @media (max-width: 600px) {{
-                .container {{
-                    border-radius: 8px;
-                }}
-                .header {{
-                    padding: 30px 20px;
-                }}
-                .content {{
-                    padding: 25px 20px;
-                }}
-                .greeting {{
-                    font-size: 16px;
-                }}
-                .message {{
-                    font-size: 14px;
-                }}
             }}
         </style>
     </head>
     <body>
-        <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <div class="logo-section">
+        <div class="wrapper">
+            <div class="container">
+                <div class="header">
                     {logo_html}
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="content">
-                <p class="greeting">Merhaba! 👋</p>
-                
-                <p class="message">
-                    {display_project_name} hesabınızı oluşturduğunuz için teşekkür ederiz! Hesabınızı aktif hale getirmek için 
-                    lütfen aşağıdaki butona tıklayarak email adresinizi doğrulayın.
-                </p>
-
-                <center>
-                    <a href="{verification_link}" class="cta-button">Hesabımı Doğrula ✨</a>
-                </center>
-
-                <div class="timer">
-                    ⏱️ <strong>Önemli:</strong> Bu doğrulama linki 48 saat geçerlidir. Lütfen bu süre içinde doğrulama işlemini tamamlayın.
+                    <h1>Arenaya Hoş Geldin</h1>
+                    <p>Son Bir Adım Kaldı</p>
                 </div>
 
-                <div class="security-note">
-                    🔒 Eğer linke tıklamakta sorun yaşıyorsanız, aşağıdaki linki tarayıcınızın adres çubuğuna yapıştırabilirsiniz.
+                <div class="content">
+                    <div class="greeting">Merhaba, 👋</div>
+                    
+                    <div class="message">
+                        <strong>{display_project_name}</strong> dünyasına adım attığın için teşekkürler. Canlı Pilates oturumlarında fiyatlar düşerken fırsatları yakalamaya başlamak ve yerini ayırtmak için e-posta adresini doğrulaman gerekiyor.
+                    </div>
+
+                    <div class="button-container">
+                        <a href="{verification_link}" class="cta-button">HESABI DOĞRULA</a>
+                    </div>
+
+                    <div class="info-box" style="border-left-color: #ff7b00;">
+                        <p><strong style="color: #ff7b00;">🔥 ZAMAN DARALIYOR:</strong> Güvenliğin için bu doğrulama bağlantısı <strong>48 saat</strong> içinde geçerliliğini yitirecektir.</p>
+                    </div>
+
+                    <div class="info-box" style="border-left-color: #00BFFF;">
+                        <p>🔒 Butona tıklamakta sorun yaşıyorsan, aşağıdaki şifreli bağlantıyı kopyalayıp tarayıcına yapıştırabilirsin:</p>
+                    </div>
+
+                    <div class="link-box">
+                        <p>{verification_link}</p>
+                    </div>
+
+                    <div class="message" style="margin-top: 40px; font-size: 12px; color: #64748b; text-align: center;">
+                        Eğer bu hesabı sen oluşturmadıysan, bu e-postayı güvenle silebilirsin. Başka biri e-posta adresini yanlış yazmış olabilir.
+                    </div>
                 </div>
 
-                <!-- Link Section -->
-                <div class="link-section">
-                    <div class="link-label">Doğrulama Linki:</div>
-                    <div class="link-text">{verification_link}</div>
+                <div class="footer">
+                    <p>© 2026 {project_name}. Tüm hakları saklıdır.</p>
+                    <p>Pilates Stüdyoları için Dinamik Fiyatlandırma Platformu</p>
+                    <div class="footer-links" style="margin-top: 15px;">
+                        <a href="{settings.FRONTEND_URL}">Canlı Arenaya Dön</a>
+                    </div>
                 </div>
-
-                <p class="message" style="margin-top: 30px; font-size: 13px; color: #999;">
-                    <strong>Bu email'i siz açmadıysanız:</strong> Lütfen bu email'i görmezden gelin. Başka birisi yanlışlıkla 
-                    email adresinizi kullanmış olabilir.
-                </p>
-            </div>
-
-            <!-- Footer -->
-            <div class="footer">
-                <p>© 2026 {project_name}. Tüm hakları saklıdır.</p>
-                <p>Pilates Stüdyoları için Dinamik Fiyatlandırma Platformu</p>
-                <div class="footer-links">
-                    <a href="http://localhost:3000">Website</a> | 
-                    <a href="http://localhost:3000">Yardım</a> | 
-                    <a href="http://localhost:3000">Gizlilik Politikası</a>
-                </div>
-                <p style="margin-top: 15px; font-size: 11px; color: #bbb;">
-                    Eğer problemler yaşıyorsanız: support@hothour.com ile iletişime geçin.
-                </p>
             </div>
         </div>
     </body>

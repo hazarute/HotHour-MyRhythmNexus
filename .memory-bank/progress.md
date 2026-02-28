@@ -141,7 +141,7 @@ Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son rev
 - [ ] Veritabanı (Production) migration planı
 - [ ] `.env` yapılandırmasının production için ayrıştırılması
 
-## Faz R4: Hizmet Başlangıç Saati Entegrasyonu (Scheduled At)
+## Faz R4.6: Hizmet Başlangıç Saati Entegrasyonu (Scheduled At)
 Oturumun (açık artırmanın) başlangıç saati ile hizmetin (pilates dersinin) başlangıç saati ayrıştırılmalı.
 
 - [X] **Veritabanı Şeması:** `schema.prisma` güncellendi (`scheduledAt` alanı eklendi).
@@ -152,3 +152,27 @@ Oturumun (açık artırmanın) başlangıç saati ile hizmetin (pilates dersinin
 - [X] **Frontend Kart Görünümü:** `AuctionCard.vue` güncellenmesi (Hizmet saatini göster).
 - [X] **Frontend Detay Görünümü:** `AuctionDetailView.vue` güncellenmesi (Hizmet saati ve süresi).
 - [X] **Frontend Rezervasyon Görünümü:** `MyReservationsView.vue` güncellenmesi (Hizmet saati öncelikli gösterim).
+
+---
+
+## Faz R4.7 — Stabilizasyon ve İş Kuralı Sertleştirme (Yeni)
+
+### R4.7.1 Rezervasyon Yetki/Kural Sertleştirmesi
+- [X] Aynı auction için eşzamanlı rezervasyon denemelerinde sadece bir kullanıcının kazanması testle doğrulandı.
+- [X] API conflict davranışı (`409`) ve tek rezervasyon garantisi doğrulandı.
+- [X] `ADMIN` rolündeki kullanıcılar için rezervasyon backend katmanında engellendi.
+- [X] `ADMIN` rezervasyon denemesi için entegrasyon testi eklendi.
+
+### R4.7.2 Frontend Koruma ve UX Senkronu
+- [X] Frontend store (`bookAuction`) seviyesinde admin rezervasyon guard eklendi.
+- [X] `AuctionCard` ve `AuctionDetailView` tarafında admin için “Hemen Kap” akışı devre dışı bırakıldı.
+- [X] Cinsiyet koşulu sağlanmadığında buton üzerinde metinsiz görsel geri bildirim (pulse/ring/icon) tamamlandı.
+
+### R4.7.3 Realtime Durum Tutarlılığı
+- [X] `turbo_triggered` event’i Home/AllAuctions/Detail sayfalarında canlı state güncellemesine bağlandı.
+- [X] `auction_booked` event’inin çoklu client’a anında ulaştığı testle doğrulandı.
+- [X] Rezerve edilen oturumun diğer kullanıcılarda dinamik olarak kullanılamaz hale gelmesi doğrulandı.
+
+### R4.7.4 Dayanıklılık ve Operasyonel Güvenilirlik
+- [X] `GET /auctions?include_computed=true` akışında transient Prisma bağlantı kopmalarına karşı reconnect+retry eklendi.
+- [X] `test_auctions_computed.py` ile listeleme akışının regresyonsuz çalıştığı doğrulandı.

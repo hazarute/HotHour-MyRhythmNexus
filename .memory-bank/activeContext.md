@@ -1,33 +1,25 @@
 # Aktif Bağlam (Active Context)
 
 ## Şu Anki Odak
-**Faz R4: Hizmet Başlangıç Saati Entegrasyonu (Scheduled At)**
+**R4 Stabilizasyon + Üretim Dayanıklılığı güncellemeleri tamamlandı.**
 
-Kullanıcı talebi üzerine, açık artırma başlangıç saati (`startTime`) ile asıl hizmetin/dersin başlangıç saati (`scheduledAt`) ayrıştırıldı.
-Backend modelleri, API'ler ve Frontend bileşenleri güncellendi. Testler başarıyla geçti.
-
-**Sıradaki Adım:**
-- Bir sonraki görev (eğer varsa) veya R4.5 Deployment Öncesi Kontrollerine geri dönüş.
+Son oturumlarda, rezervasyon ve gerçek zamanlı akışın güvenlik/kararlılık tarafı güçlendirildi:
+- Admin kullanıcıların rezervasyon yapması backend + frontend katmanlarında engellendi.
+- Aynı anda rezervasyon (race condition) koruması eşzamanlı test ile doğrulandı.
+- `auction_booked` event’i ile diğer kullanıcıların “Hemen Kap” aksiyonu dinamik olarak devre dışına düşecek akış test edildi.
+- Turbo moda geçiş, sayfa açıkken canlı yansıyacak şekilde frontend event dinleyicileriyle tamamlandı.
+- `GET /auctions?include_computed=true` için Prisma bağlantı kopması durumunda otomatik reconnect+retry dayanıklılığı eklendi.
 
 ## ✅ Tamamlanan Son İşler
-- **Backend:** `Auction` modeline `scheduled_at` eklendi.
-- **Backend:** `AuctionService` ve `AuctionValidator` güncellendi.
-- **Frontend:** `AuctionCreateForm`, `AuctionCard`, `AuctionDetailView`, `MyReservationsView` güncellendi.
-- **Test:** `test_auctions.py` güncellendi ve çalıştırıldı (Email verification fix dahil).
-- **Profile & Mobile UX:**
-    - `frontend/src/App.vue`: Mobil hamburger menü + Responsive header.
-    - `frontend/src/views/ProfileView.vue`: Kullanıcı profili ve şifre değiştirme sayfası.
-    - `app/api/auth.py`: Şifre güncelleme backend endpoint'i.
-- **Faz R1.6 Admin Refactor:** Tamamlandı.
-- **Email Doğrulama Akışı:** Profesyonel HTML template + Frontend sayfası.
-- **Configuration Management:** Production-safe environment setup.
+- **Booking kuralı:** `ADMIN` rolü rezervasyon yapamaz (service-level kural + API 403 mapping).
+- **Frontend guard:** `AuctionCard`, `AuctionDetailView`, `auctionStore.bookAuction` içinde admin rezervasyon akışı engellendi.
+- **Realtime sync:** `HomeView`, `AllAuctionsView`, `AuctionDetailView` içinde `turbo_triggered` ve `auction_booked` eventlerinin state’e yansıması tamamlandı.
+- **Turbo state senkronu:** Backend’de turbo tetikleme yalnızca manuel endpoint’e bağlı kalmadan rutin akışta da senkronlandı.
+- **DB dayanıklılığı:** `AuctionService.list_auctions` içinde transient Prisma bağlantı hatasında reconnect+retry eklendi.
+- **Testler:**
+    - Booking integration testlerine eşzamanlı iki kullanıcı senaryosu eklendi.
+    - Admin’in rezervasyon yapamaması için entegrasyon testi eklendi.
+    - Realtime sync testine `auction_booked` yayın/doğrulama adımı eklendi.
 
-## 📝 Sıradaki Adımlar
-
-### Manuel Test Planı (Uçtan Uca) Güncelleme:
-
-1. ✅ Yeni kullanıcı kaydı - Email doğrulama akışı tamamlandı
-2. ✅ Email template profesyonelle ştirildi
-3. ✅ Environment configuration (FRONTEND_URL) eklendi
-4. ✅ `.env.example` güncellenmiş
-5. ✅ **Rezervasyon Başarı Modalı:** Booking kodu tıklanabilir + clipboard copy + geri bildirim
+## 📝 Sıradaki Adım
+- R4.5 deployment öncesi son kontroller (production DB/engine izleme, CI doğrulaması, smoke test) veya yeni ürün talimatı.

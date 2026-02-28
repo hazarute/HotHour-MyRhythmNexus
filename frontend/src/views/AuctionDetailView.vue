@@ -82,26 +82,26 @@ const bookingDisabled = computed(() => {
 const themeClasses = computed(() => {
     if (isTurbo.value) {
         return {
-            bgMain: 'bg-[#221019]',
-            bgCard: 'bg-[#221019]/50',
-            borderAccent: 'border-[#f20d80]',
-            textAccent: 'text-[#f20d80]',
-            textTurbo: 'text-[#ff2a2a]',
-            gradientBtn: 'from-[#f20d80] via-[#ff0055] to-[#ff7b00]',
-            shadowNeon: 'shadow-[0_0_20px_rgba(242,13,128,0.5),0_0_40px_rgba(255,42,42,0.3)]',
-            glowColor: 'rgba(242, 13, 128, 0.5)'
+            bgMain: 'bg-[#1a0505]',
+            bgCard: 'bg-[#2a0808]/80',
+            borderAccent: 'border-[#ff2a2a]',
+            textAccent: 'text-[#ff2a2a]',
+            textTurbo: 'text-[#ff7b00]',
+            gradientBtn: 'from-[#ff2a2a] via-[#ff0055] to-[#ff7b00]',
+            shadowNeon: 'shadow-[0_0_30px_rgba(255,42,42,0.4)]',
+            glowColor: 'rgba(255, 42, 42, 0.4)'
         }
     }
 
     return {
-        bgMain: 'bg-background-dark',
-        bgCard: 'bg-[#1a1f2e]/60',
+        bgMain: 'bg-[#050505]',
+        bgCard: 'bg-[#0a0f1a]/80',
         borderAccent: 'border-neon-blue',
         textAccent: 'text-neon-blue',
-        textTurbo: 'text-neon-orange',
+        textTurbo: 'text-white',
         gradientBtn: 'from-primary via-blue-600 to-neon-blue',
-        shadowNeon: 'shadow-neon-blue',
-        glowColor: 'rgba(0, 240, 255, 0.5)'
+        shadowNeon: 'shadow-[0_0_30px_rgba(0,191,255,0.2)]',
+        glowColor: 'rgba(0, 191, 255, 0.3)'
     }
 })
 
@@ -237,6 +237,7 @@ onUnmounted(() => {
 
     socketStore.off('price_update', onPriceUpdate)
     socketStore.off('auction_booked', onAuctionBooked)
+    socketStore.off('auction_booked', onAuctionBooked)
     socketStore.off('turbo_triggered', onTurboTriggered)
 
     if (timerId) {
@@ -252,144 +253,122 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Loading State -->
-  <div v-if="auctionStore.loading && !auction" class="flex items-center justify-center min-h-screen bg-background-dark text-white">
-    <div class="animate-spin h-12 w-12 border-4 border-neon-blue border-t-transparent rounded-full"></div>
+  <div v-if="auctionStore.loading && !auction" class="flex flex-col items-center justify-center min-h-screen bg-[#050505] text-white">
+    <div class="relative w-24 h-24 mb-6">
+        <div class="absolute inset-0 rounded-full border-t-2 border-neon-blue animate-spin"></div>
+        <div class="absolute inset-2 rounded-full border-r-2 border-purple-500 animate-spin opacity-70" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+    </div>
+    <p class="text-neon-blue font-mono tracking-widest animate-pulse uppercase">Arena Hazırlanıyor...</p>
   </div>
 
-  <!-- Main Content -->
   <div v-else-if="auction" 
-       class="layout-container min-h-screen flex flex-col items-center justify-start md:justify-center pt-20 pb-8 md:py-8 px-4 sm:px-6 lg:px-8 relative transition-colors duration-700 overflow-x-hidden"
-       :class="[themeClasses.bgMain]">
+       class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-1000 overflow-hidden font-sans"
+       :class="themeClasses.bgMain">
        
-    <!-- Background Glow Effects -->
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-[128px] pointer-events-none transition-colors duration-700"
-         :style="{ backgroundColor: themeClasses.glowColor, opacity: 0.2 }"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-[128px] pointer-events-none transition-colors duration-700"
-         :style="{ backgroundColor: isTurbo ? 'rgba(255, 123, 0, 0.2)' : 'rgba(37, 106, 244, 0.2)' }"></div>
+    <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 mix-blend-screen"
+         :style="{ backgroundColor: themeClasses.glowColor }"></div>
+    <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 mix-blend-screen"
+         :style="{ backgroundColor: isTurbo ? 'rgba(255, 123, 0, 0.15)' : 'rgba(128, 0, 255, 0.15)' }"></div>
 
-    <!-- Details Container -->
-    <div class="layout-content-container flex flex-col w-full items-center justify-center relative z-10 font-display transition-all duration-300">
+    <div class="w-full max-w-2xl relative z-10 perspective-1000">
         
-        <!-- Right Column: Price & Action -->
-        <div class="w-full max-w-lg md:max-w-2xl flex flex-col items-center relative">
-            
-            <!-- Breadcrumbs (Mobile only) -->
-            <nav class="flex md:hidden flex-wrap gap-2 mb-6 items-center justify-center">
-                <router-link to="/" class="text-slate-400 hover:text-white text-xs font-medium transition-colors">Ana Sayfa</router-link>
-                <span class="text-slate-600 text-xs font-medium">/</span>
-                <span class="text-slate-400 text-xs font-medium">Pilates</span>
-                <span class="text-slate-600 text-xs font-medium">/</span>
-                <span class="text-xs font-medium flex items-center gap-1 transition-colors duration-500" :class="themeClasses.textAccent">
-                    <span class="material-symbols-outlined text-xs">bolt</span>
-                    {{ isTurbo ? 'Turbo' : 'Normal' }}
-                </span>
-            </nav>
+        <div v-if="isTurbo" class="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-[90%] md:w-auto">
+            <div class="bg-gradient-to-r from-red-600 via-orange-500 to-red-600 text-white font-black px-8 py-2 rounded-t-xl text-center uppercase tracking-[0.2em] text-sm shadow-[0_-10px_20px_rgba(255,42,42,0.3)] border-t border-x border-white/20 animate-pulse">
+                🔥 Turbo Mod Aktif 🔥
+            </div>
+        </div>
 
-            <!-- Main Card -->
-            <div class="relative w-full min-h-[550px] md:min-h-[600px] rounded-[2rem] p-[1px] overflow-hidden transition-all duration-500 shadow-2xl"
-                 :class="[themeClasses.shadowNeon, isTurbo ? 'border-2 border-[#f20d80]/50' : 'border border-white/10']">
+        <div class="relative w-full rounded-3xl p-[1px] overflow-hidden transition-all duration-700"
+             :class="[themeClasses.shadowNeon, isTurbo ? 'border-2 border-red-500/50 mt-4' : 'border border-white/10']">
             
-                <!-- Animated Border (Turbo only) -->
-                <div v-if="isTurbo" class="absolute inset-0 bg-gradient-to-r from-[#f20d80] via-[#ff7b00] to-[#f20d80] opacity-20 animate-pulse pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+            
+            <div class="rounded-[23px] p-6 sm:p-10 relative flex flex-col items-center text-center gap-6 h-full transition-colors duration-700 backdrop-blur-2xl"
+                 :class="themeClasses.bgCard">
                 
-                <div class="rounded-[2rem] p-6 sm:p-8 md:p-10 relative overflow-hidden flex flex-col items-center text-center gap-4 md:gap-6 h-full justify-between transition-colors duration-500 bg-background-dark/90 backdrop-blur-3xl">
+                <div class="w-full flex justify-between items-center mb-2">
+                    <button @click="router.push('/')" class="text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-xs uppercase tracking-wider font-bold">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        Geri
+                    </button>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest"
+                         :class="isTurbo ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'">
+                        <span class="w-2 h-2 rounded-full animate-ping" :class="isTurbo ? 'bg-red-500' : 'bg-neon-blue'"></span>
+                        Canlı İhale
+                    </div>
+                </div>
+
+                <div class="w-full flex flex-col items-center">
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2 tracking-tight">{{ auction.title }}</h1>
+                    <p class="text-slate-400 text-sm max-w-md">{{ auction.description || 'Stüdyo detayları ve kurallar.' }}</p>
+                </div>
+
+                <div class="w-full py-8 relative flex flex-col items-center justify-center">
+                    <div class="text-xs font-bold uppercase tracking-[0.3em] mb-4" :class="themeClasses.textAccent">Anlık Fiyat</div>
                     
-                    <!-- Header -->
-                    <div class="w-full flex justify-between items-start">
-                        <div class="flex flex-col items-start gap-1">
-                            <div class="flex items-center gap-2">
-                                <span class="relative flex h-3 w-3">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
-                                    <span class="relative inline-flex rounded-full h-3 w-3" :class="isTurbo ? 'bg-[#ff2a2a]' : 'bg-green-500'"></span>
-                                </span>
-                                <p class="font-bold tracking-widest text-[10px] sm:text-xs uppercase" :class="isTurbo ? 'text-[#ff2a2a]' : 'text-green-500'">
-                                    Canlı Oturum
-                                </p>
-                            </div>
-                            <h1 class="text-white text-2xl sm:text-3xl md:text-4xl font-black leading-tight mt-1 text-left">{{ auction.title }}</h1>
-                            <p class="text-slate-400 text-xs sm:text-sm text-left">{{ auction.description || 'Bu oturum için açıklama bilgisi bulunmuyor.' }}</p>
-                            
-                            <div v-if="auction.scheduled_at" class="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
-                                <span class="material-symbols-outlined text-neon-blue text-lg">event</span>
-                                <div class="flex flex-col items-start leading-tight">
-                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Seans Zamanı</span>
-                                    <span class="text-white text-sm font-bold">{{ formatDate(auction.scheduled_at) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Price Section -->
-                    <div class="flex flex-col items-center justify-center py-4 sm:py-8 w-full relative">
-                        <div class="text-slate-400 text-xs sm:text-sm font-medium mb-2 uppercase tracking-wider">Güncel Fiyat</div>
+                    <div class="relative group">
+                        <h1 v-if="isTurbo" class="absolute -inset-1 text-[80px] sm:text-[100px] md:text-[120px] font-mono font-black text-red-500 opacity-50 blur-sm translate-x-1 translate-y-1 select-none pointer-events-none">
+                            {{ formatPrice(currentPriceValue) }}
+                        </h1>
                         
-                        <div class="relative">
-                            <h1 class="text-white text-[72px] sm:text-[100px] md:text-[120px] font-mono font-black leading-none tracking-tighter transition-all duration-300 transform"
-                                :class="{ 'drop-shadow-[0_0_25px_rgba(242,13,128,0.5)]': isTurbo }">
-                                {{ formatPrice(currentPriceValue) }}
-                            </h1>
-                            <!-- Glitch bg -->
-                            <div v-if="isTurbo" class="absolute -inset-1 bg-[#f20d80]/20 blur-xl -z-10 animate-pulse"></div>
-                        </div>
+                        <h1 class="text-[80px] sm:text-[100px] md:text-[120px] font-mono font-black leading-none tracking-tighter text-white transition-all duration-300 relative z-10 tabular-nums drop-shadow-2xl"
+                            style="text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                            {{ formatPrice(currentPriceValue) }}
+                        </h1>
+                    </div>
+                </div>
 
-                        <div class="mt-4 flex items-center gap-2 px-4 py-1.5 rounded-full border transition-colors duration-500"
-                            :class="isTurbo ? 'bg-red-500/10 border-red-500/20' : 'bg-blue-500/10 border-blue-500/20'">
-                            <span class="material-symbols-outlined text-sm" :class="isTurbo ? 'text-red-500' : 'text-blue-400'">trending_down</span>
-                            <p class="text-xs font-bold uppercase tracking-wide" :class="isTurbo ? 'text-red-400' : 'text-blue-400'">
-                                {{ isTurbo ? 'Hızlı Düşüş' : 'Fiyat Düşüyor' }}
-                            </p>
+                <div class="grid grid-cols-3 gap-3 w-full max-w-sm mb-4">
+                    <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-black/50 border border-white/5 shadow-inner">
+                        <span class="text-2xl sm:text-3xl font-black text-slate-300 font-mono tabular-nums">{{ countdown.hours }}</span>
+                        <span class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mt-1">Saat</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-black/50 border border-white/5 shadow-inner">
+                        <span class="text-2xl sm:text-3xl font-black text-slate-300 font-mono tabular-nums">{{ countdown.mins }}</span>
+                        <span class="text-[9px] uppercase text-slate-500 font-bold tracking-widest mt-1">Dk</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center p-3 rounded-xl bg-black/80 border shadow-inner relative overflow-hidden"
+                         :class="isTurbo ? 'border-red-500/50 shadow-[inset_0_0_20px_rgba(255,0,0,0.2)]' : 'border-neon-blue/30'">
+                        <span class="text-3xl sm:text-4xl font-black font-mono relative z-10 tabular-nums" :class="themeClasses.textAccent">
+                            {{ countdown.secs }}
+                        </span>
+                        <span class="text-[9px] uppercase font-bold tracking-widest mt-1 relative z-10" :class="themeClasses.textAccent">Sn</span>
+                    </div>
+                </div>
+
+                <div class="w-full grid grid-cols-2 gap-3 mb-6">
+                    <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/5">
+                        <span class="material-symbols-outlined text-slate-400 mb-1">calendar_month</span>
+                        <span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Seans Zamanı</span>
+                        <span class="text-sm font-bold text-slate-200 mt-1">{{ formatDate(auction.scheduled_at) }}</span>
+                    </div>
+                    
+                    <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent"></div>
+                        <span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold relative z-10">Piyasa Değeri</span>
+                        <span class="text-sm font-bold text-slate-400 line-through decoration-red-500 mt-1 relative z-10">{{ formatPrice(startPriceValue) }}</span>
+                        <div class="mt-2 px-2 py-0.5 bg-green-500/20 border border-green-500/30 rounded text-xs font-black text-green-400 relative z-10">
+                            %{{ discountPercent }} İNDİRİM
                         </div>
                     </div>
+                </div>
 
-                    <!-- Timer Grid (Compact on Mobile) -->
-                    <div class="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-sm mb-2 sm:mb-6">
-                        <!-- Hours -->
-                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
-                            :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ countdown.hours }}</span>
-                            <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Saat</span>
+                <div class="w-full mb-6 transition-all duration-300"
+                     :class="participantConditionFx ? 'scale-[1.02]' : 'scale-100'">
+                    <div class="flex items-center justify-between p-4 rounded-xl border transition-all"
+                         :class="participantConditionFx ? 'border-red-500 bg-red-500/10' : 'border-white/5 bg-black/30'">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined" :class="participantConditionFx ? 'text-red-500' : 'text-slate-400'">group</span>
+                            <div class="text-left">
+                                <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Katılımcı Kuralı</p>
+                                <p class="text-sm font-bold text-white">{{ allowedGenderLabel }}</p>
+                            </div>
                         </div>
-                        <!-- Mins -->
-                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border border-white/5 transition-colors"
-                            :class="isTurbo ? 'bg-[#2a1621]' : 'bg-white/5'">
-                            <span class="text-xl sm:text-3xl font-bold text-white font-mono">{{ countdown.mins }}</span>
-                            <span class="text-[8px] sm:text-[10px] uppercase text-slate-400 font-bold tracking-wider">Dk</span>
-                        </div>
-                        <!-- Secs (Active) -->
-                        <div class="flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-4 rounded-2xl border relative overflow-hidden transition-all"
-                            :class="isTurbo ? 'bg-[#2a1621] border-[#ff2a2a]/30 shadow-[0_0_15px_rgba(255,42,42,0.15)]' : 'bg-white/5 border-neon-blue/30'">
-                            <div v-if="isTurbo" class="absolute inset-0 bg-[#ff2a2a]/5 animate-pulse"></div>
-                            <span class="text-xl sm:text-3xl font-bold font-mono relative z-10" :class="themeClasses.textTurbo">
-                                {{ countdown.secs }}
-                            </span>
-                            <span class="text-[8px] sm:text-[10px] uppercase font-bold tracking-wider relative z-10" :class="themeClasses.textTurbo">Sn</span>
-                        </div>
+                        <span v-if="participantConditionFx" class="text-xs font-bold text-red-400 animate-pulse">Koşulu Sağlamıyorsunuz</span>
                     </div>
+                </div>
 
-                    <!-- Info Row -->
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4 w-full mb-2 sm:mb-4">
-                        <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
-                            <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Başlangıç</p>
-                            <p class="text-white font-bold line-through decoration-slate-500 text-sm sm:text-base">{{ formatPrice(startPriceValue) }}</p>
-                        </div>
-                        <div class="p-3 sm:p-4 rounded-xl border border-white/5 text-left transition-colors" :class="isTurbo ? 'bg-[#2a1621]/50' : 'bg-white/5'">
-                            <p class="text-slate-400 text-[10px] sm:text-xs mb-1 uppercase tracking-wider">Kazanç</p>
-                            <p class="font-bold text-green-400 text-sm sm:text-base">
-                                %{{ discountPercent }} İndirim
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="w-full p-3 rounded-xl border text-left mb-2 transition-all"
-                        :class="participantConditionFx
-                            ? 'border-rose-400/70 bg-rose-500/10 ring-2 ring-rose-400/40 animate-pulse'
-                            : 'border-white/10 bg-white/5'">
-                        <p class="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Katılımcı Koşulu</p>
-                        <p class="text-sm font-semibold" :class="themeClasses.textAccent">{{ allowedGenderLabel }}</p>
-                    </div>
-
-                    <!-- CTA Button -->
+                <div class="w-full">
                     <HemenKapButton
                         variant="detail"
                         :loading="bookingLoading"
@@ -400,22 +379,11 @@ onUnmounted(() => {
                         :shadow-class="themeClasses.shadowNeon"
                         @click="handleBook"
                         @disabled-click="onDisabledBookClick"
+                        class="w-full py-5 text-xl font-black uppercase tracking-widest rounded-2xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
                     />
-
-                    <p class="block text-slate-500 text-xs">
-                        Tıklayarak
-                        <router-link :to="{ name: 'terms-of-use' }" class="hover:underline transition-colors" :class="themeClasses.textAccent">
-                            Kullanım Şartlarını
-                        </router-link>
-                        kabul etmiş olursunuz.
-                    </p>
                 </div>
             </div>
-
-            <!-- Removed Mobile Sticky Bottom Action Bar -->
-
         </div>
-
     </div>
 
     <BookingConfirmModal
@@ -428,43 +396,40 @@ onUnmounted(() => {
         @confirm="confirmBooking"
     />
 
-    <!-- Success Modal -->
-    <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-        <div class="bg-[#1a1f2e] border-2 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden" :class="themeClasses.borderAccent">
-            <div class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
-            <div class="relative z-10">
-                <div class="text-6xl mb-4"></div>
-                <h2 class="text-3xl font-bold text-white mb-2">Rezervasyon Onaylandı!</h2>
-                <p class="text-slate-300 mb-6">Bu oturumu başarıyla yakaladınız.</p>
-                
-                <div class="bg-white/10 p-4 rounded-lg mb-6 border border-white/10">
-                    <div class="text-sm text-slate-400 uppercase tracking-wider mb-1">Rezervasyon Kodunuz</div>
-                    <div 
-                        @click="copyBookingCode"
-                        class="text-4xl font-bold tracking-widest font-mono cursor-pointer px-3 py-2 rounded transition-all duration-300 relative group" 
-                        :class="[
-                            themeClasses.textAccent,
-                            copyFeedback ? 'bg-green-500/20' : 'hover:bg-white/5'
-                        ]"
-                        :title="copyFeedback ? 'Kopyalandı!' : 'Kodunu kopyalamak için tıklayın'"
-                    >
-                        {{ reservation?.booking_code || 'HOT-XXXX' }}
-                        
-                        <!-- Copy Icon -->
-                        <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            {{ copyFeedback ? 'done' : 'content_copy' }}
-                        </span>
-                    </div>
-                    
-                    <!-- Copy Feedback -->
-                    <div v-if="copyFeedback" class="mt-3 flex items-center gap-2 text-green-400 text-sm animate-in fade-in duration-300">
-                        <span class="material-symbols-outlined text-base">check_circle</span>
-                        <span>Kod kopyalandı!</span>
-                    </div>
+    <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <div class="bg-gradient-to-b from-[#0a0f1a] to-[#050505] border border-neon-green/50 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(54,211,153,0.2)] relative overflow-hidden">
+            <div class="absolute top-1/2 -left-4 w-8 h-8 bg-black rounded-full border-r border-neon-green/30"></div>
+            <div class="absolute top-1/2 -right-4 w-8 h-8 bg-black rounded-full border-l border-neon-green/30"></div>
+            <div class="absolute top-1/2 left-0 w-full h-px border-t-2 border-dashed border-neon-green/20"></div>
+
+            <div class="relative z-10 pb-6 border-b border-transparent">
+                <div class="w-16 h-16 bg-neon-green/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-neon-green/30">
+                    <span class="material-symbols-outlined text-4xl text-neon-green">check_circle</span>
                 </div>
-                
-                <button @click="showSuccessModal = false" class="w-full py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all hover:scale-[1.02]" :class="`bg-gradient-to-r ${themeClasses.gradientBtn}`">
-                    Kapat
+                <h2 class="text-2xl font-black text-white uppercase tracking-wider mb-1">Seans Kilitlendi</h2>
+                <p class="text-slate-400 text-sm">Piyasa değerinin çok altında bir fiyatla bu seansı kaptınız!</p>
+            </div>
+            
+            <div class="relative z-10 pt-8 pb-4">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-2">Giriş Kodunuz</p>
+                <div 
+                    @click="copyBookingCode"
+                    class="bg-black/50 border border-white/10 p-4 rounded-xl cursor-pointer group hover:border-neon-green/50 transition-colors relative"
+                    :title="copyFeedback ? 'Kopyalandı!' : 'Kopyalamak için tıklayın'"
+                >
+                    <p class="text-4xl font-black font-mono text-white tracking-widest drop-shadow-[0_0_10px_rgba(255,255,255,0.5)] group-hover:text-neon-green transition-colors">
+                        {{ reservation?.booking_code || 'HOT-XXXX' }}
+                    </p>
+                    <span v-if="copyFeedback" class="absolute -top-3 right-1/2 translate-x-1/2 bg-neon-green text-black text-[10px] font-bold px-2 py-1 rounded">Kopyalandı!</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-4 leading-relaxed">
+                    Ödemenizi yapmak için stüdyoya gittiğinizde lütfen bu kodu resepsiyona gösterin.
+                </p>
+            </div>
+            
+            <div class="relative z-10 mt-2">
+                <button @click="router.push('/reservations')" class="w-full py-4 rounded-xl font-black text-black bg-neon-green hover:bg-green-400 uppercase tracking-widest transition-colors">
+                    Biletlerime Git
                 </button>
             </div>
         </div>
@@ -472,8 +437,18 @@ onUnmounted(() => {
 
   </div>
   
-  <div v-else class="min-h-screen flex flex-col items-center justify-center bg-background-dark text-white">
-        <h2 class="text-2xl text-slate-500">Oturum bulunamadı</h2>
-        <router-link to="/" class="mt-4 px-6 py-2 rounded-lg border border-white/20 hover:bg-white/10 transition-colors">Ana Sayfaya Dön</router-link>
+  <div v-else class="min-h-screen flex flex-col items-center justify-center bg-[#050505] text-white">
+        <span class="material-symbols-outlined text-6xl text-slate-600 mb-4">search_off</span>
+        <h2 class="text-2xl font-bold text-slate-400 mb-6">Oturum bulunamadı veya süresi dolmuş</h2>
+        <button @click="router.push('/')" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold uppercase tracking-wider text-sm">
+            Arenaya Dön
+        </button>
   </div>
 </template>
+
+<style scoped>
+/* Tabular nums helps monospaced numbers align perfectly in timers and prices */
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+</style>

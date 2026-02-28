@@ -38,3 +38,9 @@ Backend ve Frontend geliştirme fazları (R1, R2, R3) tamamlanmıştır. Proje �
   - My Reservations görüntüleme
   - Admin’de rezervasyon doğrulama
 - Frontend build ve mevcut temel testler çalışır durumda kalır
+
+## Son Kapsam Güncellemesi (R4.7)
+- Rezervasyon akışında rol bazlı güvenlik kuralı netleştirildi: **Admin kullanıcılar oturum rezerve edemez**.
+- Realtime tutarlılık artırıldı: bir kullanıcı rezervasyon yaptığında diğer kullanıcılarda oturum durumu anında kapanır.
+- Turbo mod görünürlüğü backend state + frontend socket senkronuyla dinamik hale getirildi.
+- Üretim kararlılığı için auction listeleme akışında bağlantı kopmasına karşı otomatik toparlanma eklendi.

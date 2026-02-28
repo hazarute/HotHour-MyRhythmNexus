@@ -44,5 +44,22 @@
 4. Admin Dashboard + Admin Create + Admin Reservations (derived)
 5. Son görsel/fonksiyon regresyon turu
 
-## Bilinen Kısıt
-- Referans klasöründe Admin ve Login için ayrı örnek bulunmadığından bu ekranlar türetilmiş tasarım kararıyla üretilecektir.
+
+## Son Teknik Güncellemeler (Stabilizasyon)
+
+### 1) Booking Güvenlik Katmanları
+- Backend: `ADMIN` kullanıcılar için rezervasyon işlemi engellenir (HTTP 403).
+- Frontend: Buton-level ve store-level guard birlikte uygulanır.
+
+### 2) Realtime Durum Yayını
+- `auction_booked` event’i çoklu client senaryosunda testle doğrulandı.
+- `turbo_triggered` event’i Home/AllAuctions/Detail görünümlerinde canlı state güncellemesine bağlı.
+
+### 3) Prisma Bağlantı Dayanıklılığı
+- `list_auctions` endpoint akışında transient `ConnectError` durumunda reconnect + retry uygulanır.
+- Amaç: kısa süreli engine/network kopmalarında kullanıcıya 500 yerine toparlanan servis davranışı sağlamak.
+
+### 4) Test Stratejisi Güncellemesi
+- Booking integration testlerinde eşzamanlı iki kullanıcı yarışı (`201 + 409`) doğrulanır.
+- Admin booking yasağı için negatif entegrasyon testi eklenmiştir.
+- Realtime testinde `auction_booked` ve `turbo_triggered` eventlerinin çoklu client teslimi doğrulanır.

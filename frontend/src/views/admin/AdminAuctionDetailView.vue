@@ -21,6 +21,7 @@ const winningReservation = ref(null)
 const activeTab = ref('overview') // overview, reservations, bidders
 
 const hasWinningReservation = computed(() => !!winningReservation.value)
+const canEditAuction = computed(() => String(auction.value?.status || '').toUpperCase() === 'DRAFT')
 
 const statusLabel = computed(() => {
     const value = String(auction.value?.status || '').toUpperCase()
@@ -43,13 +44,6 @@ const allowedGenderLabel = computed(() => {
     if (value === 'FEMALE') return 'Kadın'
     if (value === 'MALE') return 'Erkek'
     return 'Fark Etmez'
-})
-
-const isParticipantConditionMatched = computed(() => {
-    if (allowedGenderValue.value === 'ANY') return true
-    const userGender = String(authStore.user?.gender || '').toUpperCase()
-    if (!userGender) return true
-    return userGender === allowedGenderValue.value
 })
 
 const formatCurrency = (val) => {
@@ -126,10 +120,8 @@ const fetchWinningReservation = async (auctionId) => {
                 </div>
             </div>
              <div class="flex gap-3 w-full md:w-auto justify-end">
-                <button @click="router.push({ name: 'admin-auction-edit', params: { id: auction?.id } })" class="text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg active:scale-95 flex items-center"
-                    :class="isParticipantConditionMatched
-                        ? 'bg-primary hover:bg-blue-600 shadow-primary/25'
-                        : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/30 ring-2 ring-rose-400/70 animate-pulse'">
+                <button v-if="canEditAuction" @click="router.push({ name: 'admin-auction-edit', params: { id: auction?.id } })" class="text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg active:scale-95 flex items-center"
+                    :class="'bg-primary hover:bg-blue-600 shadow-primary/25'">
                     <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">edit</span> Düzenle
                 </button>
             </div>
@@ -175,17 +167,11 @@ const fetchWinningReservation = async (auctionId) => {
                             <span v-else>-</span>
                         </div>
                     </div>
-                    <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border shadow-sm transition-all"
-                        :class="isParticipantConditionMatched
-                            ? 'border-slate-200 dark:border-slate-800'
-                            : 'border-rose-400/60 dark:border-rose-500/60 ring-2 ring-rose-400/30 shadow-rose-500/20 animate-pulse'">
+                    <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
                         <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Katılımcı Koşulu</span>
                         <div class="mt-2">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border"
-                                  :class="!isParticipantConditionMatched
-                                    ? 'bg-rose-500/10 text-rose-500 border-rose-500/40'
-                                    : (allowedGenderLabel === 'Fark Etmez' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30')">
-                                <span v-if="!isParticipantConditionMatched" class="material-symbols-outlined text-sm mr-1">block</span>
+                                  :class="allowedGenderLabel === 'Fark Etmez' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'">
                                 {{ allowedGenderLabel }}
                             </span>
                         </div>
