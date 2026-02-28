@@ -73,8 +73,10 @@ const canCurrentUserBookByGender = computed(() => {
     return userGender === allowedGenderValue.value
 })
 
+const canCurrentUserBookByRole = computed(() => !(authStore.isAuthenticated && authStore.isAdmin))
+
 const bookingDisabled = computed(() => {
-    return statusValue.value !== 'ACTIVE' || !canCurrentUserBookByGender.value
+    return statusValue.value !== 'ACTIVE' || !canCurrentUserBookByRole.value || !canCurrentUserBookByGender.value
 })
 
 const themeClasses = computed(() => {
@@ -167,6 +169,8 @@ const handleBook = async () => {
         router.push({ name: 'login', query: { redirect: route.fullPath } })
         return
     }
+
+    if (!canCurrentUserBookByRole.value) return
 
     if (!canCurrentUserBookByGender.value) return
 

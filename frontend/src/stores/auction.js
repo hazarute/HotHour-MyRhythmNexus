@@ -196,6 +196,10 @@ export const useAuctionStore = defineStore('auction', () => {
         if (!authStore.isAuthenticated) {
             throw new Error("You must be logged in to book a session.")
         }
+
+        if (authStore.isAdmin) {
+            throw new Error("Admin kullanıcılar rezervasyon yapamaz.")
+        }
         
         loading.value = true
         error.value = null

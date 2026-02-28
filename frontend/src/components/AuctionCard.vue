@@ -22,6 +22,7 @@ const showBookingConfirmModal = ref(false)
 const bookingLoading = ref(false)
 
 const allowedGender = computed(() => String(props.auction?.allowed_gender || props.auction?.allowedGender || 'ANY').toUpperCase())
+const canBookByRole = computed(() => !(authStore.isAuthenticated && authStore.isAdmin))
 const canBookByGender = computed(() => {
     if (allowedGender.value === 'ANY') return true
     if (!authStore.isAuthenticated) return true
@@ -29,7 +30,7 @@ const canBookByGender = computed(() => {
     return userGender === allowedGender.value
 })
 const isAuctionActive = computed(() => getAuctionStatus(props.auction) === 'ACTIVE')
-const bookingDisabled = computed(() => !isAuctionActive.value || !canBookByGender.value || bookingLoading.value)
+const bookingDisabled = computed(() => !isAuctionActive.value || !canBookByRole.value || !canBookByGender.value || bookingLoading.value)
 
 const formatPrice = (p) => {
     const value = Number(p || 0)
@@ -42,6 +43,8 @@ const goToDetail = () => {
 
 const handleHemenKap = () => {
     if (!isAuctionActive.value) return
+
+    if (!canBookByRole.value) return
 
     if (!canBookByGender.value) return
 

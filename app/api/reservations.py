@@ -11,6 +11,7 @@ from app.services.booking_service import (
     AuctionNotActiveError,
     AuctionAlreadyBookedError,
     UserNotFoundError,
+    AdminCannotBookError,
     GenderNotEligibleError,
     BookingError,
 )
@@ -73,6 +74,11 @@ async def book_auction(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User {data.user_id} not found"
+        )
+    except AdminCannotBookError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
         )
     except GenderNotEligibleError as e:
         raise HTTPException(

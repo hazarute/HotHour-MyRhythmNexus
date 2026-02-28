@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from app.core.db import db
+from app.core.db import db, connect_db
 from app.core.timezone import now_tr, to_tr_aware
 from app.services import socket_service
 from app.services.price_service import price_service
@@ -10,6 +10,23 @@ from app.utils.validators import ValidationError, auction_validator
 
 
 class AuctionService:
+    async def _find_many_auctions_with_reconnect(self):
+        try:
+            return await db.auction.find_many(order={"startTime": "asc"})
+        except TypeError:
+            return await db.auction.find_many()
+        except Exception as exc:
+            error_text = str(exc).lower()
+            if "connecterror" not in error_text and "all connection attempts failed" not in error_text:
+                raise
+
+            await connect_db()
+
+            try:
+                return await db.auction.find_many(order={"startTime": "asc"})
+            except TypeError:
+                return await db.auction.find_many()
+
     def _apply_backend_pricing_policy(self, data: dict) -> dict:
         normalized = dict(data)
         turbo_enabled = bool(normalized.get("turbo_enabled", False))
@@ -205,10 +222,7 @@ class AuctionService:
             return 0
 
     async def list_auctions(self, include_computed: bool = False, now=None):
-        try:
-            items = await db.auction.find_many(order={"startTime": "asc"})
-        except TypeError:
-            items = await db.auction.find_many()
+        items = await self._find_many_auctions_with_reconnect()
 
         normalized_now = to_tr_aware(now) if now else None
 

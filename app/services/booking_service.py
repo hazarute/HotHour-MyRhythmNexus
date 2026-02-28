@@ -43,6 +43,11 @@ class UserNotFoundError(BookingError):
     pass
 
 
+class AdminCannotBookError(BookingError):
+    """Raised when admin user attempts to book an auction"""
+    pass
+
+
 class GenderNotEligibleError(BookingError):
     """Raised when user's gender is not eligible for this auction"""
     pass
@@ -106,6 +111,10 @@ class BookingService:
         user = await db.user.find_unique(where={"id": user_id})
         if not user:
             raise UserNotFoundError(f"User {user_id} not found")
+
+        user_role = str(getattr(user, "role", "") or "").upper()
+        if user_role == "ADMIN":
+            raise AdminCannotBookError("Admin kullanıcılar rezervasyon yapamaz.")
 
         # Step 2.1: Verify gender eligibility rule
         allowed_gender = str(getattr(auction, "allowedGender", "ANY") or "ANY").upper()
