@@ -40,6 +40,11 @@ const onAuctionBooked = (data) => {
     store.updateAuctionStatus(data.auction_id, 'SOLD')
 }
 
+const onTurboTriggered = (data) => {
+    if (!data?.auction_id) return
+    store.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
+}
+
 onMounted(async () => {
     if (!socketStore.isConnected) {
         socketStore.connect()
@@ -47,6 +52,7 @@ onMounted(async () => {
 
     socketStore.on('price_update', onPriceUpdate)
     socketStore.on('auction_booked', onAuctionBooked)
+    socketStore.on('turbo_triggered', onTurboTriggered)
 
     await store.fetchAuctions()
     subscribeToAuctionRooms()
@@ -56,10 +62,15 @@ onUnmounted(() => {
     unsubscribeFromAuctionRooms()
     socketStore.off('price_update', onPriceUpdate)
     socketStore.off('auction_booked', onAuctionBooked)
+    socketStore.off('turbo_triggered', onTurboTriggered)
 })
 
 const goToAllAuctions = () => {
   router.push({ name: 'all-auctions' })
+}
+
+const goToHowItWorks = () => {
+    router.push({ name: 'how-it-works' })
 }
 </script>
 
@@ -93,7 +104,7 @@ const goToAllAuctions = () => {
                         <span class="material-symbols-outlined">gavel</span>
                         Canlı Oturumları Gör
                     </button>
-                    <button class="bg-transparent hover:bg-white/5 text-white border border-white/20 font-bold py-3 px-8 rounded-lg transition-colors active:scale-95">
+                    <button @click="goToHowItWorks" class="bg-transparent hover:bg-white/5 text-white border border-white/20 font-bold py-3 px-8 rounded-lg transition-colors active:scale-95">
                         Daha Fazla Bilgi
                     </button>
                 </div>

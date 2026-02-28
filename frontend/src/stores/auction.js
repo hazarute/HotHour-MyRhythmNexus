@@ -70,6 +70,21 @@ export const useAuctionStore = defineStore('auction', () => {
         }
     }
 
+    function updateAuctionTurboStartedAt(auctionId, turboStartedAt) {
+        const index = auctions.value.findIndex(a => a.id == auctionId)
+        if (index !== -1) {
+            auctions.value[index].turboStartedAt = turboStartedAt
+            auctions.value[index].turbo_started_at = turboStartedAt
+            auctions.value[index].turboActive = true
+        }
+
+        if (currentAuction.value && currentAuction.value.id == auctionId) {
+            currentAuction.value.turboStartedAt = turboStartedAt
+            currentAuction.value.turbo_started_at = turboStartedAt
+            currentAuction.value.turboActive = true
+        }
+    }
+
     async function createAuction(payload) {
         const authStore = useAuthStore()
         
@@ -238,6 +253,7 @@ export const useAuctionStore = defineStore('auction', () => {
         deleteAuction,
         bookAuction,
         updatePrice,
-        updateAuctionStatus
+        updateAuctionStatus,
+        updateAuctionTurboStartedAt
     }
 })

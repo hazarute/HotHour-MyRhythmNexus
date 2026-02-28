@@ -57,6 +57,11 @@ const onAuctionBooked = (data) => {
   store.updateAuctionStatus(data.auction_id, 'SOLD')
 }
 
+const onTurboTriggered = (data) => {
+  if (!data?.auction_id) return
+  store.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
+}
+
 onMounted(async () => {
   if (!socketStore.isConnected) {
     socketStore.connect()
@@ -64,6 +69,7 @@ onMounted(async () => {
 
   socketStore.on('price_update', onPriceUpdate)
   socketStore.on('auction_booked', onAuctionBooked)
+  socketStore.on('turbo_triggered', onTurboTriggered)
 
   await store.fetchAuctions()
   subscribeToAuctionRooms()
@@ -73,6 +79,7 @@ onUnmounted(() => {
   unsubscribeFromAuctionRooms()
   socketStore.off('price_update', onPriceUpdate)
   socketStore.off('auction_booked', onAuctionBooked)
+  socketStore.off('turbo_triggered', onTurboTriggered)
 })
 
 const handleFilterChange = (status) => {

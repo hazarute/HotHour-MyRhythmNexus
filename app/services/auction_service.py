@@ -127,6 +127,25 @@ class AuctionService:
 
         return auction
 
+    async def _ensure_turbo_triggered(self, auction, now: Optional[datetime] = None):
+        if not auction:
+            return None
+
+        auction_id = getattr(auction, "id", None)
+        if auction_id is None:
+            return auction
+
+        auction_status = str(getattr(auction, "status", "")).upper()
+        if auction_status != "ACTIVE":
+            return auction
+
+        result = await self.check_and_trigger_turbo(auction_id, now=now)
+        if result.get("triggered"):
+            refreshed = await db.auction.find_unique(where={"id": auction_id})
+            return refreshed or auction
+
+        return auction
+
     async def create_auction(self, data: dict):
         data = self._apply_backend_pricing_policy(data)
         is_valid, error_msg = auction_validator.validate_auction_create(data)
@@ -163,6 +182,7 @@ class AuctionService:
         if auction:
             auction = await self._sync_status_with_reservation(auction)
             auction = await self._check_and_update_status(auction)
+            auction = await self._ensure_turbo_triggered(auction)
             auction = await self._sync_current_price(auction)
         return auction
 
@@ -177,6 +197,7 @@ class AuctionService:
             )
             for item in items:
                 checked = await self._check_and_update_status(item)
+                checked = await self._ensure_turbo_triggered(checked)
                 await self._sync_current_price(checked, emit_event=True)
             return len(items)
         except Exception as e:
@@ -195,6 +216,7 @@ class AuctionService:
         for item in items:
             checked = await self._sync_status_with_reservation(item)
             checked = await self._check_and_update_status(checked)
+            checked = await self._ensure_turbo_triggered(checked)
             checked = await self._sync_current_price(checked)
             updated_items.append(checked)
         items = updated_items

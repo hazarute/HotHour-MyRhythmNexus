@@ -115,6 +115,12 @@ const onAuctionBooked = (data) => {
     }
 }
 
+const onTurboTriggered = (data) => {
+    if (!data?.auction_id) return
+    if (String(data.auction_id) !== String(route.params.id)) return
+    auctionStore.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
+}
+
 onMounted(async () => {
     const id = route.params.id
 
@@ -127,6 +133,7 @@ onMounted(async () => {
 
     socketStore.on('price_update', onPriceUpdate)
     socketStore.on('auction_booked', onAuctionBooked)
+    socketStore.on('turbo_triggered', onTurboTriggered)
 
     timerId = setInterval(() => {
         nowMs.value = Date.now()
@@ -226,6 +233,7 @@ onUnmounted(() => {
 
     socketStore.off('price_update', onPriceUpdate)
     socketStore.off('auction_booked', onAuctionBooked)
+    socketStore.off('turbo_triggered', onTurboTriggered)
 
     if (timerId) {
         clearInterval(timerId)
