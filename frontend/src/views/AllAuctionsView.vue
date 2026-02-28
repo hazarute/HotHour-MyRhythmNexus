@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import { useSocketStore } from '../stores/socket'
 import AuctionCard from '../components/AuctionCard.vue'
-import { getAuctionStatus } from '../utils/auction'
+import { getAuctionStatus, getAuctionField } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
@@ -14,7 +14,26 @@ const searchQuery = ref('')
 const filterStatus = ref('ACTIVE')
 
 const filteredAuctions = computed(() => {
-  let result = store.auctions
+  const oneMonthAgo = new Date()
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+
+  const isWithinLastMonth = (auction) => {
+    const dateValue =
+      getAuctionField(auction, 'scheduled_at', 'scheduledAt') ??
+      getAuctionField(auction, 'start_time', 'startTime') ??
+      getAuctionField(auction, 'created_at', 'createdAt')
+
+    if (!dateValue) return true
+    const auctionDate = new Date(dateValue)
+    if (Number.isNaN(auctionDate.getTime())) return true
+    return auctionDate >= oneMonthAgo
+  }
+
+  let result = Array.isArray(store.auctions)
+    ? store.auctions.filter((auction) => auction && typeof auction === 'object')
+    : []
+
+  result = result.filter(isWithinLastMonth)
   
   if (filterStatus.value !== 'ALL') {
     result = result.filter(a => getAuctionStatus(a) === filterStatus.value)
@@ -23,8 +42,8 @@ const filteredAuctions = computed(() => {
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(a => 
-      a.title.toLowerCase().includes(query) ||
-      a.description?.toLowerCase().includes(query)
+      String(a?.title ?? '').toLowerCase().includes(query) ||
+      String(a?.description ?? '').toLowerCase().includes(query)
     )
   }
   

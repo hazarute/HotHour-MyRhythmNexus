@@ -38,6 +38,10 @@ const router = createRouter({
       component: () => import('../views/AllAuctionsView.vue')
     },
     {
+      path: '/all-auctions',
+      redirect: '/auctions'
+    },
+    {
       path: '/how-it-works',
       name: 'how-it-works',
       component: () => import('../views/HowItWorksView.vue')

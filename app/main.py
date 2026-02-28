@@ -7,6 +7,7 @@ from app.core.socket import sio
 from app.api import auth
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.auction_service import auction_service
+from app.services.booking_service import booking_service
 import socketio
 
 scheduler = AsyncIOScheduler()
@@ -19,6 +20,7 @@ async def update_auctions_job():
     try:
         # Fetch status candidates (DRAFT and ACTIVE only)
         count = await auction_service.check_pending_auctions()
+        auto_cancelled = await booking_service.auto_cancel_overdue_pending_reservations()
         # print(f"Checked {count} pending auctions for status updates.")
     except Exception as e:
         print(f"Scheduler Error: {e}")

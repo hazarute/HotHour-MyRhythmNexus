@@ -1,21 +1,180 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '@/stores/auction'
+import { useAuthStore } from '@/stores/auth'
 import CountDownTimer from '@/components/CountDownTimer.vue'
 import { sortAuctionsByNewest } from '@/utils/sorting'
 
 const router = useRouter()
 const store = useAuctionStore()
+const authStore = useAuthStore()
 const searchQuery = ref('')
 const statusFilter = ref('ALL') // ALL, ACTIVE, SOLD, DRAFT
 const showFilterDropdown = ref(false)
+const showNotificationsDropdown = ref(false)
+const notificationsDropdownRef = ref(null)
 const currentPage = ref(1)
 const pageSize = 15
+const notificationsLoading = ref(false)
+const adminNotifications = ref([])
+const unreadNotificationsCount = ref(0)
+const deletingNotificationId = ref(null)
+const clearingReadNotifications = ref(false)
 
-onMounted(() => {
-  store.fetchAuctions()
+onMounted(async () => {
+  await store.fetchAuctions()
+  await fetchAdminNotifications(true)
+    document.addEventListener('click', handleDocumentClick, true)
 })
+
+onUnmounted(() => {
+        document.removeEventListener('click', handleDocumentClick, true)
+})
+
+const fetchAdminNotifications = async (silent = false) => {
+    if (!authStore.token) return
+
+    if (!silent) {
+        notificationsLoading.value = true
+    }
+
+    try {
+        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/notifications/cancellations?limit=20`, {
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        })
+
+        if (!response.ok) {
+            throw new Error('Bildirimler alınamadı')
+        }
+
+        const data = await response.json()
+        adminNotifications.value = Array.isArray(data.notifications) ? data.notifications : []
+        unreadNotificationsCount.value = Number(data.unread_count || 0)
+    } catch (err) {
+        console.error('Admin bildirimleri alınamadı:', err)
+    } finally {
+        notificationsLoading.value = false
+    }
+}
+
+const toggleNotificationsDropdown = async () => {
+    showNotificationsDropdown.value = !showNotificationsDropdown.value
+    if (showNotificationsDropdown.value) {
+        await fetchAdminNotifications()
+    }
+}
+
+const handleDocumentClick = (event) => {
+    if (!showNotificationsDropdown.value) return
+
+    const root = notificationsDropdownRef.value
+    if (!root) return
+
+    if (!root.contains(event.target)) {
+        showNotificationsDropdown.value = false
+    }
+}
+
+const formatNotificationDate = (dateStr) => {
+    if (!dateStr) return '-'
+    return new Date(dateStr).toLocaleString('tr-TR', {
+        day: '2-digit', month: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+    })
+}
+
+const markNotificationAsRead = async (notification) => {
+    if (!notification || notification.is_read || !authStore.token) return
+
+    try {
+        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const response = await fetch(
+            `${baseUrl}/api/v1/reservations/admin/notifications/${notification.id}/read`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
+        )
+
+        if (response.ok) {
+            notification.is_read = true
+            unreadNotificationsCount.value = Math.max(0, unreadNotificationsCount.value - 1)
+        }
+    } catch (err) {
+        console.error('Bildirim okundu güncelleme hatası:', err)
+    }
+}
+
+const openNotification = async (notification) => {
+    await markNotificationAsRead(notification)
+
+    if (notification?.reservation_id) {
+        router.push({ name: 'admin-reservation-detail', params: { id: notification.reservation_id } })
+        showNotificationsDropdown.value = false
+    }
+}
+
+const deleteNotification = async (notificationId) => {
+    if (!notificationId || !authStore.token) return
+
+    try {
+        deletingNotificationId.value = notificationId
+        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const response = await fetch(
+            `${baseUrl}/api/v1/reservations/admin/notifications/${notificationId}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error('Bildirim silinemedi')
+        }
+
+        await fetchAdminNotifications()
+    } catch (err) {
+        console.error('Bildirim silme hatası:', err)
+    } finally {
+        deletingNotificationId.value = null
+    }
+}
+
+const clearReadNotifications = async () => {
+    if (!authStore.token) return
+
+    try {
+        clearingReadNotifications.value = true
+        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const response = await fetch(
+            `${baseUrl}/api/v1/reservations/admin/notifications/read/all`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${authStore.token}`
+                }
+            }
+        )
+
+        if (!response.ok) {
+            throw new Error('Okunan bildirimler temizlenemedi')
+        }
+
+        await fetchAdminNotifications()
+    } catch (err) {
+        console.error('Okunan bildirim temizleme hatası:', err)
+    } finally {
+        clearingReadNotifications.value = false
+    }
+}
 
 const filteredAuctions = computed(() => {
     // Create a copy to avoid mutating the store directly
@@ -146,15 +305,79 @@ const allowedGenderLabel = (auction) => {
 <template>
   <div>
     <!-- Header Area -->
-    <header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <header class="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Tüm Oturumlar</h2>
             <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
         </div>
-        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end">
-            <button class="flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
+        <div ref="notificationsDropdownRef" class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end relative">
+            <button @click="toggleNotificationsDropdown" class="relative flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
                 <span class="material-symbols-outlined">notifications</span>
+                <span
+                    v-if="unreadNotificationsCount > 0"
+                    class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
+                >
+                    {{ unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount }}
+                </span>
             </button>
+
+            <div
+                v-if="showNotificationsDropdown"
+                class="absolute top-full right-0 mt-2 w-[360px] max-w-[90vw] bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[120] overflow-hidden"
+            >
+                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white">İptal Bildirimleri</p>
+                    <div class="flex items-center gap-3">
+                        <button
+                            @click="clearReadNotifications"
+                            class="text-xs text-slate-500 hover:text-red-500 hover:underline"
+                            :disabled="clearingReadNotifications"
+                        >
+                            {{ clearingReadNotifications ? 'Temizleniyor...' : 'Okunanları Temizle' }}
+                        </button>
+                        <button @click="fetchAdminNotifications()" class="text-xs text-primary hover:underline">Yenile</button>
+                    </div>
+                </div>
+
+                <div v-if="notificationsLoading" class="p-4 text-xs text-slate-500 dark:text-slate-400">
+                    Bildirimler yükleniyor...
+                </div>
+
+                <div v-else-if="adminNotifications.length === 0" class="p-4 text-xs text-slate-500 dark:text-slate-400">
+                    Şu an otomatik iptal bildirimi bulunmuyor.
+                </div>
+
+                <div v-else class="max-h-96 overflow-y-auto">
+                    <div
+                        v-for="notification in adminNotifications"
+                        :key="notification.id"
+                        class="w-full text-left px-4 py-3 border-b border-slate-200 dark:border-slate-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-[#232d3f] transition-colors"
+                        :class="notification.is_read ? 'opacity-80' : 'bg-red-50/40 dark:bg-red-900/10'"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <button @click="openNotification(notification)" class="flex-1 text-left">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white">{{ notification.title }}</p>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ notification.message }}</p>
+                            </button>
+                            <div class="flex items-center gap-2 ml-2">
+                                <span v-if="!notification.is_read" class="mt-1 w-2 h-2 rounded-full bg-red-500"></span>
+                                <button
+                                    @click="deleteNotification(notification.id)"
+                                    class="text-slate-400 hover:text-red-500 transition-colors"
+                                    title="Bildirimi Sil"
+                                    :disabled="deletingNotificationId === notification.id"
+                                >
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">
+                                        {{ deletingNotificationId === notification.id ? 'progress_activity' : 'delete' }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">{{ formatNotificationDate(notification.created_at) }}</p>
+                    </div>
+                </div>
+            </div>
+
             <button @click="router.push({ name: 'admin-auction-create' })" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
                 <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
                 <span class="font-medium">Oturum Oluştur</span>

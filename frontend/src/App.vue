@@ -51,7 +51,7 @@ const handleLogout = () => {
             <router-link to="/" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors" active-class="text-neon-blue drop-shadow-[0_0_8px_rgba(0,191,255,0.5)]">
               Ana Sayfa
             </router-link>
-            <router-link to="/all-auctions" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors" active-class="text-neon-blue drop-shadow-[0_0_8px_rgba(0,191,255,0.5)]">
+            <router-link to="/auctions" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors" active-class="text-neon-blue drop-shadow-[0_0_8px_rgba(0,191,255,0.5)]">
               Canlı Arena
             </router-link>
             
@@ -115,7 +115,7 @@ const handleLogout = () => {
                 <span class="material-symbols-outlined">home</span> Ana Sayfa
             </router-link>
             
-            <router-link to="/all-auctions" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
+            <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
                 <span class="material-symbols-outlined">local_fire_department</span> Canlı Arena
             </router-link>
             

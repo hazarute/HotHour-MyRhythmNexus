@@ -255,3 +255,39 @@ async def test_admin_user_cannot_book_auction():
 
     reservations = await db.db.reservation.find_many(where={"auctionId": auction.id})
     assert len(reservations) == 0
+
+
+@pytest.mark.asyncio
+async def test_cancelled_reservation_marks_auction_cancelled():
+    email = f"booker+{uuid.uuid4().hex[:8]}@example.com"
+    phone = f"+906{uuid.uuid4().hex[:7]}"
+    password = "BookPass123!"
+
+    user = await create_user(email=email, phone=phone, password=password)
+    auction = await create_active_auction(title="Cancel Status Auction", current_price=Decimal("72.90"))
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login.status_code == 200, login.text
+        token = login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        book_response = await client.post(
+            "/api/v1/reservations/book",
+            json={"auction_id": auction.id, "user_id": user.id},
+            headers=headers,
+        )
+        assert book_response.status_code == 201, book_response.text
+
+        reservation_id = book_response.json()["id"]
+
+        cancel_response = await client.delete(
+            f"/api/v1/reservations/{reservation_id}",
+            headers=headers,
+        )
+        assert cancel_response.status_code == 204, cancel_response.text
+
+    updated_auction = await db.db.auction.find_unique(where={"id": auction.id})
+    assert updated_auction is not None
+    assert str(updated_auction.status) == "CANCELLED"

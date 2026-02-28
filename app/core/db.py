@@ -58,22 +58,46 @@ if _use_fake:
             self._data = {}
             self._next_id = 1
 
+        def _matches_where(self, item, where):
+            for key, value in where.items():
+                if isinstance(value, dict) and "in" in value:
+                    if item.get(key) not in value.get("in", []):
+                        return False
+                else:
+                    if item.get(key) != value:
+                        return False
+            return True
+
         async def create(self, *, data):
             obj = dict(data)
             obj_id = obj.get("id") or self._next_id
             obj["id"] = obj_id
+            obj.setdefault("createdAt", now_tr())
             self._data[obj_id] = obj
             self._next_id = max(self._next_id, obj_id + 1)
             return _Record(**obj)
 
-        async def find_many(self, *, where=None, include=None, order=None):
+        async def find_many(self, *, where=None, include=None, order=None, take=None):
             records = list(self._data.values())
             if where:
                 records = [
                     item for item in records
-                    if all(item.get(key) == value for key, value in where.items())
+                    if self._matches_where(item, where)
                 ]
+
+            if order and order.get("createdAt") == "desc":
+                records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)
+            elif order and order.get("createdAt") == "asc":
+                records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=TR_TIMEZONE))
+
+            if isinstance(take, int) and take >= 0:
+                records = records[:take]
+
             return [_Record(**value) for value in records]
+
+        async def count(self, *, where=None):
+            records = await self.find_many(where=where)
+            return len(records)
 
         async def find_unique(self, *, where):
             # support where by id or email
@@ -101,6 +125,18 @@ if _use_fake:
                     if v.get("email") == where.get("email"):
                         return self._data.pop(k, None)
             return None
+
+        async def delete_many(self, *, where=None):
+            keys = list(self._data.keys())
+            deleted = 0
+            for key in keys:
+                item = self._data.get(key)
+                if item is None:
+                    continue
+                if where is None or self._matches_where(item, where):
+                    del self._data[key]
+                    deleted += 1
+            return {"count": deleted}
 
         async def update(self, *, where, data):
             target_id = None
@@ -138,7 +174,7 @@ if _use_fake:
             obj.setdefault("createdAt", now)
             return await super().create(data=obj)
 
-        async def find_many(self, *, where=None, include=None, order=None):
+        async def find_many(self, *, where=None, include=None, order=None, take=None):
             records = list(self._data.values())
             if where:
                 records = [
@@ -150,6 +186,9 @@ if _use_fake:
                 records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)
             if order and order.get("reservedAt") == "desc":
                 records.sort(key=lambda item: item.get("reservedAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)
+
+            if isinstance(take, int) and take >= 0:
+                records = records[:take]
 
             response = []
             for item in records:
@@ -166,6 +205,7 @@ if _use_fake:
             self.user = _Model()
             self.auction = _Model()
             self.reservation = _ReservationModel(self)
+            self.notification = _Model()
 
         def is_connected(self):
             return True

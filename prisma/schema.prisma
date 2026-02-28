@@ -47,6 +47,13 @@ enum PaymentStatus {
   CANCELLED        // Cancelled
 }
 
+enum NotificationType {
+  SYSTEM
+  AUTO_CANCEL_NO_SHOW
+  USER_CANCELLED_BY_CUSTOMER
+  AUCTION_EXPIRED_UNBOOKED
+}
+
 // ------------------------------------------------------
 // MODELS
 // ------------------------------------------------------
@@ -103,6 +110,7 @@ model Auction {
 
   // Relations
   reservation   Reservation?
+  notifications Notification[]
 
   @@index([status])
   @@index([endTime])
@@ -126,6 +134,7 @@ model Reservation {
   // Relations
   auction       Auction @relation(fields: [auctionId], references: [id])
   user          User    @relation(fields: [userId], references: [id])
+  notifications Notification[]
 
   @@map("reservations")
 }
@@ -133,12 +142,21 @@ model Reservation {
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
+  reservationId Int?
+  auctionId Int?
+  type      NotificationType @default(SYSTEM)
   title     String
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  reservation Reservation? @relation(fields: [reservationId], references: [id])
+  auction   Auction?    @relation(fields: [auctionId], references: [id])
+
+  @@index([type, isRead, createdAt])
+  @@index([reservationId])
+  @@index([auctionId])
 
   @@map("notifications")
 }

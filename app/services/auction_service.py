@@ -124,17 +124,8 @@ class AuctionService:
         target_status = None
         if reservation_status and reservation_status != "CANCELLED" and auction_status != "SOLD":
             target_status = "SOLD"
-        elif reservation_status == "CANCELLED" and auction_status == "SOLD":
-            now = now_tr()
-            end_time = to_tr_aware(getattr(auction, "endTime", None))
-            start_time = to_tr_aware(getattr(auction, "startTime", None))
-
-            if end_time and now >= end_time:
-                target_status = "EXPIRED"
-            elif start_time and now < start_time:
-                target_status = "DRAFT"
-            else:
-                target_status = "ACTIVE"
+        elif reservation_status == "CANCELLED" and auction_status != "CANCELLED":
+            target_status = "CANCELLED"
 
         if target_status and target_status != auction_status:
             auction = await db.auction.update(

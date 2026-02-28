@@ -9,6 +9,11 @@ const router = useRouter()
 const reservations = ref([])
 const loading = ref(false)
 const error = ref(null)
+const copiedReservationId = ref(null)
+const cancellingReservationId = ref(null)
+const confirmCancelReservationId = ref(null)
+const cancellationFeedback = ref(null)
+const cancellationFeedbackReservationId = ref(null)
 
 const getStatusConfig = (status) => {
     const configs = {
@@ -24,6 +29,8 @@ const getStatusConfig = (status) => {
 const isCompleted = (status) => {
     return ['COMPLETED', 'NO_SHOW', 'CANCELLED'].includes(status)
 }
+
+const isCopyAllowed = (status) => status === 'PENDING_ON_SITE'
 
 const fetchMyReservations = async () => {
     loading.value = true
@@ -78,6 +85,109 @@ const formatTime = (dateStr) => {
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0 }).format(amount)
+}
+
+const copyBookingCode = async (reservationId, bookingCode) => {
+    const code = String(bookingCode ?? '').trim()
+    if (!code) return
+
+    try {
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(code)
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = code
+            textArea.setAttribute('readonly', '')
+            textArea.style.position = 'absolute'
+            textArea.style.left = '-9999px'
+            document.body.appendChild(textArea)
+            textArea.select()
+            document.execCommand('copy')
+            document.body.removeChild(textArea)
+        }
+
+        copiedReservationId.value = reservationId
+        setTimeout(() => {
+            if (copiedReservationId.value === reservationId) {
+                copiedReservationId.value = null
+            }
+        }, 1500)
+    } catch (copyError) {
+        console.error('Giriş kodu kopyalanamadı:', copyError)
+    }
+}
+
+const openCancelConfirmation = (reservationId) => {
+    confirmCancelReservationId.value = reservationId
+    cancellationFeedback.value = null
+    cancellationFeedbackReservationId.value = null
+}
+
+const closeCancelConfirmation = () => {
+    confirmCancelReservationId.value = null
+}
+
+const cancelReservation = async (reservationId) => {
+    try {
+        if (!authStore.token) {
+            router.push('/login')
+            return
+        }
+
+        cancellingReservationId.value = reservationId
+        cancellationFeedback.value = null
+        cancellationFeedbackReservationId.value = null
+
+        const baseUrl = import.meta.env.VITE_API_URL || ''
+        const response = await fetch(`${baseUrl}/api/v1/reservations/${reservationId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authStore.token}`
+            }
+        })
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                authStore.logout()
+                router.push('/login')
+                return
+            }
+
+            let detail = 'Rezervasyon iptal edilemedi. Lütfen tekrar deneyin.'
+            try {
+                const errData = await response.json()
+                if (errData?.detail) detail = errData.detail
+            } catch {
+                // no-op
+            }
+            throw new Error(detail)
+        }
+
+        const target = reservations.value.find((reservation) => reservation.id === reservationId)
+        if (target) {
+            target.status = 'CANCELLED'
+        }
+
+        if (copiedReservationId.value === reservationId) {
+            copiedReservationId.value = null
+        }
+
+        cancellationFeedback.value = {
+            type: 'success',
+            message: 'Rezervasyonunuz iptal edildi. Bu seans hakkınızı yeniden kazanamazsınız.'
+        }
+        cancellationFeedbackReservationId.value = reservationId
+        confirmCancelReservationId.value = null
+    } catch (cancelError) {
+        console.error('Rezervasyon iptal hatası:', cancelError)
+        cancellationFeedback.value = {
+            type: 'error',
+            message: cancelError.message || 'Rezervasyon iptal edilemedi.'
+        }
+        cancellationFeedbackReservationId.value = reservationId
+    } finally {
+        cancellingReservationId.value = null
+    }
 }
 
 onMounted(() => {
@@ -160,6 +270,49 @@ onMounted(() => {
                                 Alım: {{ formatDate(res.reserved_at) }} - {{ formatTime(res.reserved_at) }}
                             </div>
                         </div>
+
+                        <div v-if="res.status === 'PENDING_ON_SITE'" class="mt-5">
+                            <button
+                                @click="openCancelConfirmation(res.id)"
+                                class="w-full md:w-auto px-4 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl border border-red-500/30 text-red-300 bg-red-950/30 hover:bg-red-950/45 hover:border-red-400/40 transition-colors flex items-center justify-center gap-2"
+                                :disabled="cancellingReservationId === res.id"
+                            >
+                                <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                Rezervasyonu İptal Et
+                            </button>
+
+                            <div
+                                v-if="confirmCancelReservationId === res.id"
+                                class="mt-3 p-4 rounded-xl border border-red-500/40 bg-red-950/35 backdrop-blur-sm"
+                            >
+                                <div class="flex items-start gap-3">
+                                    <span class="material-symbols-outlined text-red-300 mt-0.5">warning</span>
+                                    <div class="text-left">
+                                        <p class="text-sm font-black text-red-200 uppercase tracking-wide">Dikkat: Bu işlem geri alınamaz</p>
+                                        <p class="text-xs text-red-100/90 mt-1 leading-relaxed">
+                                            Bu rezervasyonu iptal ettiğiniz anda giriş kodunuz kalıcı olarak geçersiz olur ve aynı seansı bu fiyattan tekrar talep edemezsiniz.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex flex-col sm:flex-row gap-2">
+                                    <button
+                                        @click="cancelReservation(res.id)"
+                                        class="px-4 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider bg-red-500 text-white hover:bg-red-400 transition-colors"
+                                        :disabled="cancellingReservationId === res.id"
+                                    >
+                                        {{ cancellingReservationId === res.id ? 'İptal Ediliyor...' : 'Evet, İptal Et' }}
+                                    </button>
+                                    <button
+                                        @click="closeCancelConfirmation"
+                                        class="px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider border border-white/15 text-slate-300 hover:bg-white/5 transition-colors"
+                                        :disabled="cancellingReservationId === res.id"
+                                    >
+                                        Vazgeç
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="hidden md:flex flex-col items-center justify-between relative w-0">
@@ -185,16 +338,40 @@ onMounted(() => {
                             <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-6"></div>
 
                             <p class="text-xs text-slate-500 uppercase tracking-widest mb-2">Giriş Kodunuz</p>
-                            <div class="bg-black/50 border border-white/10 rounded-lg p-4 mb-3">
+                            <div
+                                class="bg-black/50 border border-white/10 rounded-lg p-4 mb-3 transition-colors"
+                                :class="isCopyAllowed(res.status) ? 'cursor-pointer hover:border-neon-blue/40' : 'cursor-not-allowed opacity-80'"
+                                @click="isCopyAllowed(res.status) && copyBookingCode(res.id, res.booking_code)"
+                                :title="isCopyAllowed(res.status)
+                                  ? (copiedReservationId === res.id ? 'Kopyalandı' : 'Kopyalamak için tıkla')
+                                  : 'Sadece ödeme bekleyen biletlerin kodu kopyalanabilir'"
+                            >
                                 <p class="text-3xl md:text-4xl font-mono font-black tracking-widest" 
                                    :class="isCompleted(res.status) ? 'text-slate-600 line-through decoration-slate-600/50' : 'text-neon-green drop-shadow-[0_0_8px_rgba(54,211,153,0.8)]'">
                                     {{ res.booking_code }}
                                 </p>
                             </div>
+
+                            <p class="text-[11px] font-semibold mb-3"
+                               :class="copiedReservationId === res.id ? 'text-neon-blue' : 'text-slate-500'">
+                                {{ copiedReservationId === res.id
+                                  ? 'Kopyalandı'
+                                  : (isCopyAllowed(res.status)
+                                    ? 'Kopyalamak için kodun üstüne tıklayın'
+                                    : 'Bu bilette kopyalama devre dışı') }}
+                            </p>
                             
                             <p class="text-[11px] text-slate-400 leading-tight">
                                 <span v-if="res.status === 'PENDING_ON_SITE'">Ödemenizi yapmak ve seansa katılmak için bu kodu stüdyo resepsiyonuna gösterin.</span>
                                 <span v-else>Bu biletin geçerliliği sona ermiştir.</span>
+                            </p>
+
+                            <p
+                                v-if="cancellationFeedback && cancellationFeedbackReservationId === res.id"
+                                class="text-[11px] mt-3 font-semibold"
+                                :class="cancellationFeedback.type === 'success' ? 'text-neon-green' : 'text-red-300'"
+                            >
+                                {{ cancellationFeedback.message }}
                             </p>
                         </div>
                     </div>
