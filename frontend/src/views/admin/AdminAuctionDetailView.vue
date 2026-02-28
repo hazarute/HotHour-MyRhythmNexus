@@ -22,6 +22,36 @@ const activeTab = ref('overview') // overview, reservations, bidders
 
 const hasWinningReservation = computed(() => !!winningReservation.value)
 
+const statusLabel = computed(() => {
+    const value = String(auction.value?.status || '').toUpperCase()
+    const labels = {
+        DRAFT: 'TASLAK',
+        ACTIVE: 'AKTİF',
+        SOLD: 'SATILDI',
+        EXPIRED: 'SÜRESİ DOLDU',
+        CANCELLED: 'İPTAL EDİLDİ'
+    }
+    return labels[value] || value || '-'
+})
+
+const allowedGenderValue = computed(() => {
+    return String(auction.value?.allowed_gender || auction.value?.allowedGender || 'ANY').toUpperCase()
+})
+
+const allowedGenderLabel = computed(() => {
+    const value = allowedGenderValue.value
+    if (value === 'FEMALE') return 'Kadın'
+    if (value === 'MALE') return 'Erkek'
+    return 'Fark Etmez'
+})
+
+const isParticipantConditionMatched = computed(() => {
+    if (allowedGenderValue.value === 'ANY') return true
+    const userGender = String(authStore.user?.gender || '').toUpperCase()
+    if (!userGender) return true
+    return userGender === allowedGenderValue.value
+})
+
 const formatCurrency = (val) => {
     if (val === undefined || val === null) return '₺0.00'
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
@@ -96,7 +126,10 @@ const fetchWinningReservation = async (auctionId) => {
                 </div>
             </div>
              <div class="flex gap-3 w-full md:w-auto justify-end">
-                <button @click="router.push({ name: 'admin-auction-edit', params: { id: auction?.id } })" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
+                <button @click="router.push({ name: 'admin-auction-edit', params: { id: auction?.id } })" class="text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg active:scale-95 flex items-center"
+                    :class="isParticipantConditionMatched
+                        ? 'bg-primary hover:bg-blue-600 shadow-primary/25'
+                        : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/30 ring-2 ring-rose-400/70 animate-pulse'">
                     <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">edit</span> Düzenle
                 </button>
             </div>
@@ -118,13 +151,13 @@ const fetchWinningReservation = async (auctionId) => {
 
             <div v-else class="flex flex-col gap-6">
                 <!-- Info Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Durum</span>
                          <div class="mt-2">
                             <span v-if="auction?.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
                             <span v-else-if="auction?.status === 'SOLD'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
-                            <span v-else class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ auction?.status }}</span>
+                            <span v-else class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ statusLabel }}</span>
                         </div>
                     </div>
                      <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -140,6 +173,21 @@ const fetchWinningReservation = async (auctionId) => {
                          <div class="mt-2 text-lg font-mono text-primary font-bold">
                             <CountDownTimer v-if="auction?.status === 'ACTIVE'" :targetTime="auction?.endTime || auction?.end_time" :showLabel="false" :small="true" />
                             <span v-else>-</span>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border shadow-sm transition-all"
+                        :class="isParticipantConditionMatched
+                            ? 'border-slate-200 dark:border-slate-800'
+                            : 'border-rose-400/60 dark:border-rose-500/60 ring-2 ring-rose-400/30 shadow-rose-500/20 animate-pulse'">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Katılımcı Koşulu</span>
+                        <div class="mt-2">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border"
+                                  :class="!isParticipantConditionMatched
+                                    ? 'bg-rose-500/10 text-rose-500 border-rose-500/40'
+                                    : (allowedGenderLabel === 'Fark Etmez' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30')">
+                                <span v-if="!isParticipantConditionMatched" class="material-symbols-outlined text-sm mr-1">block</span>
+                                {{ allowedGenderLabel }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -173,6 +221,14 @@ const fetchWinningReservation = async (auctionId) => {
                                     <span>Bitiş:</span>
                                     <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.endTime || auction?.end_time) }}</span>
                                 </li>
+                                <li class="flex justify-between">
+                                    <span>Hizmet Zamanı:</span>
+                                    <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.scheduledAt || auction?.scheduled_at) }}</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span>Katılımcı Koşulu:</span>
+                                    <span class="font-medium text-slate-900 dark:text-white">{{ allowedGenderLabel }}</span>
+                                </li>
                              </ul>
                         </div>
                          <div>
@@ -189,6 +245,14 @@ const fetchWinningReservation = async (auctionId) => {
                                 <li class="flex justify-between">
                                     <span>Düşüş Miktarı:</span>
                                     <span class="font-medium text-slate-900 dark:text-white">{{ formatCurrency(auction?.dropAmount || auction?.drop_amount) }}</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span>Oluşturulma:</span>
+                                    <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.createdAt || auction?.created_at) }}</span>
+                                </li>
+                                <li class="flex justify-between">
+                                    <span>Son Güncelleme:</span>
+                                    <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.updatedAt || auction?.updated_at) }}</span>
                                 </li>
                              </ul>
                         </div>

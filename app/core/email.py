@@ -24,7 +24,6 @@ conf = ConnectionConfig(
     USE_CREDENTIALS=True,
     VALIDATE_CERTS=False  # Gmail için sertifika doğrulama devre dışı
 )
-
 async def send_email(email_to: EmailStr, subject_template: str, html_template: str):
     """
     Base function to send emails
@@ -58,14 +57,17 @@ async def send_verification_email(email_to: str, token: str) -> None:
         return
 
     project_name = settings.PROJECT_NAME
+    display_project_name = project_name.replace(" Core", "").replace("Core ", "").replace("Core", "").strip()
     subject = f"✨ {project_name} - Hesabınızı Doğrulayın"
     
     # Email link - Frontend verify sayfasına yönlendir (URL .env'den okunur)
     verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
+    logo_url = f"{settings.FRONTEND_URL}/logo_marka_adi_var.png"
+    logo_html = f'<img src="{logo_url}" alt="{display_project_name} Logo" class="logo-img" />'
     
     html_content = f"""
     <!DOCTYPE html>
-    <html dir="rtl" lang="tr">
+    <html dir="ltr" lang="tr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -99,11 +101,17 @@ async def send_verification_email(email_to: str, token: str) -> None:
                 color: white;
             }}
             .logo-section {{
-                margin-bottom: 20px;
+                margin-bottom: 0;
             }}
             .logo {{
                 font-size: 48px;
-                margin-bottom: 10px;
+                margin-bottom: 0;
+            }}
+            .logo-img {{
+                width: 220px;
+                max-width: 100%;
+                height: auto;
+                display: inline-block;
             }}
             .header h1 {{
                 font-size: 28px;
@@ -133,20 +141,21 @@ async def send_verification_email(email_to: str, token: str) -> None:
             }}
             .cta-button {{
                 display: inline-block;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
+                background: #2f5eff;
+                color: #ffffff !important;
                 padding: 14px 40px;
                 border-radius: 8px;
                 text-decoration: none;
-                font-weight: 600;
+                font-weight: 700;
                 font-size: 16px;
                 transition: transform 0.2s, box-shadow 0.2s;
-                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-                border: none;
+                box-shadow: 0 10px 25px rgba(47, 94, 255, 0.45);
+                border: 1px solid #2147d9;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
             }}
             .cta-button:hover {{
                 transform: translateY(-2px);
-                box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+                box-shadow: 0 15px 35px rgba(47, 94, 255, 0.6);
             }}
             .link-section {{
                 margin-top: 30px;
@@ -233,10 +242,8 @@ async def send_verification_email(email_to: str, token: str) -> None:
             <!-- Header -->
             <div class="header">
                 <div class="logo-section">
-                    <div class="logo">⏳🔥</div>
+                    {logo_html}
                 </div>
-                <h1>{project_name}</h1>
-                <p>Pilates Oturumları Platformu</p>
             </div>
 
             <!-- Content -->
@@ -244,7 +251,7 @@ async def send_verification_email(email_to: str, token: str) -> None:
                 <p class="greeting">Merhaba! 👋</p>
                 
                 <p class="message">
-                    {project_name} hesabınızı oluşturdığunuz için teşekkür ederiz! Hesabınızı aktif hale getirmek için 
+                    {display_project_name} hesabınızı oluşturduğunuz için teşekkür ederiz! Hesabınızı aktif hale getirmek için 
                     lütfen aşağıdaki butona tıklayarak email adresinizi doğrulayın.
                 </p>
 

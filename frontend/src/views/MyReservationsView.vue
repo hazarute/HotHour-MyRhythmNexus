@@ -148,7 +148,7 @@ onMounted(() => {
                                     <div>
                                         <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Hizmet Zamanı</p>
                                         <p class="font-medium text-slate-200">{{ formatDate(res.scheduled_at || res.auction_start_time) }}</p>
-                                        <p v-if="res.scheduled_at" class="text-[10px] text-slate-500 mt-0.5">(Ders Başlangıcı)</p>
+                                        <p v-if="res.scheduled_at" class="text-[10px] text-slate-500 mt-0.5">(Seans Başlangıcı)</p>
                                     </div>
                                     <div>
                                         <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Kilitlenen Fiyat</p>

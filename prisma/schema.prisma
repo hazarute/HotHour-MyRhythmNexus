@@ -26,6 +26,12 @@ enum Gender {
   MALE
 }
 
+enum AllowedGender {
+  FEMALE
+  MALE
+  ANY
+}
+
 enum AuctionStatus {
   DRAFT      // Draft mode
   ACTIVE     // Active auction
@@ -67,6 +73,7 @@ model Auction {
   id          Int      @id @default(autoincrement())
   title       String   
   description String?  
+  allowedGender AllowedGender @default(ANY)
   
   // --- Pricing Config ---
   startPrice       Decimal @db.Decimal(10, 2)

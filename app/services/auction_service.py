@@ -142,6 +142,7 @@ class AuctionService:
             data={
                 "title": data.get("title"),
                 "description": data.get("description"),
+                "allowedGender": data.get("allowed_gender", "ANY"),
                 "startPrice": data.get("start_price"),
                 "floorPrice": data.get("floor_price"),
                 "currentPrice": data.get("start_price"),
@@ -209,6 +210,7 @@ class AuctionService:
                 "id": mapping.get("id"),
                 "title": mapping.get("title"),
                 "description": mapping.get("description"),
+                "allowed_gender": mapping.get("allowedGender") or "ANY",
                 "start_price": mapping.get("startPrice"),
                 "floor_price": mapping.get("floorPrice"),
                 "start_time": mapping.get("startTime"),
@@ -237,6 +239,7 @@ class AuctionService:
         merged_for_validation = {
             "title": getattr(existing, "title", None),
             "description": getattr(existing, "description", None),
+            "allowed_gender": getattr(existing, "allowedGender", "ANY"),
             "start_price": getattr(existing, "startPrice", None),
             "floor_price": getattr(existing, "floorPrice", None),
             "start_time": getattr(existing, "startTime", None),
@@ -260,6 +263,7 @@ class AuctionService:
         mapping = {
             "title": "title",
             "description": "description",
+            "allowed_gender": "allowedGender",
             "status": "status",
             "start_time": "startTime",
             "end_time": "endTime",
@@ -311,6 +315,7 @@ class AuctionService:
             "id": g("id"),
             "title": g("title"),
             "description": g("description"),
+            "allowedGender": g("allowedGender") or g("allowed_gender") or "ANY",
             "startPrice": g("startPrice") or g("start_price"),
             "floorPrice": g("floorPrice") or g("floor_price"),
             "currentPrice": g("currentPrice") or g("current_price"),

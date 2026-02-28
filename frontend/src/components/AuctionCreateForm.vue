@@ -15,11 +15,17 @@ const props = defineProps({
 const emit = defineEmits(['create-auction', 'update-auction', 'cancel'])
 
 const DISCOUNT_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+const GENDER_OPTIONS = [
+    { value: 'FEMALE', label: 'Kadın' },
+    { value: 'MALE', label: 'Erkek' },
+    { value: 'ANY', label: 'Fark Etmez' }
+]
 const TURBO_TRIGGER_DEFAULT = 120
 const TURBO_INTERVAL_DEFAULT = 10
 
 const selectedDiscountRate = ref(null)
 const showDiscountDropdown = ref(false)
+const showGenderDropdown = ref(false)
 const loading = ref(false)
 
 const minDateTime = ref('')
@@ -27,6 +33,7 @@ const minDateTime = ref('')
 const form = reactive({
     title: '',
     description: '',
+    allowed_gender: 'ANY',
     start_time: '',
     end_time: '',
     scheduled_at: '',
@@ -42,6 +49,10 @@ const form = reactive({
 
 const roundMoney = (value) => Number(Number(value || 0).toFixed(2))
 const floorMoney = (value) => Math.floor(Number(value || 0) * 100) / 100
+
+const getAllowedGenderLabel = (value) => {
+    return GENDER_OPTIONS.find((item) => item.value === value)?.label || 'Fark Etmez'
+}
 
 const formatDateForInput = (isoString) => {
     if (!isoString) return ''
@@ -182,6 +193,7 @@ const populateForm = (data) => {
 
     Object.assign(form, {
         ...newData,
+        allowed_gender: newData.allowed_gender ?? newData.allowedGender ?? form.allowed_gender,
         start_price: startPrice,
         floor_price: floorPrice,
         drop_interval_mins: Number(newData.drop_interval_mins ?? newData.dropIntervalMins ?? form.drop_interval_mins),
@@ -302,12 +314,38 @@ const submitForm = () => {
                         />
                     </div>
                 </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300">Katılımcı Cinsiyet Koşulu</label>
+                    <div class="relative">
+                        <button
+                            type="button"
+                            @click="showGenderDropdown = !showGenderDropdown"
+                            class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors"
+                        >
+                            <span>{{ getAllowedGenderLabel(form.allowed_gender) }}</span>
+                            <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span>
+                        </button>
+                        <div v-if="showGenderDropdown" class="absolute top-full right-0 mt-2 w-full bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-50 py-1">
+                            <button
+                                v-for="option in GENDER_OPTIONS"
+                                :key="option.value"
+                                type="button"
+                                @click="form.allowed_gender = option.value; showGenderDropdown = false"
+                                class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]"
+                            >
+                                {{ option.label }}
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">Bu koşul, oturumu kimlerin “Hemen Kap” yapabileceğini belirler.</p>
+                </div>
             </div>
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
                 <h4 class="text-white font-semibold">Zamanlama</h4>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Hizmet Zamanı (Ders Saati)</label>
+                        <label class="block text-sm font-medium text-slate-300">Hizmet Zamanı (Seans Saati)</label>
                         <input
                             v-model="form.scheduled_at"
                             type="datetime-local"

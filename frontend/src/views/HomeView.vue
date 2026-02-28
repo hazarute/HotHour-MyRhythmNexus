@@ -1,19 +1,61 @@
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
+import { useSocketStore } from '../stores/socket'
 import AuctionCard from '../components/AuctionCard.vue'
 import { isAuctionActive } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
+const socketStore = useSocketStore()
 
 const activeAuctions = computed(() => {
     return store.auctions.filter(isAuctionActive)
 })
 
-onMounted(() => {
-  store.fetchAuctions()
+const subscribeToAuctionRooms = () => {
+    store.auctions.forEach((auction) => {
+        if (auction?.id) {
+            socketStore.subscribeAuction(auction.id)
+        }
+    })
+}
+
+const unsubscribeFromAuctionRooms = () => {
+    store.auctions.forEach((auction) => {
+        if (auction?.id) {
+            socketStore.unsubscribeAuction(auction.id)
+        }
+    })
+}
+
+const onPriceUpdate = (data) => {
+    if (!data?.auction_id) return
+    store.updatePrice(data.auction_id, data.current_price)
+}
+
+const onAuctionBooked = (data) => {
+    if (!data?.auction_id) return
+    store.updateAuctionStatus(data.auction_id, 'SOLD')
+}
+
+onMounted(async () => {
+    if (!socketStore.isConnected) {
+        socketStore.connect()
+    }
+
+    socketStore.on('price_update', onPriceUpdate)
+    socketStore.on('auction_booked', onAuctionBooked)
+
+    await store.fetchAuctions()
+    subscribeToAuctionRooms()
+})
+
+onUnmounted(() => {
+    unsubscribeFromAuctionRooms()
+    socketStore.off('price_update', onPriceUpdate)
+    socketStore.off('auction_booked', onAuctionBooked)
 })
 
 const goToAllAuctions = () => {

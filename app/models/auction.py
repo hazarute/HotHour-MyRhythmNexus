@@ -13,9 +13,16 @@ class AuctionStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
+class AllowedGender(str, Enum):
+    FEMALE = "FEMALE"
+    MALE = "MALE"
+    ANY = "ANY"
+
+
 class AuctionBase(BaseModel):
     title: str
     description: Optional[str] = None
+    allowed_gender: Optional[AllowedGender] = AllowedGender.ANY
     start_price: Decimal
     floor_price: Decimal
     start_time: datetime
@@ -36,6 +43,7 @@ class AuctionCreate(AuctionBase):
 class AuctionUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    allowed_gender: Optional[AllowedGender] = None
     status: Optional[AuctionStatus] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None

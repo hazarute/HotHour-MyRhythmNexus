@@ -14,12 +14,47 @@ from prisma.enums import PaymentStatus
 
 
 TURBO_SHOWCASE_TITLE = "Turbo Sculpt Reformer"
+ALLOWED_GENDER_SEQUENCE = ["ANY", "FEMALE", "MALE"]
 
 
 def _deleted_count(result) -> int:
     if isinstance(result, int):
         return result
     return int(getattr(result, "count", 0) or 0)
+
+
+def _normalize_enum_name(value) -> str:
+    raw = str(value or "").upper()
+    return raw.split(".")[-1]
+
+
+def _pick_eligible_user(users, allowed_gender: str):
+    normalized_allowed = _normalize_enum_name(allowed_gender)
+    if normalized_allowed == "ANY":
+        return random.choice(users) if users else None
+
+    eligible_users = [
+        user for user in users
+        if _normalize_enum_name(getattr(user, "gender", "")) == normalized_allowed
+    ]
+
+    if not eligible_users:
+        return None
+
+    return random.choice(eligible_users)
+
+
+def _with_project_defaults(data: dict, index: int) -> dict:
+    normalized = dict(data)
+
+    normalized.setdefault("allowedGender", ALLOWED_GENDER_SEQUENCE[index % len(ALLOWED_GENDER_SEQUENCE)])
+
+    if not normalized.get("scheduledAt"):
+        end_time = normalized.get("endTime")
+        if end_time is not None:
+            normalized["scheduledAt"] = end_time + timedelta(hours=2)
+
+    return normalized
 
 
 async def _seed_reservations(users, auctions):
@@ -43,10 +78,16 @@ async def _seed_reservations(users, auctions):
         if getattr(auction, "title", None) == TURBO_SHOWCASE_TITLE:
             continue
 
-        user = random.choice(users)
+        allowed_gender = getattr(auction, "allowedGender", "ANY")
+        user = _pick_eligible_user(users, allowed_gender)
+        if user is None:
+            print(f"⚠️ Uygun kullanıcı bulunamadı, rezervasyon atlandı: {getattr(auction, 'title', '-') } ({allowed_gender})")
+            continue
+
         status = random.choice([
             PaymentStatus.PENDING_ON_SITE,
             PaymentStatus.COMPLETED,
+            PaymentStatus.NO_SHOW,
             PaymentStatus.CANCELLED,
         ])
 
@@ -360,10 +401,19 @@ async def seed_auctions():
         }
     ]
 
-    for data in auctions_data:
+    normalized_auctions = [
+        _with_project_defaults(data, index)
+        for index, data in enumerate(auctions_data)
+    ]
+
+    for data in normalized_auctions:
         try:
             auction = await db.auction.create(data=data)
-            print(f"Oluşturuldu: {getattr(auction, 'title', '-') } - ID: {getattr(auction, 'id', '-')}")
+            print(
+                f"Oluşturuldu: {getattr(auction, 'title', '-') } - ID: {getattr(auction, 'id', '-')} "
+                f"| Koşul: {getattr(auction, 'allowedGender', 'ANY')} "
+                f"| Seans: {getattr(auction, 'scheduledAt', '-') }"
+            )
         except Exception as e:
             print(f"Hata oluştu ({data['title']}): {e}")
 

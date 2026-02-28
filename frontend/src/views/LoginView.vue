@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -41,11 +42,11 @@ const handleLogin = async () => {
         <div class="w-full">
             <!-- Mobile Logo/Branding -->
             <div class="lg:hidden text-center mb-8">
-                <div class="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-lg shadow-primary/30 mb-4">
-                     <span class="material-symbols-outlined text-white text-3xl">hourglass_top</span>
+                <div class="inline-flex items-center justify-center p-4 rounded-3xl bg-dark-card border border-primary/20 shadow-glow mb-4 transition-transform hover:scale-105 duration-300">
+                     <BrandLogo className="w-16 h-16" />
                 </div>
-                <h1 class="text-2xl font-bold text-white mb-2">HotHour</h1>
-                <p class="text-slate-400 text-sm">Pilates Oturumları Platformu</p>
+                <h1 class="text-3xl font-bold text-white mb-1">HotHour</h1>
+                <p class="text-slate-400 text-sm font-medium">Pilates Oturumları Platformu</p>
             </div>
 
           <div class="hh-glass-card rounded-2xl p-6 sm:p-8 border border-white/10 shadow-glow backdrop-blur-xl bg-dark-bg/80">

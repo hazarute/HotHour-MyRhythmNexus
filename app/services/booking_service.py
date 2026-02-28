@@ -43,6 +43,11 @@ class UserNotFoundError(BookingError):
     pass
 
 
+class GenderNotEligibleError(BookingError):
+    """Raised when user's gender is not eligible for this auction"""
+    pass
+
+
 class BookingService:
     """Service for managing booking/reservation operations"""
     
@@ -101,6 +106,14 @@ class BookingService:
         user = await db.user.find_unique(where={"id": user_id})
         if not user:
             raise UserNotFoundError(f"User {user_id} not found")
+
+        # Step 2.1: Verify gender eligibility rule
+        allowed_gender = str(getattr(auction, "allowedGender", "ANY") or "ANY").upper()
+        user_gender = str(getattr(user, "gender", "") or "").upper()
+        if allowed_gender in {"FEMALE", "MALE"} and user_gender != allowed_gender:
+            if allowed_gender == "FEMALE":
+                raise GenderNotEligibleError("Bu oturum yalnızca kadın kullanıcılar içindir.")
+            raise GenderNotEligibleError("Bu oturum yalnızca erkek kullanıcılar içindir.")
         
         # Step 3: Get current (locked) price
         # Note: We use the auction's currentPrice field directly

@@ -1,10 +1,12 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useAuctionStore } from '../stores/auction'
 import CountDownTimer from './CountDownTimer.vue'
 import HemenKapButton from './HemenKapButton.vue'
-import { getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, isAuctionTurbo } from '../utils/auction'
+import BookingConfirmModal from './BookingConfirmModal.vue'
+import { getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, getAuctionStatus, isAuctionTurbo } from '../utils/auction'
 
 const props = defineProps({
   auction: {
@@ -15,6 +17,19 @@ const props = defineProps({
 
 const router = useRouter()
 const authStore = useAuthStore()
+const auctionStore = useAuctionStore()
+const showBookingConfirmModal = ref(false)
+const bookingLoading = ref(false)
+
+const allowedGender = computed(() => String(props.auction?.allowed_gender || props.auction?.allowedGender || 'ANY').toUpperCase())
+const canBookByGender = computed(() => {
+    if (allowedGender.value === 'ANY') return true
+    if (!authStore.isAuthenticated) return true
+    const userGender = String(authStore.user?.gender || '').toUpperCase()
+    return userGender === allowedGender.value
+})
+const isAuctionActive = computed(() => getAuctionStatus(props.auction) === 'ACTIVE')
+const bookingDisabled = computed(() => !isAuctionActive.value || !canBookByGender.value || bookingLoading.value)
 
 const formatPrice = (p) => {
     const value = Number(p || 0)
@@ -26,6 +41,10 @@ const goToDetail = () => {
 }
 
 const handleHemenKap = () => {
+    if (!isAuctionActive.value) return
+
+    if (!canBookByGender.value) return
+
     const targetRoute = { name: 'auction-detail', params: { id: props.auction.id } }
 
     if (!authStore.isAuthenticated) {
@@ -36,7 +55,24 @@ const handleHemenKap = () => {
         return
     }
 
-    router.push(targetRoute)
+    showBookingConfirmModal.value = true
+}
+
+const confirmBooking = async () => {
+    showBookingConfirmModal.value = false
+    bookingLoading.value = true
+    try {
+        const reservation = await auctionStore.bookAuction(props.auction.id)
+        if (reservation?.booking_code) {
+            alert(`Rezervasyon onaylandı! Kodunuz: ${reservation.booking_code}`)
+        } else {
+            alert('Rezervasyonunuz başarıyla alındı!')
+        }
+    } catch (err) {
+        alert(err?.message || 'Rezervasyon sırasında bir hata oluştu.')
+    } finally {
+        bookingLoading.value = false
+    }
 }
 
 const currentPrice = computed(() => {
@@ -68,7 +104,7 @@ const studioName = computed(() => props.auction.description || 'Açıklama bilgi
 </script>
 
 <template>
-  <div 
+    <div 
         class="glass-card rounded-2xl overflow-hidden group transition-all duration-300 relative flex flex-col cursor-pointer"
         :class="isTurbo ? 'border-neon-orange shadow-neon-blue hover:shadow-neon-blue hover:scale-[1.01]' : 'hover:border-neon-blue/50'"
     @click="goToDetail"
@@ -136,11 +172,23 @@ const studioName = computed(() => props.auction.description || 'Açıklama bilgi
 
                         <HemenKapButton
                             variant="card"
+                                                        :loading="bookingLoading"
                             :card-label="isTurbo ? 'Hemen Kap ⚡' : 'Hemen Kap'"
                             :show-trailing-icon="!isTurbo"
+                                                        :disabled="bookingDisabled"
                             @click="handleHemenKap"
                         />
         </div>
     </div>
   </div>
+
+    <BookingConfirmModal
+        :visible="showBookingConfirmModal"
+        :price="currentPrice"
+        :discount-percent="Math.max(0, Math.round(((startPrice - currentPrice) / (startPrice || 1)) * 100))"
+        :target-time="endTime"
+        :loading="bookingLoading"
+        @cancel="showBookingConfirmModal = false"
+        @confirm="confirmBooking"
+    />
 </template>

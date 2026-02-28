@@ -48,10 +48,25 @@ export const useAuctionStore = defineStore('auction', () => {
         const index = auctions.value.findIndex(a => a.id == auctionId)
         if (index !== -1) {
             auctions.value[index].currentPrice = newPrice
+            auctions.value[index].current_price = newPrice
+            auctions.value[index].computedPrice = newPrice
         }
         // Update current view if matches
         if (currentAuction.value && currentAuction.value.id == auctionId) {
             currentAuction.value.currentPrice = newPrice
+            currentAuction.value.current_price = newPrice
+            currentAuction.value.computedPrice = newPrice
+        }
+    }
+
+    function updateAuctionStatus(auctionId, newStatus) {
+        const index = auctions.value.findIndex(a => a.id == auctionId)
+        if (index !== -1) {
+            auctions.value[index].status = newStatus
+        }
+
+        if (currentAuction.value && currentAuction.value.id == auctionId) {
+            currentAuction.value.status = newStatus
         }
     }
 
@@ -199,6 +214,7 @@ export const useAuctionStore = defineStore('auction', () => {
             if (currentAuction.value && currentAuction.value.id === auctionId) {
                 currentAuction.value.status = 'SOLD'
             }
+            updateAuctionStatus(auctionId, 'SOLD')
             return reservation
         } catch (err) {
             console.error("Booking error:", err)
@@ -221,6 +237,7 @@ export const useAuctionStore = defineStore('auction', () => {
         cancelAuction,
         deleteAuction,
         bookAuction,
-        updatePrice
+        updatePrice,
+        updateAuctionStatus
     }
 })

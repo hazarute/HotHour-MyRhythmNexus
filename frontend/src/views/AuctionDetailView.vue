@@ -5,6 +5,7 @@ import { useAuctionStore } from '../stores/auction'
 import { useSocketStore } from '../stores/socket'
 import { useAuthStore } from '../stores/auth'
 import HemenKapButton from '../components/HemenKapButton.vue'
+import BookingConfirmModal from '../components/BookingConfirmModal.vue'
 import { getAuctionField, getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, getAuctionStatus } from '../utils/auction'
 
 const route = useRoute()
@@ -15,10 +16,13 @@ const authStore = useAuthStore()
 
 const auction = computed(() => auctionStore.currentAuction)
 const showSuccessModal = ref(false)
+const showBookingConfirmModal = ref(false)
 const reservation = ref(null)
 const bookingLoading = ref(false)
 const nowMs = ref(Date.now())
 const copyFeedback = ref(false)
+const participantConditionFx = ref(false)
+let participantConditionFxTimer = null
 let timerId = null
 
 const startPriceValue = computed(() => getAuctionStartPrice(auction.value))
@@ -53,6 +57,25 @@ const countdown = computed(() => {
 })
 
 const isTurbo = computed(() => Boolean(getAuctionField(auction.value, 'turbo_started_at', 'turboStartedAt')))
+
+const allowedGenderValue = computed(() => String(getAuctionField(auction.value, 'allowed_gender', 'allowedGender') || 'ANY').toUpperCase())
+
+const allowedGenderLabel = computed(() => {
+    if (allowedGenderValue.value === 'FEMALE') return 'Kadın'
+    if (allowedGenderValue.value === 'MALE') return 'Erkek'
+    return 'Fark Etmez'
+})
+
+const canCurrentUserBookByGender = computed(() => {
+    if (allowedGenderValue.value === 'ANY') return true
+    if (!authStore.isAuthenticated) return true
+    const userGender = String(authStore.user?.gender || '').toUpperCase()
+    return userGender === allowedGenderValue.value
+})
+
+const bookingDisabled = computed(() => {
+    return statusValue.value !== 'ACTIVE' || !canCurrentUserBookByGender.value
+})
 
 const themeClasses = computed(() => {
     if (isTurbo.value) {
@@ -138,9 +161,35 @@ const handleBook = async () => {
         return
     }
 
-    if (!confirm(`${formatPrice(currentPriceValue.value)} tutarındaki bu oturumu rezerve etmek istediğinize emin misiniz?`)) {
-        return
+    if (!canCurrentUserBookByGender.value) return
+
+    showBookingConfirmModal.value = true
+}
+
+const triggerParticipantConditionFx = () => {
+    participantConditionFx.value = false
+    if (participantConditionFxTimer) {
+        clearTimeout(participantConditionFxTimer)
+        participantConditionFxTimer = null
     }
+
+    requestAnimationFrame(() => {
+        participantConditionFx.value = true
+        participantConditionFxTimer = setTimeout(() => {
+            participantConditionFx.value = false
+            participantConditionFxTimer = null
+        }, 900)
+    })
+}
+
+const onDisabledBookClick = () => {
+    if (!canCurrentUserBookByGender.value) {
+        triggerParticipantConditionFx()
+    }
+}
+
+const confirmBooking = async () => {
+    showBookingConfirmModal.value = false
 
     bookingLoading.value = true
     try {
@@ -181,6 +230,11 @@ onUnmounted(() => {
     if (timerId) {
         clearInterval(timerId)
         timerId = null
+    }
+
+    if (participantConditionFxTimer) {
+        clearTimeout(participantConditionFxTimer)
+        participantConditionFxTimer = null
     }
 })
 </script>
@@ -247,7 +301,7 @@ onUnmounted(() => {
                             <div v-if="auction.scheduled_at" class="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md">
                                 <span class="material-symbols-outlined text-neon-blue text-lg">event</span>
                                 <div class="flex flex-col items-start leading-tight">
-                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ders Zamanı</span>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Seans Zamanı</span>
                                     <span class="text-white text-sm font-bold">{{ formatDate(auction.scheduled_at) }}</span>
                                 </div>
                             </div>
@@ -315,19 +369,34 @@ onUnmounted(() => {
                         </div>
                     </div>
 
+                    <div class="w-full p-3 rounded-xl border text-left mb-2 transition-all"
+                        :class="participantConditionFx
+                            ? 'border-rose-400/70 bg-rose-500/10 ring-2 ring-rose-400/40 animate-pulse'
+                            : 'border-white/10 bg-white/5'">
+                        <p class="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Katılımcı Koşulu</p>
+                        <p class="text-sm font-semibold" :class="themeClasses.textAccent">{{ allowedGenderLabel }}</p>
+                    </div>
+
                     <!-- CTA Button -->
                     <HemenKapButton
                         variant="detail"
                         :loading="bookingLoading"
-                        :disabled="statusValue !== 'ACTIVE'"
+                        :disabled="bookingDisabled"
                         :is-active="statusValue === 'ACTIVE'"
                         :animate-icon="isTurbo"
                         :gradient-class="themeClasses.gradientBtn"
                         :shadow-class="themeClasses.shadowNeon"
                         @click="handleBook"
+                        @disabled-click="onDisabledBookClick"
                     />
 
-                    <p class="block text-slate-500 text-xs">Tıklayarak <a href="#" class="hover:underline transition-colors" :class="themeClasses.textAccent">Kullanım Şartlarını</a> kabul etmiş olursunuz.</p>
+                    <p class="block text-slate-500 text-xs">
+                        Tıklayarak
+                        <router-link :to="{ name: 'terms-of-use' }" class="hover:underline transition-colors" :class="themeClasses.textAccent">
+                            Kullanım Şartlarını
+                        </router-link>
+                        kabul etmiş olursunuz.
+                    </p>
                 </div>
             </div>
 
@@ -336,6 +405,16 @@ onUnmounted(() => {
         </div>
 
     </div>
+
+    <BookingConfirmModal
+        :visible="showBookingConfirmModal"
+        :price="currentPriceValue"
+        :discount-percent="discountPercent"
+        :target-time="endTimeValue"
+        :loading="bookingLoading"
+        @cancel="showBookingConfirmModal = false"
+        @confirm="confirmBooking"
+    />
 
     <!-- Success Modal -->
     <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">

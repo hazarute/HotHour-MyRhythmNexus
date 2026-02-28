@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { useRouter, RouterLink, RouterView } from 'vue-router'
 import { ref } from 'vue'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -50,15 +51,15 @@ const logout = () => {
     >
         <div class="flex flex-col gap-8">
             <!-- Logo / Brand (Desktop Only) -->
-            <div class="hidden md:flex items-center gap-3 px-2">
-                <div class="relative flex items-center justify-center size-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-white" style="font-size: 24px;">hourglass_top</span>
+            <RouterLink to="/" class="hidden md:flex items-center gap-4 px-2 group">
+                <div class="relative flex items-center justify-center size-12 rounded-2xl bg-gradient-to-br from-primary/20 to-blue-600/10 border border-primary/20 shadow-lg shadow-primary/10 group-hover:scale-105 transition-transform duration-300">
+                    <BrandLogo className="w-8 h-8 object-contain" />
                 </div>
-                <div class="flex flex-col">
-                    <h1 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">HotHour</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs font-medium">Stüdyo Kontrol</p>
+                <div class="flex flex-col justify-center">
+                    <h1 class="text-slate-900 dark:text-white text-xl font-bold leading-none tracking-tight group-hover:text-primary transition-colors">HotHour</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider mt-1">Stüdyo Kontrol</p>
                 </div>
-            </div>
+            </RouterLink>
 
             <!-- Navigation -->
             <nav class="flex flex-col gap-2">

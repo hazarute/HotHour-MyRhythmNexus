@@ -1,4 +1,6 @@
 <script setup>
+import { onUnmounted, ref } from 'vue'
+
 const props = defineProps({
   variant: {
     type: String,
@@ -38,21 +40,59 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['click'])
+const emit = defineEmits(['click', 'disabled-click'])
+
+const blockedFx = ref(false)
+let blockedFxTimer = null
+
+const triggerBlockedFx = () => {
+  blockedFx.value = false
+  if (blockedFxTimer) {
+    clearTimeout(blockedFxTimer)
+    blockedFxTimer = null
+  }
+
+  requestAnimationFrame(() => {
+    blockedFx.value = true
+    blockedFxTimer = setTimeout(() => {
+      blockedFx.value = false
+      blockedFxTimer = null
+    }, 900)
+  })
+}
 
 const onClick = (event) => {
-  if (props.disabled || props.loading) return
+  if (props.loading) return
+
+  if (props.disabled) {
+    triggerBlockedFx()
+    emit('disabled-click', event)
+    return
+  }
+
   emit('click', event)
 }
+
+onUnmounted(() => {
+  if (blockedFxTimer) {
+    clearTimeout(blockedFxTimer)
+    blockedFxTimer = null
+  }
+})
 </script>
 
 <template>
   <button
     v-if="variant === 'card'"
-    class="w-full py-3 rounded-lg bg-primary hover:bg-neon-blue hover:shadow-neon-blue text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn"
-    :disabled="disabled || loading"
+    class="w-full py-3 rounded-lg bg-primary hover:bg-neon-blue hover:shadow-neon-blue text-white font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn relative"
+    :class="blockedFx ? 'bg-rose-600 hover:bg-rose-500 ring-2 ring-rose-400/70 animate-pulse' : ''"
+    :disabled="loading"
+    :aria-disabled="disabled || loading"
     @click.stop="onClick"
   >
+    <span v-if="blockedFx" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg animate-pulse">
+      <span class="material-symbols-outlined text-sm">block</span>
+    </span>
     <span>{{ cardLabel }}</span>
     <span v-if="showTrailingIcon" class="material-symbols-outlined group-hover/btn:translate-x-1 transition-transform text-lg">bolt</span>
   </button>
@@ -60,11 +100,16 @@ const onClick = (event) => {
   <button
     v-else
     class="flex group relative w-full overflow-hidden rounded-2xl p-[2px] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-2"
-    :class="[gradientClass, shadowClass]"
-    :disabled="disabled || loading"
+    :class="[gradientClass, shadowClass, blockedFx ? 'ring-2 ring-rose-400/80 animate-pulse' : '']"
+    :disabled="loading"
+    :aria-disabled="disabled || loading"
     @click="onClick"
   >
+    <span v-if="blockedFx" class="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg animate-pulse">
+      <span class="material-symbols-outlined text-base">block</span>
+    </span>
     <div class="relative flex h-16 w-full items-center justify-center rounded-[14px] px-8 transition-all" :class="`bg-gradient-to-r ${gradientClass}`">
+      <div v-if="blockedFx" class="absolute inset-0 bg-rose-600/30"></div>
       <span class="absolute right-0 -mt-12 -mr-12 h-32 w-32 translate-x-1/2 rotate-45 bg-white opacity-10 blur-xl transition-all duration-1000 group-hover:-translate-x-full"></span>
 
       <span v-if="loading" class="flex items-center gap-2 text-white font-bold animate-pulse">

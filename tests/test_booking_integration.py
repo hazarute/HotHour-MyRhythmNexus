@@ -39,6 +39,7 @@ async def create_active_auction(title: str = "Booking Auction", current_price: D
         data={
             "title": title,
             "description": "Integration test auction",
+            "allowedGender": "ANY",
             "startPrice": Decimal("120.00"),
             "floorPrice": Decimal("60.00"),
             "currentPrice": current_price,
@@ -117,3 +118,46 @@ async def test_duplicate_booking_returns_conflict():
 
     assert second.status_code == 409, second.text
     assert "already booked" in second.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_gender_restricted_auction_blocks_ineligible_user():
+    email = f"booker+{uuid.uuid4().hex[:8]}@example.com"
+    phone = f"+902{uuid.uuid4().hex[:7]}"
+    password = "BookPass123!"
+
+    # Male user
+    user = await create_user(email=email, phone=phone, password=password, gender="MALE")
+
+    now = datetime.now(timezone.utc)
+    auction = await db.db.auction.create(
+        data={
+            "title": "Women Only Session",
+            "description": "Gender restricted session",
+            "allowedGender": "FEMALE",
+            "startPrice": Decimal("120.00"),
+            "floorPrice": Decimal("60.00"),
+            "currentPrice": Decimal("89.90"),
+            "startTime": now - timedelta(minutes=5),
+            "endTime": now + timedelta(minutes=55),
+            "dropIntervalMins": 5,
+            "dropAmount": Decimal("2.50"),
+            "status": "ACTIVE",
+        }
+    )
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login.status_code == 200, login.text
+        token = login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        response = await client.post(
+            "/api/v1/reservations/book",
+            json={"auction_id": auction.id, "user_id": user.id},
+            headers=headers,
+        )
+
+    assert response.status_code == 403, response.text
+    assert "yalnızca kadın" in response.json()["detail"].lower()

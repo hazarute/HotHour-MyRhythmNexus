@@ -2,6 +2,7 @@
 import { useAuthStore } from './stores/auth'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -37,19 +38,16 @@ const handleLogout = () => {
     <header v-if="!isAdminRoute" class="sticky top-0 z-50 w-full border-b border-white/10 bg-background-dark/80 backdrop-blur-md">
       <div class="px-6 md:px-12 py-4 flex items-center justify-between">
         <div class="flex items-center gap-10">
-          <router-link to="/" class="flex items-center gap-3 group">
-            <div class="w-8 h-8 text-primary group-hover:text-neon-blue transition-colors duration-300">
-              <svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24 4C12.9543 4 4 7.25611 4 11.2727C4 14.0109 8.16144 16.3957 14.31 17.6364C8.16144 18.877 4 21.2618 4 24C4 26.7382 8.16144 29.123 14.31 30.3636C8.16144 31.6043 4 33.9891 4 36.7273C4 40.7439 12.9543 44 24 44C35.0457 44 44 40.7439 44 36.7273C44 33.9891 39.8386 31.6043 33.69 30.3636C39.8386 29.123 44 26.7382 44 24C44 21.2618 39.8386 18.877 33.69 17.6364C39.8386 16.3957 44 14.0109 44 11.2727C44 7.25611 35.0457 4 24 4Z" fill="currentColor"></path>
-              </svg>
-            </div>
-            <span class="text-xl font-bold tracking-tight text-white">HotHour</span>
+          <router-link to="/" class="flex items-center gap-4 group">
+            <BrandLogo className="w-12 h-12 transition-transform duration-300 group-hover:scale-110" />
+            <span class="text-2xl font-bold tracking-tight text-white mb-0.5">HotHour</span>
           </router-link>
           
           <nav class="hidden md:flex items-center gap-8">
             <router-link to="/" class="text-sm font-medium text-neon-blue drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">Ana Sayfa</router-link>
+            <router-link to="/auctions" class="text-sm font-medium text-slate-400 hover:text-white transition-colors" active-class="text-white">Canlı Oturumları Gör</router-link>
             <template v-if="authStore.isAuthenticated">
-                <router-link to="/my-reservations" class="text-sm font-medium text-slate-400 hover:text-white transition-colors" active-class="text-white">My Reservations</router-link>
+                <router-link to="/my-reservations" class="text-sm font-medium text-slate-400 hover:text-white transition-colors" active-class="text-white">Rezervasyonlarım</router-link>
             </template>
             <template v-else>
                 <router-link to="/how-it-works" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Nasıl Çalışır</router-link>
@@ -93,9 +91,10 @@ const handleLogout = () => {
       <!-- Mobile Menu -->
       <div v-if="isMobileMenuOpen" class="md:hidden border-t border-white/10 bg-background-dark/95 backdrop-blur-xl absolute top-full left-0 w-full p-4 flex flex-col gap-4 shadow-2xl animate-fade-in-down">
         <router-link to="/" class="text-base font-medium text-neon-blue p-2 rounded-lg hover:bg-white/5" active-class="bg-white/5">Ana Sayfa</router-link>
+        <router-link to="/auctions" class="text-base font-medium text-slate-300 p-2 rounded-lg hover:bg-white/5 hover:text-white" active-class="bg-white/5 text-white">Canlı Oturumları Gör</router-link>
         
         <template v-if="authStore.isAuthenticated">
-            <router-link to="/my-reservations" class="text-base font-medium text-slate-300 p-2 rounded-lg hover:bg-white/5 hover:text-white" active-class="bg-white/5 text-white">My Reservations</router-link>
+            <router-link to="/my-reservations" class="text-base font-medium text-slate-300 p-2 rounded-lg hover:bg-white/5 hover:text-white" active-class="bg-white/5 text-white">Rezervasyonlarım</router-link>
             <router-link to="/profile" class="text-base font-medium text-slate-300 p-2 rounded-lg hover:bg-white/5 hover:text-white" active-class="bg-white/5 text-white">Profilim</router-link>
             <router-link v-if="authStore.isAdmin" to="/admin" class="text-base font-medium text-slate-300 p-2 rounded-lg hover:bg-white/5 hover:text-white" active-class="bg-white/5 text-white">Studio Panel</router-link>
             <button @click="handleLogout" class="text-left text-base font-medium text-red-400 p-2 rounded-lg hover:bg-white/5 hover:text-red-300">

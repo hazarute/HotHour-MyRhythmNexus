@@ -43,6 +43,11 @@ const router = createRouter({
       component: () => import('../views/HowItWorksView.vue')
     },
     {
+      path: '/terms-of-use',
+      name: 'terms-of-use',
+      component: () => import('../views/TermsOfUseView.vue')
+    },
+    {
       path: '/my-reservations',
       name: 'my-reservations',
       component: () => import('../views/MyReservationsView.vue'),

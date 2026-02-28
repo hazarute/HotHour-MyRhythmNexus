@@ -126,6 +126,21 @@ const formatDate = (dateStr) => {
         hour: '2-digit', minute: '2-digit'
     })
 }
+
+const statusLabels = {
+    'DRAFT': 'TASLAK',
+    'ACTIVE': 'AKTİF',
+    'SOLD': 'SATILDI',
+    'EXPIRED': 'SÜRESİ DOLDU',
+    'CANCELLED': 'İPTAL EDİLDİ'
+}
+
+const allowedGenderLabel = (auction) => {
+    const value = String(auction?.allowed_gender || auction?.allowedGender || 'ANY').toUpperCase()
+    if (value === 'FEMALE') return 'Kadın'
+    if (value === 'MALE') return 'Erkek'
+    return 'Fark Etmez'
+}
 </script>
 
 <template>
@@ -272,7 +287,7 @@ const formatDate = (dateStr) => {
                             </div>
                             <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
                             <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
-                            <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ auction.status }}</span>
+                            <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ statusLabels[auction.status] || auction.status }}</span>
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex flex-col">
@@ -285,6 +300,11 @@ const formatDate = (dateStr) => {
                                 <span v-else class="text-xs font-mono text-slate-600 dark:text-slate-400">-</span>
                             </div>
                         </div>
+                        <div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neon-blue/10 text-neon-blue border border-neon-blue/30">
+                                Katılımcı Koşulu: {{ allowedGenderLabel(auction) }}
+                            </span>
+                        </div>
                      </div>
                 </div>
 
@@ -294,6 +314,7 @@ const formatDate = (dateStr) => {
                         <tr class="bg-slate-50 dark:bg-background-dark/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>
                             <th class="px-6 py-4 font-semibold">Oturum Adı</th>
+                            <th class="px-6 py-4 font-semibold w-40">Katılımcı Koşulu</th>
                             <th class="px-6 py-4 font-semibold w-36">Başlangıç</th>
                             <th class="px-6 py-4 font-semibold w-36">Bitiş</th>
                             <th class="px-6 py-4 font-semibold">Güncel Fiyat</th>
@@ -304,7 +325,7 @@ const formatDate = (dateStr) => {
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-sm">
                         
                         <tr v-if="paginatedAuctions.length === 0">
-                            <td colspan="5" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
+                            <td colspan="8" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
                                 Kriterlere uygun oturum bulunamadı.
                             </td>
                         </tr>
@@ -318,7 +339,7 @@ const formatDate = (dateStr) => {
                                     SATILDI
                                 </span>
                                 <span v-else class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
-                                    {{ auction.status }}
+                                    {{ statusLabels[auction.status] || auction.status }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
@@ -326,6 +347,16 @@ const formatDate = (dateStr) => {
                                     <span class="text-slate-900 dark:text-white font-medium">{{ auction.title }}</span>
                                     <p class="text-slate-500 dark:text-slate-400 text-xs line-clamp-1 max-w-[300px]">{{ auction.description }}</p>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border"
+                                    :class="String(auction?.allowed_gender || auction?.allowedGender || 'ANY').toUpperCase() === 'ANY'
+                                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                                        : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'"
+                                >
+                                    {{ allowedGenderLabel(auction) }}
+                                </span>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="text-xs text-slate-600 dark:text-slate-300 font-mono">
@@ -352,7 +383,7 @@ const formatDate = (dateStr) => {
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <button v-if="['ACTIVE', 'DRAFT'].includes(auction.status)" @click="router.push({ name: 'admin-auction-edit', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Düzenle">
+                                    <button v-if="auction.status === 'DRAFT'" @click="router.push({ name: 'admin-auction-edit', params: { id: auction.id } })" class="p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors" title="Düzenle">
                                         <span class="material-symbols-outlined" style="font-size: 20px;">edit</span>
                                     </button>
                                     <button v-if="auction.status === 'ACTIVE'" @click="handleCancelAuction(auction)" class="p-2 rounded-lg text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors" title="İptal Et">
