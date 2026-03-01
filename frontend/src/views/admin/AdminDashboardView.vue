@@ -1,305 +1,38 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuctionStore } from '@/stores/auction'
-import { useAuthStore } from '@/stores/auth'
 import CountDownTimer from '@/components/CountDownTimer.vue'
-import { sortAuctionsByNewest } from '@/utils/sorting'
+
+import AdminNotificationDropdown from '@/components/admin/AdminNotificationDropdown.vue'
+import { useAdminAuctions } from '@/composables/admin/useAdminAuctions'
+import { formatCurrency, formatDate } from '@/utils/admin/formatters'
+import { getAuctionStatusMeta, getAllowedGenderLabel } from '@/utils/admin/status_metadata'
 
 const router = useRouter()
-const store = useAuctionStore()
-const authStore = useAuthStore()
-const searchQuery = ref('')
-const statusFilter = ref('ALL') // ALL, ACTIVE, SOLD, DRAFT
-const showFilterDropdown = ref(false)
-const showNotificationsDropdown = ref(false)
-const notificationsDropdownRef = ref(null)
-const currentPage = ref(1)
-const pageSize = 15
-const notificationsLoading = ref(false)
-const adminNotifications = ref([])
-const unreadNotificationsCount = ref(0)
-const deletingNotificationId = ref(null)
-const clearingReadNotifications = ref(false)
 
-onMounted(async () => {
-  await store.fetchAuctions()
-  await fetchAdminNotifications(true)
-    document.addEventListener('click', handleDocumentClick, true)
-})
+// Auctions & Stats
+const {
+    searchQuery,
+    statusFilter,
+    showFilterDropdown,
+    currentPage,
+    paginatedAuctions,
+    filteredAuctions,
+    pageSize,
+    totalPages,
+    activeAuctionsCount,
+    soldAuctionsCount,
+    totalRevenue,
+    avgSoldPrice,
+    activeBiddersMock: activeBidders,
+    fetchAuctions,
+    goNextPage,
+    goPrevPage,
+    handleCancelAuction,
+    handleDeleteDraftAuction
+} = useAdminAuctions()
 
-onUnmounted(() => {
-        document.removeEventListener('click', handleDocumentClick, true)
-})
-
-const fetchAdminNotifications = async (silent = false) => {
-    if (!authStore.token) return
-
-    if (!silent) {
-        notificationsLoading.value = true
-    }
-
-    try {
-        const baseUrl = import.meta.env.VITE_API_URL || ''
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/notifications/cancellations?limit=20`, {
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-
-        if (!response.ok) {
-            throw new Error('Bildirimler alınamadı')
-        }
-
-        const data = await response.json()
-        adminNotifications.value = Array.isArray(data.notifications) ? data.notifications : []
-        unreadNotificationsCount.value = Number(data.unread_count || 0)
-    } catch (err) {
-        console.error('Admin bildirimleri alınamadı:', err)
-    } finally {
-        notificationsLoading.value = false
-    }
-}
-
-const toggleNotificationsDropdown = async () => {
-    showNotificationsDropdown.value = !showNotificationsDropdown.value
-    if (showNotificationsDropdown.value) {
-        await fetchAdminNotifications()
-    }
-}
-
-const handleDocumentClick = (event) => {
-    if (!showNotificationsDropdown.value) return
-
-    const root = notificationsDropdownRef.value
-    if (!root) return
-
-    if (!root.contains(event.target)) {
-        showNotificationsDropdown.value = false
-    }
-}
-
-const formatNotificationDate = (dateStr) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleString('tr-TR', {
-        day: '2-digit', month: '2-digit',
-        hour: '2-digit', minute: '2-digit'
-    })
-}
-
-const markNotificationAsRead = async (notification) => {
-    if (!notification || notification.is_read || !authStore.token) return
-
-    try {
-        const baseUrl = import.meta.env.VITE_API_URL || ''
-        const response = await fetch(
-            `${baseUrl}/api/v1/reservations/admin/notifications/${notification.id}/read`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authStore.token}`
-                }
-            }
-        )
-
-        if (response.ok) {
-            notification.is_read = true
-            unreadNotificationsCount.value = Math.max(0, unreadNotificationsCount.value - 1)
-        }
-    } catch (err) {
-        console.error('Bildirim okundu güncelleme hatası:', err)
-    }
-}
-
-const openNotification = async (notification) => {
-    await markNotificationAsRead(notification)
-
-    if (notification?.reservation_id) {
-        router.push({ name: 'admin-reservation-detail', params: { id: notification.reservation_id } })
-        showNotificationsDropdown.value = false
-    }
-}
-
-const deleteNotification = async (notificationId) => {
-    if (!notificationId || !authStore.token) return
-
-    try {
-        deletingNotificationId.value = notificationId
-        const baseUrl = import.meta.env.VITE_API_URL || ''
-        const response = await fetch(
-            `${baseUrl}/api/v1/reservations/admin/notifications/${notificationId}`,
-            {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${authStore.token}`
-                }
-            }
-        )
-
-        if (!response.ok) {
-            throw new Error('Bildirim silinemedi')
-        }
-
-        await fetchAdminNotifications()
-    } catch (err) {
-        console.error('Bildirim silme hatası:', err)
-    } finally {
-        deletingNotificationId.value = null
-    }
-}
-
-const clearReadNotifications = async () => {
-    if (!authStore.token) return
-
-    try {
-        clearingReadNotifications.value = true
-        const baseUrl = import.meta.env.VITE_API_URL || ''
-        const response = await fetch(
-            `${baseUrl}/api/v1/reservations/admin/notifications/read/all`,
-            {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${authStore.token}`
-                }
-            }
-        )
-
-        if (!response.ok) {
-            throw new Error('Okunan bildirimler temizlenemedi')
-        }
-
-        await fetchAdminNotifications()
-    } catch (err) {
-        console.error('Okunan bildirim temizleme hatası:', err)
-    } finally {
-        clearingReadNotifications.value = false
-    }
-}
-
-const filteredAuctions = computed(() => {
-    // Create a copy to avoid mutating the store directly
-    let result = [...store.auctions]
-    
-    // Status Filter
-    if (statusFilter.value !== 'ALL') {
-        result = result.filter(a => a.status === statusFilter.value)
-    }
-    
-    // Search Filter
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase()
-        result = result.filter(a => 
-            a.title.toLowerCase().includes(query) || 
-            (a.description && a.description.toLowerCase().includes(query)) ||
-            String(a.id).includes(query)
-        )
-    }
-
-    return sortAuctionsByNewest(result)
-})
-
-const totalPages = computed(() => {
-    const pages = Math.ceil(filteredAuctions.value.length / pageSize)
-    return pages > 0 ? pages : 1
-})
-
-const paginatedAuctions = computed(() => {
-    const start = (currentPage.value - 1) * pageSize
-    const end = start + pageSize
-    return filteredAuctions.value.slice(start, end)
-})
-
-watch([searchQuery, statusFilter], () => {
-    currentPage.value = 1
-})
-
-watch(totalPages, (newTotal) => {
-    if (currentPage.value > newTotal) {
-        currentPage.value = newTotal
-    }
-})
-
-const goNextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value += 1
-    }
-}
-
-const goPrevPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value -= 1
-    }
-}
-
-const handleCancelAuction = async (auction) => {
-    const ok = confirm(`"${auction.title}" oturumunu iptal etmek istiyor musun?`)
-    if (!ok) return
-
-    try {
-        await store.cancelAuction(auction.id)
-        await store.fetchAuctions()
-    } catch (error) {
-        alert(error?.message || 'Oturum iptal edilirken bir hata oluştu.')
-    }
-}
-
-const handleDeleteDraftAuction = async (auction) => {
-    const ok = confirm(`"${auction.title}" taslak oturumu silinsin mi? Bu işlem geri alınamaz.`)
-    if (!ok) return
-
-    try {
-        await store.deleteAuction(auction.id)
-        await store.fetchAuctions()
-    } catch (error) {
-        alert(error?.message || 'Taslak oturum silinirken bir hata oluştu.')
-    }
-}
-
-const activeAuctions = computed(() => store.auctions.filter((a) => a.status === 'ACTIVE').length)
-const soldAuctions = computed(() => store.auctions.filter((a) => a.status === 'SOLD').length)
-
-// Real Data Calculations
-const totalRevenue = computed(() => {
-    return store.auctions
-        .filter(a => a.status === 'SOLD' && (a.current_price || a.currentPrice))
-        .reduce((sum, a) => sum + Number(a.current_price || a.currentPrice), 0)
-})
-
-const avgSoldPrice = computed(() => {
-    if (soldAuctions.value === 0) return 0
-    return totalRevenue.value / soldAuctions.value
-})
-
-// Mock for active bidders as it needs websocket tracking
-const activeBidders = ref(Math.floor(Math.random() * 20) + 5) 
-
-const formatCurrency = (val) => {
-    if (val === undefined || val === null) return '₺0.00'
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
-}
-
-const formatDate = (dateStr) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleString('tr-TR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-    })
-}
-
-const statusLabels = {
-    'DRAFT': 'TASLAK',
-    'ACTIVE': 'AKTİF',
-    'SOLD': 'SATILDI',
-    'EXPIRED': 'SÜRESİ DOLDU',
-    'CANCELLED': 'İPTAL EDİLDİ'
-}
-
-const allowedGenderLabel = (auction) => {
-    const value = String(auction?.allowed_gender || auction?.allowedGender || 'ANY').toUpperCase()
-    if (value === 'FEMALE') return 'Kadın'
-    if (value === 'MALE') return 'Erkek'
-    return 'Fark Etmez'
-}
+// Initial fetch is handled inside `useAdminAuctions()` to avoid duplicate requests
 </script>
 
 <template>
@@ -310,73 +43,8 @@ const allowedGenderLabel = (auction) => {
             <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Tüm Oturumlar</h2>
             <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
         </div>
-        <div ref="notificationsDropdownRef" class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end relative">
-            <button @click="toggleNotificationsDropdown" class="relative flex items-center justify-center p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#232d3f] transition-colors">
-                <span class="material-symbols-outlined">notifications</span>
-                <span
-                    v-if="unreadNotificationsCount > 0"
-                    class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center"
-                >
-                    {{ unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount }}
-                </span>
-            </button>
-
-            <div
-                v-if="showNotificationsDropdown"
-                class="absolute top-full right-0 mt-2 w-[360px] max-w-[90vw] bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[120] overflow-hidden"
-            >
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <p class="text-sm font-semibold text-slate-900 dark:text-white">İptal Bildirimleri</p>
-                    <div class="flex items-center gap-3">
-                        <button
-                            @click="clearReadNotifications"
-                            class="text-xs text-slate-500 hover:text-red-500 hover:underline"
-                            :disabled="clearingReadNotifications"
-                        >
-                            {{ clearingReadNotifications ? 'Temizleniyor...' : 'Okunanları Temizle' }}
-                        </button>
-                        <button @click="fetchAdminNotifications()" class="text-xs text-primary hover:underline">Yenile</button>
-                    </div>
-                </div>
-
-                <div v-if="notificationsLoading" class="p-4 text-xs text-slate-500 dark:text-slate-400">
-                    Bildirimler yükleniyor...
-                </div>
-
-                <div v-else-if="adminNotifications.length === 0" class="p-4 text-xs text-slate-500 dark:text-slate-400">
-                    Şu an otomatik iptal bildirimi bulunmuyor.
-                </div>
-
-                <div v-else class="max-h-96 overflow-y-auto">
-                    <div
-                        v-for="notification in adminNotifications"
-                        :key="notification.id"
-                        class="w-full text-left px-4 py-3 border-b border-slate-200 dark:border-slate-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-[#232d3f] transition-colors"
-                        :class="notification.is_read ? 'opacity-80' : 'bg-red-50/40 dark:bg-red-900/10'"
-                    >
-                        <div class="flex items-start justify-between gap-3">
-                            <button @click="openNotification(notification)" class="flex-1 text-left">
-                                <p class="text-xs font-bold text-slate-900 dark:text-white">{{ notification.title }}</p>
-                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{{ notification.message }}</p>
-                            </button>
-                            <div class="flex items-center gap-2 ml-2">
-                                <span v-if="!notification.is_read" class="mt-1 w-2 h-2 rounded-full bg-red-500"></span>
-                                <button
-                                    @click="deleteNotification(notification.id)"
-                                    class="text-slate-400 hover:text-red-500 transition-colors"
-                                    title="Bildirimi Sil"
-                                    :disabled="deletingNotificationId === notification.id"
-                                >
-                                    <span class="material-symbols-outlined" style="font-size: 16px;">
-                                        {{ deletingNotificationId === notification.id ? 'progress_activity' : 'delete' }}
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">{{ formatNotificationDate(notification.created_at) }}</p>
-                    </div>
-                </div>
-            </div>
+        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end relative">
+            <AdminNotificationDropdown />
 
             <button @click="router.push({ name: 'admin-auction-create' })" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
                 <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
@@ -416,7 +84,7 @@ const allowedGenderLabel = (auction) => {
                     </div>
                     <div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Satılan</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctions }} Oturum</h3>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctionsCount }} Oturum</h3>
                     </div>
                 </div>
             </div>
@@ -508,9 +176,9 @@ const allowedGenderLabel = (auction) => {
                                 <span class="font-semibold text-slate-900 dark:text-white">{{ auction.title }}</span>
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 max-w-[200px]">{{ auction.description }}</p>
                             </div>
-                            <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
-                            <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
-                            <span v-else class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ statusLabels[auction.status] || auction.status }}</span>
+                            <span :class="['inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border', getAuctionStatusMeta(auction.status).class]">
+                                {{ getAuctionStatusMeta(auction.status).label }}
+                            </span>
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex flex-col">
@@ -525,7 +193,7 @@ const allowedGenderLabel = (auction) => {
                         </div>
                         <div>
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neon-blue/10 text-neon-blue border border-neon-blue/30">
-                                Katılımcı Koşulu: {{ allowedGenderLabel(auction) }}
+                                Katılımcı Koşulu: {{ getAllowedGenderLabel(auction) }}
                             </span>
                         </div>
                      </div>
@@ -555,14 +223,8 @@ const allowedGenderLabel = (auction) => {
 
                         <tr v-for="auction in paginatedAuctions" :key="auction.id" class="group hover:bg-slate-50 dark:hover:bg-[#232d3f]/30 transition-colors">
                             <td class="px-6 py-4">
-                                <span v-if="auction.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-[0_0_10px_rgba(37,106,244,0.15)] backdrop-blur-sm">
-                                    AKTİF
-                                </span>
-                                <span v-else-if="auction.status === 'SOLD'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20 shadow-[0_0_10px_rgba(11,218,94,0.15)] backdrop-blur-sm">
-                                    SATILDI
-                                </span>
-                                <span v-else class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
-                                    {{ statusLabels[auction.status] || auction.status }}
+                                <span :class="['inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold backdrop-blur-sm border', getAuctionStatusMeta(auction.status).class]">
+                                    {{ getAuctionStatusMeta(auction.status).label }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
@@ -578,7 +240,7 @@ const allowedGenderLabel = (auction) => {
                                         ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
                                         : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'"
                                 >
-                                    {{ allowedGenderLabel(auction) }}
+                                    {{ getAllowedGenderLabel(auction) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">

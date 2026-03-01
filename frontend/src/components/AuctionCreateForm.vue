@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 
 const props = defineProps({
     initialData: {
@@ -85,9 +85,63 @@ const calculateDurationMinutes = () => {
     return Math.max(1, Math.floor((endDate - startDate) / 60000))
 }
 
+// Validation helper - is start time valid
+const isStartTimeValidCheck = () => {
+    return form.start_time !== '' && new Date(form.start_time) > new Date()
+}
+
+// Validation helper - is end time valid
+const isEndTimeValidCheck = () => {
+    if (!form.end_time || !form.start_time) return false
+    const end = new Date(form.end_time)
+    const start = new Date(form.start_time)
+    return end > start
+}
+
+// Validation helper - is scheduled time valid
+const isScheduledAtValidCheck = () => {
+    if (!form.scheduled_at || !form.end_time) return true
+    const scheduled = new Date(form.scheduled_at)
+    const end = new Date(form.end_time)
+    return scheduled >= end
+}
+
 const isTurboEligible = () => {
     const durationMins = calculateDurationMinutes()
     return durationMins !== null && durationMins >= 180
+}
+
+// Comprehensive validation before submit
+const validateFormCompleteness = () => {
+    const errors = []
+
+    if (!form.start_time) {
+        errors.push('Açık Artırma Başlangıcı zorunludur.')
+    }
+    if (!form.end_time) {
+        errors.push('Açık Artırma Bitişi zorunludur.')
+    } else if (!isEndTimeValidCheck()) {
+        errors.push('Açık Artırma Bitişi, Başlangıcından sonra olmalıdır.')
+    }
+
+    if (form.scheduled_at && !isScheduledAtValidCheck()) {
+        const endTime = new Date(form.end_time)
+        const scheduledTime = new Date(form.scheduled_at)
+        errors.push(
+            `Hizmet Zamanı (${scheduledTime.toLocaleString('tr-TR')}) ` +
+            `Açık Artırma Bitişi (${endTime.toLocaleString('tr-TR')}) ` +
+            `tarihinden öncesine ayarlanamaz.`
+        )
+    }
+
+    if (!form.start_price || form.start_price <= 0) {
+        errors.push('Başlangıç Fiyatı pozitif bir sayı olmalıdır.')
+    }
+    if (selectedDiscountRate.value === null || selectedDiscountRate.value === undefined) {
+        errors.push('İndirim Yüzdesi seçilmelidir.')
+    }
+
+    return errors
 }
 
 const chooseOptimalInterval = (durationMins) => {
@@ -243,9 +297,11 @@ const submitForm = () => {
     loading.value = true
     applyAutomaticPricing()
 
-    if (!form.start_time || !form.end_time || !form.start_price || !selectedDiscountRate.value) {
+    // Comprehensive validation
+    const validationErrors = validateFormCompleteness()
+    if (validationErrors.length > 0) {
         loading.value = false
-        alert('Lütfen önce Zamanlama, Başlangıç Fiyatı ve İndirim Yüzdesi alanlarını doldurun.')
+        alert('Form Hataları:\n\n' + validationErrors.join('\n'))
         return
     }
 
@@ -344,22 +400,14 @@ const submitForm = () => {
 
             <div class="hh-glass-card rounded-xl p-4 space-y-4">
                 <h4 class="text-white font-semibold">Zamanlama</h4>
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Hizmet Zamanı (Seans Saati)</label>
-                        <input
-                            v-model="form.scheduled_at"
-                            type="datetime-local"
-                            :min="minDateTime"
-                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
-                            @click="$event.target.showPicker && $event.target.showPicker()"
-                            @focus="$event.target.showPicker && $event.target.showPicker()"
-                        />
-                        <p class="text-xs text-slate-400">Hizmetin fiilen gerçekleşeceği zaman. Boş bırakılırsa Bitiş Zamanı kullanılır.</p>
-                    </div>
+                <p class="text-xs text-slate-400">Alanları sırasıyla doldurun. Her bir alan bir öncekinin doldurulmasını gerektirmektedir.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Başlangıç Zamanı</label>
+                        <label class="block text-sm font-medium text-slate-300">
+                            Açık Artırma Başlangıcı
+                            <span v-if="isStartTimeValidCheck()" class="text-green-400 ml-1">✓</span>
+                        </label>
                         <input
                             v-model="form.start_time"
                             type="datetime-local"
@@ -372,22 +420,63 @@ const submitForm = () => {
                             @paste.prevent
                             @drop.prevent
                         />
+                        <p class="text-xs text-slate-400">Açık artırmanın başlayacağı zaman</p>
                     </div>
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-300">Bitiş Zamanı</label>
+                        <label class="block text-sm font-medium" :class="isStartTimeValidCheck() ? 'text-slate-300' : 'text-slate-500'">
+                            Açık Artırma Bitişi
+                            <span v-if="isEndTimeValidCheck()" class="text-green-400 ml-1">✓</span>
+                            <span v-else-if="!isStartTimeValidCheck()" class="text-slate-400 ml-1">🔒</span>
+                        </label>
                         <input
                             v-model="form.end_time"
                             type="datetime-local"
                             required
+                            :disabled="!isStartTimeValidCheck()"
                             :min="form.start_time || minDateTime"
-                            class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue cursor-pointer"
+                            :class="[
+                                'w-full rounded-lg px-3 py-2.5 focus:outline-none transition-colors',
+                                isStartTimeValidCheck()
+                                    ? 'bg-dark-bg/60 border border-slate-600 text-white focus:border-neon-blue cursor-pointer'
+                                    : 'bg-slate-700/30 border border-slate-700 text-slate-400 cursor-not-allowed opacity-60'
+                            ]"
                             @click="$event.target.showPicker && $event.target.showPicker()"
                             @focus="$event.target.showPicker && $event.target.showPicker()"
                             @keydown.prevent
                             @paste.prevent
                             @drop.prevent
                         />
+                        <p v-if="!isStartTimeValidCheck()" class="text-xs text-slate-500">
+                            ⓘ Açık Artırma Başlangıcını seçtikten sonra etkinleştirilecek
+                        </p>
+                        <p v-else class="text-xs text-slate-400">Açık artırmanın sona ereceği zaman</p>
                     </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium" :class="isEndTimeValidCheck() ? 'text-slate-300' : 'text-slate-500'">
+                        Hizmet Zamanı (Oturum Saati)
+                        <span v-if="isScheduledAtValidCheck()" class="text-green-400 ml-1">✓</span>
+                        <span v-else-if="!isEndTimeValidCheck()" class="text-slate-400 ml-1">🔒</span>
+                    </label>
+                    <input
+                        v-model="form.scheduled_at"
+                        type="datetime-local"
+                        :disabled="!isEndTimeValidCheck()"
+                        :min="form.end_time || minDateTime"
+                        :class="[
+                            'w-full rounded-lg px-3 py-2.5 focus:outline-none transition-colors',
+                            isEndTimeValidCheck()
+                                ? 'bg-dark-bg/60 border border-slate-600 text-white focus:border-neon-blue cursor-pointer'
+                                : 'bg-slate-700/30 border border-slate-700 text-slate-400 cursor-not-allowed opacity-60'
+                        ]"
+                        @click="$event.target.showPicker && $event.target.showPicker()"
+                        @focus="$event.target.showPicker && $event.target.showPicker()"
+                    />
+                    <p v-if="!isEndTimeValidCheck()" class="text-xs text-slate-500">
+                        ⓘ Açık Artırma Bitişini seçtikten sonra etkinleştirilecek
+                    </p>
+                    <p v-else class="text-xs text-slate-400">Hizmetin fiilen gerçekleşeceği zaman. <strong>Açık Artırma Bitişi'nden sonra</strong> olmalıdır. Boş bırakılırsa Açık Artırma Bitişi tarihi kullanılır.</p>
                 </div>
             </div>
 

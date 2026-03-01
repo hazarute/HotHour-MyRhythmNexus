@@ -8,6 +8,8 @@ class SocketService {
   constructor() {
     this.socket = null;
     this.isConnected = false;
+    this._pendingAuctionSubs = new Set();
+    this._pendingUserSubs = new Set();
   }
 
   connect() {
@@ -23,6 +25,19 @@ class SocketService {
     this.socket.on("connect", () => {
       console.log("[SocketService] Connected:", this.socket.id);
       this.isConnected = true;
+      // Flush pending subscriptions
+      try {
+        this._pendingAuctionSubs.forEach(id => {
+          console.log(`[SocketService] Flushing pending subscribe_auction ${id}`)
+          this.socket.emit("subscribe_auction", { auction_id: id })
+        })
+        this._pendingUserSubs.forEach(id => {
+          console.log(`[SocketService] Flushing pending subscribe_user ${id}`)
+          this.socket.emit("subscribe_user", { user_id: id })
+        })
+      } catch (err) {
+        console.warn('[SocketService] Error flushing pending subs', err)
+      }
     });
 
     this.socket.on("disconnect", (reason) => {
@@ -45,18 +60,22 @@ class SocketService {
 
   // Room Subscription Methods
   subscribeAuction(auctionId) {
+    // Track pending subscription so it will be flushed on connect
+    this._pendingAuctionSubs.add(auctionId)
     if (!this.socket) return;
     console.log(`[SocketService] Subscribing to auction:${auctionId}`);
     this.socket.emit("subscribe_auction", { auction_id: auctionId });
   }
 
   unsubscribeAuction(auctionId) {
+    this._pendingAuctionSubs.delete(auctionId)
     if (!this.socket) return;
     console.log(`[SocketService] Unsubscribing from auction:${auctionId}`);
     this.socket.emit("unsubscribe_auction", { auction_id: auctionId });
   }
 
   subscribeUser(userId) {
+    this._pendingUserSubs.add(userId)
     if (!this.socket) return;
     console.log(`[SocketService] Subscribing to user:${userId}`);
     this.socket.emit("subscribe_user", { user_id: userId });

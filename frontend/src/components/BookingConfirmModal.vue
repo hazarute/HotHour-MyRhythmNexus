@@ -124,7 +124,7 @@ const formatPrice = (val) => {
             @click="emit('confirm')"
             class="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-primary via-blue-600 to-neon-blue hover:shadow-neon-blue transition-all disabled:opacity-50"
           >
-            Hemen Kapat
+            Hemen Kap
           </button>
         </div>
       </div>

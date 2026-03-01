@@ -15,6 +15,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['booking-success'])
+
 const router = useRouter()
 const authStore = useAuthStore()
 const auctionStore = useAuctionStore()
@@ -66,11 +68,7 @@ const confirmBooking = async () => {
     bookingLoading.value = true
     try {
         const reservation = await auctionStore.bookAuction(props.auction.id)
-        if (reservation?.booking_code) {
-            alert(`Rezervasyon onaylandı! Kodunuz: ${reservation.booking_code}`)
-        } else {
-            alert('Rezervasyonunuz başarıyla alındı!')
-        }
+        emit('booking-success', reservation)
     } catch (err) {
         alert(err?.message || 'Rezervasyon sırasında bir hata oluştu.')
     } finally {

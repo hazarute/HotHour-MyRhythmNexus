@@ -101,6 +101,10 @@ class AuctionService:
                 where={"id": auction.id},
                 data={"status": new_status}
             )
+            # Emit the dynamic update event so frontend updates DRAFT -> ACTIVE automatically
+            mapping = await self._to_mapping(auction)
+            mapping["status"] = getattr(auction, "status", new_status)
+            await socket_service.emit_auction_updated(mapping)
 
         return auction
 
@@ -165,7 +169,7 @@ class AuctionService:
         if turbo_drop is None:
             turbo_drop = drop_amount if drop_amount is not None else Decimal("0.00")
 
-        return await db.auction.create(
+        created = await db.auction.create(
             data={
                 "title": data.get("title"),
                 "description": data.get("description"),
@@ -184,6 +188,23 @@ class AuctionService:
                 "turboIntervalMins": data.get("turbo_interval_mins", 10),
             }
         )
+        
+        # Determine status dynamically
+        auction_status = "DRAFT"
+        now_value = now_tr()
+
+        if created.startTime <= now_value <= created.endTime:
+            auction_status = "ACTIVE"
+        elif now_value < created.startTime:
+            auction_status = "DRAFT"
+        else:
+            auction_status = "EXPIRED"
+
+        mapping = await self._to_mapping(created)
+        mapping["status"] = auction_status
+        await socket_service.emit_auction_created(mapping)
+            
+        return created
 
     async def get_auction(self, auction_id: int):
         auction = await db.auction.find_unique(where={"id": auction_id})
@@ -263,29 +284,49 @@ class AuctionService:
         if not existing:
             return None
 
-        merged_for_validation = {
-            "title": getattr(existing, "title", None),
-            "description": getattr(existing, "description", None),
-            "allowed_gender": getattr(existing, "allowedGender", "ANY"),
-            "start_price": getattr(existing, "startPrice", None),
-            "floor_price": getattr(existing, "floorPrice", None),
-            "start_time": getattr(existing, "startTime", None),
-            "end_time": getattr(existing, "endTime", None),
-            "drop_interval_mins": getattr(existing, "dropIntervalMins", None),
-            "drop_amount": getattr(existing, "dropAmount", None),
-            "turbo_enabled": getattr(existing, "turboEnabled", False),
-            "turbo_trigger_mins": getattr(existing, "turboTriggerMins", auction_validator.TURBO_TRIGGER_MINS_FIXED),
-            "turbo_drop_amount": getattr(existing, "turboDropAmount", None),
-            "turbo_interval_mins": getattr(existing, "turboIntervalMins", auction_validator.TURBO_INTERVAL_MINS_FIXED),
+        validation_sensitive_fields = {
+            "start_price",
+            "floor_price",
+            "start_time",
+            "end_time",
+            "drop_interval_mins",
+            "drop_amount",
+            "turbo_enabled",
+            "turbo_trigger_mins",
+            "turbo_drop_amount",
+            "turbo_interval_mins",
         }
-        for key, value in data.items():
-            if value is not None:
-                merged_for_validation[key] = value
 
-        merged_for_validation = self._apply_backend_pricing_policy(merged_for_validation)
-        is_valid, error_msg = auction_validator.validate_auction_create(merged_for_validation)
-        if not is_valid:
-            raise ValidationError(error_msg)
+        should_run_full_validation = any(
+            field in data and data[field] is not None
+            for field in validation_sensitive_fields
+        )
+
+        merged_for_validation = None
+        if should_run_full_validation:
+            merged_for_validation = {
+                "title": getattr(existing, "title", None),
+                "description": getattr(existing, "description", None),
+                "allowed_gender": getattr(existing, "allowedGender", "ANY"),
+                "start_price": getattr(existing, "startPrice", None),
+                "floor_price": getattr(existing, "floorPrice", None),
+                "start_time": getattr(existing, "startTime", None),
+                "end_time": getattr(existing, "endTime", None),
+                "drop_interval_mins": getattr(existing, "dropIntervalMins", None),
+                "drop_amount": getattr(existing, "dropAmount", None),
+                "turbo_enabled": getattr(existing, "turboEnabled", False),
+                "turbo_trigger_mins": getattr(existing, "turboTriggerMins", auction_validator.TURBO_TRIGGER_MINS_FIXED),
+                "turbo_drop_amount": getattr(existing, "turboDropAmount", None),
+                "turbo_interval_mins": getattr(existing, "turboIntervalMins", auction_validator.TURBO_INTERVAL_MINS_FIXED),
+            }
+            for key, value in data.items():
+                if value is not None:
+                    merged_for_validation[key] = value
+
+            merged_for_validation = self._apply_backend_pricing_policy(merged_for_validation)
+            is_valid, error_msg = auction_validator.validate_auction_create(merged_for_validation)
+            if not is_valid:
+                raise ValidationError(error_msg)
 
         mapping = {
             "title": "title",
@@ -309,20 +350,29 @@ class AuctionService:
             if key in mapping and value is not None:
                 update_data[mapping[key]] = value
 
-        # Enforce backend fixed turbo policy in persisted data as well
-        turbo_enabled = merged_for_validation.get("turbo_enabled", False)
-        update_data["turboTriggerMins"] = auction_validator.TURBO_TRIGGER_MINS_FIXED
-        update_data["turboIntervalMins"] = auction_validator.TURBO_INTERVAL_MINS_FIXED
-        if not turbo_enabled:
-            update_data["turboDropAmount"] = Decimal("0.00")
+        # Enforce backend fixed turbo policy only when pricing/timing/turbo config is being updated.
+        if should_run_full_validation and merged_for_validation is not None:
+            turbo_enabled = merged_for_validation.get("turbo_enabled", False)
+            update_data["turboTriggerMins"] = auction_validator.TURBO_TRIGGER_MINS_FIXED
+            update_data["turboIntervalMins"] = auction_validator.TURBO_INTERVAL_MINS_FIXED
+            if not turbo_enabled:
+                update_data["turboDropAmount"] = Decimal("0.00")
 
         if not update_data:
             return None
 
-        return await db.auction.update(
+        updated = await db.auction.update(
             where={"id": auction_id},
             data=update_data
         )
+
+        computed_auction = await self.get_auction(updated.id)
+        if computed_auction:
+            mapping = await self._to_mapping(computed_auction)
+            mapping["status"] = getattr(computed_auction, "status", "DRAFT")
+            await socket_service.emit_auction_updated(mapping)
+
+        return updated
 
     async def delete_auction(self, auction_id: int):
         existing = await db.auction.find_unique(where={"id": auction_id})
@@ -332,7 +382,9 @@ class AuctionService:
         if getattr(existing, "status", None) != "DRAFT":
             raise ValidationError("Only DRAFT auctions can be deleted")
 
-        return await db.auction.delete(where={"id": auction_id})
+        deleted = await db.auction.delete(where={"id": auction_id})
+        await socket_service.emit_auction_deleted(auction_id)
+        return deleted
 
     async def _to_mapping(self, auction_obj) -> dict:
         def g(attr):

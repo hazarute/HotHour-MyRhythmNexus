@@ -2,6 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { adminFetch } from '@/utils/admin/api_client'
+import { getReservationStatusMeta } from '@/utils/admin/status_metadata'
+import { formatLongDate } from '@/utils/admin/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,25 +13,13 @@ const reservation = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
-const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-
 // Fetch reservation details
 const fetchReservation = async () => {
     loading.value = true
     error.value = null
     const id = route.params.id
     try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-        
-        if (!response.ok) {
-            throw new Error('Rezervasyon detayları getirilemedi')
-        }
-        
-        reservation.value = await response.json()
+        reservation.value = await adminFetch(`/api/v1/reservations/admin/${id}`, {}, authStore)
     } catch (err) {
         console.error(err)
         error.value = err.message
@@ -37,46 +28,11 @@ const fetchReservation = async () => {
     }
 }
 
-const formatDate = (value) => {
-    if (!value) return '-'
-    return new Date(value).toLocaleString('tr-TR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
-
-const getStatusConfig = (status) => {
-    switch(status) {
-        case 'COMPLETED':
-        case 'CHECKED_IN':
-            return { label: 'Giriş Yapıldı', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
-        case 'PENDING_ON_SITE':
-        case 'CONFIRMED':
-            return { label: 'Bekliyor', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', dot: 'bg-amber-500' }
-        case 'CANCELLED':
-            return { label: 'İptal Edildi', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
-        default:
-            return { label: status, class: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300', dot: 'bg-slate-500' }
-    }
-}
-
 const handleCheckIn = async () => {
     if (!confirm('Bu rezervasyonu onaylamak istiyor musunuz?')) return
     const id = reservation.value.id
     try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${id}/check-in`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-
-        if (!response.ok) throw new Error('İşlem başarısız')
-        
+        await adminFetch(`/api/v1/reservations/admin/${id}/check-in`, { method: 'POST' }, authStore)
         await fetchReservation() // Refresh data
         alert('Giriş işlemi başarılı!')
     } catch (err) {
@@ -88,15 +44,7 @@ const handleCancel = async () => {
     if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?')) return
     const id = reservation.value.id
     try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${id}/cancel`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-
-        if (!response.ok) throw new Error('İşlem başarısız')
-        
+        await adminFetch(`/api/v1/reservations/admin/${id}/cancel`, { method: 'POST' }, authStore)
         await fetchReservation() // Refresh data
         alert('Rezervasyon iptal edildi.')
     } catch (err) {
@@ -158,9 +106,9 @@ onMounted(() => {
                 </div>
                 <div>
                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Durum</p>
-                   <span :class="getStatusConfig(reservation.status).class" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold border border-transparent">
-                        <span :class="getStatusConfig(reservation.status).dot" class="w-2 h-2 rounded-full"></span>
-                        {{ getStatusConfig(reservation.status).label }}
+                   <span :class="getReservationStatusMeta(reservation.status).class" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold border border-transparent">
+                        <span :class="getReservationStatusMeta(reservation.status).dot" class="w-2 h-2 rounded-full"></span>
+                        {{ getReservationStatusMeta(reservation.status).label }}
                     </span>
                 </div>
                 <div class="mt-2 pt-4 w-full border-t border-slate-100 dark:border-slate-800">
@@ -170,7 +118,7 @@ onMounted(() => {
                      </div>
                 </div>
                 <div class="w-full text-xs text-slate-400 mt-1">
-                    Rezervasyon: {{ formatDate(reservation.reserved_at) }}
+                    Rezervasyon: {{ formatLongDate(reservation.reserved_at) }}
                 </div>
             </div>
 
@@ -244,13 +192,13 @@ onMounted(() => {
                             <div>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Başlangıç</div>
                                 <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                                    {{ formatDate(reservation.auction.start_time) }}
+                                    {{ formatLongDate(reservation.auction.start_time) }}
                                 </div>
                             </div>
                             <div>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Bitiş</div>
                                 <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
-                                    {{ formatDate(reservation.auction.end_time) }}
+                                    {{ formatLongDate(reservation.auction.end_time) }}
                                 </div>
                             </div>
                         </div>

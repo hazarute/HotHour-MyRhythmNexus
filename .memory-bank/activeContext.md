@@ -1,25 +1,20 @@
-# Aktif Bağlam (Active Context)
+﻿# Aktif Bağlam (Active Context)
 
-## Şu Anki Odak
-**R4 Stabilizasyon + Üretim Dayanıklılığı güncellemeleri tamamlandı.**
+## Mevcut Durum / Şu Anki Zihinsel Odak
+Proje vizyonu, tasarımı, backend mantığı ve tüm çekirdek bileşenleri hatasız olarak **çalışmaktadır**. Mobil öncelikli (R2) revizyonlarına, test (R3/R4) koşullarına kadar uygulama prod'a çıkacak yeterliliktedir.
+**Faz R5 — Admin Paneli Yapısal Refactoring BAŞARIYLA TAMAMLANDI.**
 
-Son oturumlarda, rezervasyon ve gerçek zamanlı akışın güvenlik/kararlılık tarafı güçlendirildi:
-- Admin kullanıcıların rezervasyon yapması backend + frontend katmanlarında engellendi.
-- Aynı anda rezervasyon (race condition) koruması eşzamanlı test ile doğrulandı.
-- `auction_booked` event’i ile diğer kullanıcıların “Hemen Kap” aksiyonu dinamik olarak devre dışına düşecek akış test edildi.
-- Turbo moda geçiş, sayfa açıkken canlı yansıyacak şekilde frontend event dinleyicileriyle tamamlandı.
-- `GET /auctions?include_computed=true` için Prisma bağlantı kopması durumunda otomatik reconnect+retry dayanıklılığı eklendi.
+2026-03-01 güncellemesi: Admin Dashboard üzerindeki **aktif + turbo** oturumların "İptal Et" aksiyonunda alınan `400 turbo mode requires at least 180 minutes auction duration` hatası giderildi. Kök neden, `update_auction` içinde sadece `status` güncellemesinde bile tam zaman/fiyat/turbo validasyonunun tetiklenmesiydi.
 
-## ✅ Tamamlanan Son İşler
-- **Booking kuralı:** `ADMIN` rolü rezervasyon yapamaz (service-level kural + API 403 mapping).
-- **Frontend guard:** `AuctionCard`, `AuctionDetailView`, `auctionStore.bookAuction` içinde admin rezervasyon akışı engellendi.
-- **Realtime sync:** `HomeView`, `AllAuctionsView`, `AuctionDetailView` içinde `turbo_triggered` ve `auction_booked` eventlerinin state’e yansıması tamamlandı.
-- **Turbo state senkronu:** Backend’de turbo tetikleme yalnızca manuel endpoint’e bağlı kalmadan rutin akışta da senkronlandı.
-- **DB dayanıklılığı:** `AuctionService.list_auctions` içinde transient Prisma bağlantı hatasında reconnect+retry eklendi.
-- **Testler:**
-    - Booking integration testlerine eşzamanlı iki kullanıcı senaryosu eklendi.
-    - Admin’in rezervasyon yapamaması için entegrasyon testi eklendi.
-    - Realtime sync testine `auction_booked` yayın/doğrulama adımı eklendi.
+Tüm Yönetim Paneli (AdminDashboardView, AdminReservationsView, AdminAuctionDetailView, AdminReservationDetailView) sayfalarındaki karmaşık state'ler ve fetch operasyonları ayrıştırıldı, UI metadata'ları merkezileştirildi. Sistem modüler ve temiz bir mimariye (Composable ve Utils yapısına) taşındı. 
+`npm run build` ile ön yüzün prod derlemesi başarıyla oluşturuldu; bileşenler derlendi ve önemli varlıklar (`dist/`) yazıldı. UI düzeninde kritik bir bozulma gözlenmedi.
 
-## 📝 Sıradaki Adım
-- R4.5 deployment öncesi son kontroller (production DB/engine izleme, CI doğrulaması, smoke test) veya yeni ürün talimatı.
+## Sıradaki Görev Planı (AI Seansı İçin)
+Refactoring kapsamının R5 adımları tüm View dosyaları özelinde başarıyla uygulandığı için projede "Bütünüyle Üretime Hazır (Production Ready)" duruma gelinmiştir.
+
+Sıradaki adım:
+Kullanıcının projeyi baştan sona E2E ile doğrulaması veya deployment/CI adımlarını tetiklemesidir. Ayrıca test altyapısının CI'ya entegrasyonu önerilir.
+
+## Dikkat Edilmesi Gerekenler
+* Yapısal temizlik (Clean Architecture) projede başarıyla uygulanmıştır, yeni eklenecek admin view'ları için composables/admin veya utils/admin yönergeleri standart kabul edilmelidir.
+* Local build başarılıdır. Unit testler (Vitest) oluşturuldu ve yerel çalıştırmada geçti. Realtime entegrasyonlar composable seviyesinde socket abonelikleri ile sağlandı; görünümler (AdminDashboard, AdminReservations, NotificationDropdown) bu veri akışlarını kullanacak şekilde güncellendi.

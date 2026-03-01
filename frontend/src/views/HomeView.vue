@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
 import { useSocketStore } from '../stores/socket'
 import AuctionCard from '../components/AuctionCard.vue'
+import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { isAuctionActive } from '../utils/auction'
 
 const router = useRouter()
@@ -37,12 +38,32 @@ const onPriceUpdate = (data) => {
 
 const onAuctionBooked = (data) => {
     if (!data?.auction_id) return
+    if (store.pendingBookingAuctionId && String(store.pendingBookingAuctionId) === String(data.auction_id)) return
     store.updateAuctionStatus(data.auction_id, 'SOLD')
 }
 
 const onTurboTriggered = (data) => {
     if (!data?.auction_id) return
     store.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
+}
+
+const onAuctionCreated = (data) => {
+    if (data?.auction) {
+        store.handleAuctionCreated(data.auction)
+        // Subscribe to its room immediately
+        socketStore.subscribeAuction(data.auction.id)
+    }
+}
+
+const onAuctionUpdated = (data) => {
+    if (data?.auction) store.handleAuctionUpdated(data.auction)
+}
+
+const onAuctionDeleted = (data) => {
+    if (data?.auction_id) {
+        store.handleAuctionDeleted(data.auction_id)
+        socketStore.unsubscribeAuction(data.auction_id)
+    }
 }
 
 onMounted(async () => {
@@ -53,6 +74,9 @@ onMounted(async () => {
     socketStore.on('price_update', onPriceUpdate)
     socketStore.on('auction_booked', onAuctionBooked)
     socketStore.on('turbo_triggered', onTurboTriggered)
+    socketStore.on('auction_created', onAuctionCreated)
+    socketStore.on('auction_updated', onAuctionUpdated)
+    socketStore.on('auction_deleted', onAuctionDeleted)
 
     await store.fetchAuctions()
     subscribeToAuctionRooms()
@@ -63,6 +87,9 @@ onUnmounted(() => {
     socketStore.off('price_update', onPriceUpdate)
     socketStore.off('auction_booked', onAuctionBooked)
     socketStore.off('turbo_triggered', onTurboTriggered)
+    socketStore.off('auction_created', onAuctionCreated)
+    socketStore.off('auction_updated', onAuctionUpdated)
+    socketStore.off('auction_deleted', onAuctionDeleted)
 })
 
 const goToAllAuctions = () => {
@@ -71,6 +98,14 @@ const goToAllAuctions = () => {
 
 const goToHowItWorks = () => {
     router.push({ name: 'how-it-works' })
+}
+
+const showSuccessModal = ref(false)
+const bookingResult = ref(null)
+
+const onBookingSuccess = (reservation) => {
+    bookingResult.value = reservation
+    showSuccessModal.value = true
 }
 </script>
 
@@ -189,9 +224,16 @@ const goToHowItWorks = () => {
                 :key="auction.id" 
                 :auction="auction" 
                 class="transform hover:-translate-y-1 transition-all duration-300"
+                @booking-success="onBookingSuccess"
             />
         </div>
     </section>
+
+  <BookingSuccessModal
+    :visible="showSuccessModal"
+    :reservation="bookingResult"
+    @close="showSuccessModal = false"
+  />
   </div>
 </template>
 

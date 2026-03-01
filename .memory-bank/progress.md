@@ -1,178 +1,45 @@
-# İlerleme Durumu (Progress)
+﻿# İlerleme Durumu (Progress)
 
-## Tamamlanan Teknik Fazlar
+## Aktif Odak: Üretime Geçiş (Deployment) ve E2E Test
+**Durum:** 🚀 Ready for Production / Quality Assurance
+Tüm teknik borçlar ödendi, UI/UX mimarisi tamamlandı, backend onaylandı. Sıradaki hedef projenin canlıya alınması veya son kullanıcı testleridir.
 
-### Faz 1 — Temel Kurulum ve Altyapı
-- [X] Backend temel kurulum, DB yapılandırması, health check
-
-### Faz 2 — Çekirdek İş Mantığı
-- [X] Auth, Auction CRUD, fiyat motoru, validasyonlar, turbo trigger
-
-### Faz 3 — Rezervasyon Sistemi
-- [X] Reservation modeli, booking service, race condition koruması, endpointler
-
-### Faz 4 — Gerçek Zamanlı Özellikler
-- [X] Socket.io entegrasyonu, room-based yayın, booking/turbo eventleri
-
-### Faz 5 — İlk Frontend Entegrasyonu
-- [X] Vue/Pinia/Router altyapısı
-- [X] Temel ekranlar ve booking akışı
-- [X] E2E ve realtime test kapsamı
-- [X] Lokal host/cors stabilizasyonu
+### R5.6 Detay Görünümlerin Adaptasyonu (Tamamlandı)
+- [X] AdminAuctionDetailView.vue sayfası refactor edildi (329 satırdan 260 satıra küçültüldü, adminFetch, formatters.js, ve status_metadata.js yapısına bağlandı).
+- [X] AdminReservationDetailView.vue sayfasındaki karmaşık label rendering mantıkları silinerek evrensel Utils klasörüne taşındı.
+- [X] AdminAuctionFormView ve AdminView sayfalarının yeni mimaride "Clean" standartlarına tam uygun olduğu doğrulandı.
 
 ---
 
-## Faz R1 — Referans Tabanlı UI Yeniden Tasarım (Yeni Plan)
-**Durum:** 🚧 In Progress
+## Recent Changes (2026-03-01)
 
-### R1.1 Referans Analizi ve Tasarım Token Çıkarımı
-- [X] `Referans Görseller/` mevcut içeriği analiz edildi
-- [X] Renk, tipografi, spacing, radius, shadow, glow token seti çıkarıldı (`frontend/src/style.css`, `frontend/tailwind.config.js`)
-- [X] Ortak component varyant kuralları netleştirildi (`hh-btn*`, `hh-badge*`, `hh-card*`, `hh-section`, `hh-topbar`)
-
-### R1.2 Global Layout ve Navigasyon Refactor
-- [X] App shell (header/nav/container) referans diline taşındı (`frontend/src/App.vue`)
-- [X] Global buton, badge, card ve section pattern’leri standardize edildi
-
-### R1.3 Direct Reference Ekran Dönüşümü
-- [X] Home ekranı `HomeView` referansına hizalandı (`hero + filter bar + live auction grid`)
-- [X] My Reservations ekranı `MyReservationsView` referansına hizalandı (`3 kolonlu kart + access code odağı`)
-
-### R1.4 Derived Ekran Dönüşümü
-- [X] Login ekranı referans dilinden türetildi (`frontend/src/views/LoginView.vue`)
-- [X] Auction Detail ekranı referans dilinden türetildi (`frontend/src/views/AuctionDetailView.vue`)
-- [X] Admin Dashboard ekranı referans dilinden türetildi (`frontend/src/views/AdminDashboardView.vue`)
-- [X] Admin Create Auction ekranı referans dilinden türetildi (`frontend/src/components/AuctionCreateForm.vue`)
-- [X] Admin Reservations ekranı referans dilinden türetildi (`frontend/src/views/AdminReservationsView.vue`)
-
-### R1.5 Fonksiyonel Regresyon ve Görsel Doğrulama
-- [X] Kritik kullanıcı yolculukları manuel doğrulandı
-- [X] Türkçe karakter ve UTF-8 encoding sorunları çözüldü
-
-### R1.6 Admin Paneli İyileştirmeleri (Refactor)
-- [X] Admin Dashboard Filtreleme (Active, Sold, Expired, Cancelled)
-- [X] Admin Auction Create/Edit Form Ayrımı (`AdminAuctionFormView`)
-- [X] Admin Auction Detail Sayfası (`AdminAuctionDetailView`)
-- [X] Router Yapılandırması (Admin alt rotaları)
-- [X] API: Get Single Auction Endpoint (`GET /auctions/{id}`)
-- [X] AuctionDetailView için "Turbo Mod" tasarımı eklendi
-- [X] Admin Dashboard canlı veri bağlantısı ve UI düzeltmeleri (Fiyat, Sayaç, Açıklama)
+- [X] Admin Dashboard "İptal Et" akışında turbo açık aktif oturumlar için gelen `400 turbo mode requires at least 180 minutes auction duration` hatası giderildi.
+- [X] `app/services/auction_service.py` içinde `update_auction` akışı iyileştirildi: sadece fiyat/zaman/turbo alanları güncellendiğinde tam validasyon çalışacak, `status` gibi operasyonel güncellemelerde çalışmayacak.
+- [X] Regresyon testi eklendi: `tests/test_auction_validation_integration.py::test_status_only_cancel_skips_full_turbo_duration_validation`.
+- [X] Doğrulama çalıştırıldı: `pytest tests/test_auction_validation_integration.py -q` → 5 passed.
+- [X] Composables güncellenerek `useAdminAuctions`, `useAdminReservations`, `useAdminNotifications` içinde realtime `SocketService` abonelikleri eklendi; `useAdminAuctions` içindeki module-level socket hookup’u composable lifecycle'ına taşındı.
+- [X] Admin view'larda (Dashboard, Reservations) ve bildirim dropdown'unda duplicate initial-fetch çağrıları kaldırıldı — initial fetch artık composable içinde yönetiliyor.
+- [X] Unit test altyapısı eklendi: `vitest`, `@vue/test-utils`, `jsdom` ve üç test dosyası oluşturuldu (`useAdminAuctions.test.js`, `useAdminReservations.test.js`, `useAdminNotifications.test.js`) ve yerel çalıştırmada hepsi geçti.
+- [X] `frontend/package.json` test script'i eklendi ve devDependencies güncellendi.
+- [X] Frontend prod derlemesi oluşturuldu: `npm run build` başarıyla çalıştı ve `frontend/dist` yazıldı.
 
 ---
 
-## 📅 Faz R2: Responsive Tasarım ve Mobil Uyumluluk (YENİ HEDEF 🎯)
-Tüm sayfaların mobil cihazlarda kusursuz çalışması için detaylı responsive tasarım çalışması.
+## Önerilen Sonraki Adımlar
 
-**Genel Hedefler:**
-- Global `hh-section` kullanımı ile tutarlı kenar boşlukları.
-- Mobil öncelikli (mobile-first) yaklaşımın tüm bileşenlere uygulanması.
-- Admin panelinin mobilde kullanılabilir hale getirilmesi (Sidebar -> Drawer).
-
-### 1. Admin Paneli (AdminView.vue & Alt Sayfalar)
-- [X] **Sidebar:** Masaüstünde sabit, mobilde gizlenebilir/açılabilir (Hamburger menü) yapıya geçiş.
-- [X] **Header:** Mobilde içeriklerin dikey dizilmesi veya ikonlaşması.
-- [X] **Tablolar:** Rezervasyon listelerinin mobilde "Kart Görünümü"ne (Card View) dönüşmesi (AdminReservationsView).
-- [X] **Formlar:** "Yeni Oturum Oluştur" modalının mobilde tam ekran veya bottom-sheet gibi davranması.
-
-### 2. Ana Sayfa (HomeView.vue)
-- [X] **Hero Alanı:** Mobilde metin boyutlarının (`text-5xl` -> `text-3xl`) optimize edilmesi.
-- [X] **İstatistik Kartları:** Mobilde gizlenen yan istatistiklerin (Hidden md:flex) accordion veya swipe ile gösterilmesi.
-- [X] **Navigasyon:** Üst menünün mobil uyumlu hale getirilmesi.
-
-### 3. Açık Artırma Detay (AuctionDetailView.vue)
-- [X] **Zamanlayıcı:** Sayaçların mobilde daha kompakt görünmesi (Grid 3-col yerine Flex row veya daha küçük kutular).
-- [X] **Butonlar:** "Hemen Kap" butonunun mobilde ekranın altına sabitlenmesi (Sticky Bottom Action).
-
-### 4. Giriş & Profil (LoginView.vue)
-- [X] **Form Alanı:** Mobilde tam genişlik, masaüstünde ortalanmış kart yapısının korunması.
-- [X] **Görseller:** Arka plan efektlerinin mobilde performansı düşürmeyecek şekilde optimize edilmesi.
-  - Auction oluşturma
-  - Kullanıcı tarafında canlı görüntüleme
-  - Hemen Kap ve rezervasyon kodu
-  - Admin rezervasyon doğrulama
-- [X] Frontend build doğrulaması (`npm run build`)
-- [X] İlgili testler tekrar koşuldu (`test_e2e_flow`, `test_booking_integration`, `test_realtime_sync`)
-- [X] Test tamamlandı: E2E/booking/realtime test senaryoları ve frontend build doğrulaması başarılı (24.02.2026)
-
-## Faz R3+ - Kayıt Sistemi Tamamlandı ✅
-- [X] SignUpView.vue: Responsive kayıt formu (mobile-first)
-- [X] Frontend validasyonlar: Input handlers, real-time feedback
-- [X] Backend User Models: Prisma-aligned (production-ready)
-- [X] Auth endpoints: Token return + user data
-- [X] Prisma migration: Gender required (NOT NULL)
-- [X] 3-Katmanlı validasyon: Frontend → Pydantic → Business Logic
-- [X] GitHub commit + push: Commit ID 9356949
-
-## 🚀 Faz R4: Canlıya Geçiş Hazırlığı ve Manuel Testler
-Sistemin uçtan uca kararlılığını sağlamak için manuel testler ve son revizyonlar. Bu aşamada kod geliştirmesinden ziyade, doğrulama ve hata gidermeye odaklanılacaktır.
-
-### R4.1 Kimlik Doğrulama (Auth) Doğrulaması
-- [X] Kayıt Ol (Sign Up) akışı ve validasyonların canlı testi
-- [ ] Giriş Yap (Login) ve Token saklama (LocalStorage) kontrolü
-- [ ] Otomatik oturum açma (Persist Auth) ve güvenli çıkış (Logout) testi
-- [X] **E-posta Doğrulama Sistemi (Email Verification) Entegrasyonu**
-    - [X] Backend: SMTP/Email Service yapılandırması
-    - [X] Frontend: Doğrulama bekleme ve sonuç sayfası
-    - [X] Flow: Kayıt sonrası doğrulama akışı
-
-### R4.2 Açık Artırma (Auction) Modülü Doğrulaması
-- [ ] Ana sayfa listeleme performansı ve filtreler (Socket.io verisi)
-- [ ] Detay sayfası görsel bütünlüğü ve sayaç (Timer) doğruluğu
-- [ ] Teklif verme (Bid) ve fiyat güncelleme testi (Socket.io)
-- [ ] Açık artırma tamamlanma (Expired/Sold) durumlarının UI yansıması
-
-### R4.3 Rezervasyon (Reservation) Modülü Doğrulaması
-- [ ] Hemen Al (Buy Now) butonu ve rezervasyon oluşturma testi
-- [ ] "Rezervasyonlarım" sayfasında QR/Access Code görüntüleme
-- [ ] Çakışan rezervasyon (Race Condition) testi (Manuel)
-- [ ] Geçmiş ve gelecek rezervasyonların ayrımı
-
-### R4.4 Admin Paneli Doğrulaması (Tamamlanan: R1.6)
-- [X] Yeni açık artırma oluşturma formu (Validasyon ve POST işlemi)
-- [X] Açık artırma düzenleme (Edit) ve detay (Detail) görüntüleme
-- [ ] Rezervasyon listesi ve detay görüntüleme (AdminReservationsView)
-- [ ] Mobil görünümde admin panelinin kullanılabilirliği (Responsive Test)
-
-### R4.5 Deployment ve Son Kontroller
-- [ ] Tüm sayfalarda responsive tasarım (Mobil/Tablet/Desktop) kontrolü
-- [ ] Konsol hatalarının temizlenmesi (Console logs)
-- [ ] Production build (`npm run build`) son kontrolü
-- [ ] GitHub Actions / CI Pipeline kontrolü (Varsa)
-- [ ] Veritabanı (Production) migration planı
-- [ ] `.env` yapılandırmasının production için ayrıştırılması
-
-## Faz R4.6: Hizmet Başlangıç Saati Entegrasyonu (Scheduled At)
-Oturumun (açık artırmanın) başlangıç saati ile hizmetin (pilates dersinin) başlangıç saati ayrıştırılmalı.
-
-- [X] **Veritabanı Şeması:** `schema.prisma` güncellendi (`scheduledAt` alanı eklendi).
-- [X] **Backend Test:** `test_auctions.py` testlerinin yeni alan ile uyumlu hale getirilmesi.
-- [X] **Backend Modelleri:** `app/models/auction.py` güncellenmesi (`scheduledAt` alanı Pydantic şemasına eklendi).
-- [X] **Backend Servisleri:** `app/services/auction_service.py` güncellenmesi (Varsayılan değer atama mantığı).
-- [X] **Frontend Admin Formu:** `AuctionCreateForm.vue` güncellenmesi (Yeni tarih-saat seçici girişi).
-- [X] **Frontend Kart Görünümü:** `AuctionCard.vue` güncellenmesi (Hizmet saatini göster).
-- [X] **Frontend Detay Görünümü:** `AuctionDetailView.vue` güncellenmesi (Hizmet saati ve süresi).
-- [X] **Frontend Rezervasyon Görünümü:** `MyReservationsView.vue` güncellenmesi (Hizmet saati öncelikli gösterim).
+- CI entegrasyonu: Vitest testlerini CI pipeline'ına ekleyin ve prod build adımını doğrulayın.
+- E2E testi: Realtime socket uçları tam entegre ise Playwright veya Cypress ile user-flow testleri ekleyin.
+- Deployment: Dist içeriğini staging/production sunucusuna dağıtma planı oluşturun.
 
 ---
 
-## Faz R4.7 — Stabilizasyon ve İş Kuralı Sertleştirme (Yeni)
+## Tüm Tamamlanmış (Tamamlanan) Fazlar (MVP, R1, R2, R3, R4, R5)
+**Durum:** ✅ COMPLETED & STABILIZED
 
-### R4.7.1 Rezervasyon Yetki/Kural Sertleştirmesi
-- [X] Aynı auction için eşzamanlı rezervasyon denemelerinde sadece bir kullanıcının kazanması testle doğrulandı.
-- [X] API conflict davranışı (`409`) ve tek rezervasyon garantisi doğrulandı.
-- [X] `ADMIN` rolündeki kullanıcılar için rezervasyon backend katmanında engellendi.
-- [X] `ADMIN` rezervasyon denemesi için entegrasyon testi eklendi.
-
-### R4.7.2 Frontend Koruma ve UX Senkronu
-- [X] Frontend store (`bookAuction`) seviyesinde admin rezervasyon guard eklendi.
-- [X] `AuctionCard` ve `AuctionDetailView` tarafında admin için “Hemen Kap” akışı devre dışı bırakıldı.
-- [X] Cinsiyet koşulu sağlanmadığında buton üzerinde metinsiz görsel geri bildirim (pulse/ring/icon) tamamlandı.
-
-### R4.7.3 Realtime Durum Tutarlılığı
-- [X] `turbo_triggered` event’i Home/AllAuctions/Detail sayfalarında canlı state güncellemesine bağlandı.
-- [X] `auction_booked` event’inin çoklu client’a anında ulaştığı testle doğrulandı.
-- [X] Rezerve edilen oturumun diğer kullanıcılarda dinamik olarak kullanılamaz hale gelmesi doğrulandı.
-
-### R4.7.4 Dayanıklılık ve Operasyonel Güvenilirlik
-- [X] `GET /auctions?include_computed=true` akışında transient Prisma bağlantı kopmalarına karşı reconnect+retry eklendi.
-- [X] `test_auctions_computed.py` ile listeleme akışının regresyonsuz çalıştığı doğrulandı.
+- **Faz R5 (Admin Paneli Yapısal Refactoring):** AdminDashboardView, AdminReservationsView, AdminAuctionDetailView ve ilgili tüm admin arayüzleri "Composable Split Pattern" ve "Centralized Metadata Rule" ile sıfırlandı. Mimari teknik borç tamamen ödendi. Vue projeleri üretim kalitesine ulaştı.
+- **Temel Mimari & Backend:** DB (Prisma SQLite->Postgres yapıları), Auth, Socket.io Realtime Server, Pydantic vs Prisma tipleri. (Faz 1, Faz 2)
+- **İş Mantığı ve Race Condition:** Rezervasyon oluşturma, Backend Level 409 ve 403 (Admin yasakları), fiyat düşüş mekanizması, e-mail onay (SMTP) ve bildirim oluşturma görevleri testleriyle tamamlandı. (Faz 3, R3, R4.7)
+- **Tasarım ve Token (R1):** Tüm app shell, Home, MyReservations, AuctionDetay referans görsellerle aynı estetik diline çekildi (Cam efekti, neon). Component refactor, CTA hiyerarşisi stabil.
+- **Responsive (R2):** Mobilden geniş ekrana kesintisiz uyum. Mobile-first gridleri, flex yapıları.
+- **Güvenilirlik ve Ops (R4.x):** Transient DB drop hata izolasyonu, reconnection logic, Prisma operasyonları onaylandı. test_notifications.py tamamlandı, no-show ile otomatik cancel bildirim oluşturmaları stabil.
+- **E2E Test & Coverage:** test_e2e_flow.py, realtime client testleri ve validasyon API testleri sorunsuz yeşilde kalıyor.

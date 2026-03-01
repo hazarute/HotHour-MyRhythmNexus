@@ -8,6 +8,7 @@ import uuid
 import pytest
 import pytest_asyncio
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.core import db, security
@@ -199,4 +200,59 @@ async def test_valid_turbo_auction_api():
         data = r2.json()
         assert data["title"] == "Turbo Auction"
 
+    await delete_user_in_db(email)
+
+
+@pytest.mark.asyncio
+async def test_status_only_cancel_skips_full_turbo_duration_validation():
+    """Status-only cancel should succeed even if legacy turbo timing is currently invalid by new rules."""
+    email = f"admin-{uuid.uuid4().hex[:8]}@example.com"
+    phone = f"+100{uuid.uuid4().hex[:7]}"
+    password = "AdminPass123!"
+
+    await create_admin_user(email, phone, "Admin User", password)
+
+    now = datetime.now(timezone.utc)
+    start_time = now - timedelta(minutes=10)
+    end_time = now + timedelta(minutes=110)  # < 180 mins total window
+
+    created_auction = await db.db.auction.create(
+        data={
+            "title": "Legacy Turbo Active Auction",
+            "description": "Status-only cancel regression",
+            "allowedGender": "ANY",
+            "startPrice": Decimal("500.00"),
+            "floorPrice": Decimal("200.00"),
+            "currentPrice": Decimal("480.00"),
+            "startTime": start_time,
+            "endTime": end_time,
+            "scheduledAt": end_time,
+            "dropIntervalMins": 30,
+            "dropAmount": Decimal("20.00"),
+            "turboEnabled": True,
+            "turboTriggerMins": 120,
+            "turboDropAmount": Decimal("10.00"),
+            "turboIntervalMins": 10,
+            "status": "ACTIVE",
+        }
+    )
+    auction_id = int(getattr(created_auction, "id"))
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_res = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login_res.status_code == 200
+        token = login_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        cancel_res = await client.put(
+            f"/api/v1/auctions/{auction_id}",
+            json={"status": "CANCELLED"},
+            headers=headers,
+        )
+
+        assert cancel_res.status_code == 200, cancel_res.text
+        assert cancel_res.json()["status"] == "CANCELLED"
+
+    await delete_auction_in_db(auction_id)
     await delete_user_in_db(email)

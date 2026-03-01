@@ -75,7 +75,7 @@ class BookingService:
             if admin_id is None:
                 continue
 
-            await notification_model.create(
+            notification = await notification_model.create(
                 data={
                     "userId": admin_id,
                     "reservationId": reservation_id,
@@ -85,6 +85,10 @@ class BookingService:
                     "message": message,
                     "isRead": False,
                 }
+            )
+            await socket_service.emit_notification_created(
+                notification_id=notification.id,
+                notification_type=notification_type,
             )
 
     async def auto_cancel_overdue_pending_reservations(self) -> int:
@@ -230,6 +234,13 @@ class BookingService:
             await socket_service.emit_auction_booked(
                 auction_id=auction_id,
                 booking_code=reservation.bookingCode,
+            )
+            await socket_service.emit_reservation_created(
+                reservation_id=reservation.id,
+                booking_code=reservation.bookingCode,
+                user_id=user_id,
+                auction_id=auction_id,
+                status=str(getattr(reservation.status, "name", reservation.status)),
             )
 
             return result
@@ -405,6 +416,12 @@ class BookingService:
                 data={"status": next_status}
             )
 
+        # Emit real-time cancellation event so admin panel updates instantly
+        await socket_service.emit_reservation_cancelled(
+            reservation_id=reservation_id,
+            auction_id=auction_id,
+        )
+
         user_name = getattr(user, "fullName", "Bilinmeyen Kullanıcı")
         auction_title = getattr(auction, "title", "Bilinmeyen Oturum")
         booking_code = getattr(reservation, "bookingCode", "-")
@@ -502,6 +519,7 @@ class BookingService:
             return False
 
         await notification_model.delete(where={"id": notification_id})
+        await socket_service.emit_notification_deleted(notification_id=notification_id)
         return True
 
     async def delete_admin_read_notifications(self, admin_user_id: int) -> int:
@@ -521,6 +539,7 @@ class BookingService:
             is_read = bool(getattr(item, "isRead", False))
             if notification_type in allowed_types and is_read:
                 await notification_model.delete(where={"id": item.id})
+                await socket_service.emit_notification_deleted(notification_id=item.id)
                 deleted_count += 1
 
         return deleted_count
@@ -543,6 +562,14 @@ class BookingService:
             where={"id": reservation_id},
             data={"status": "COMPLETED"}
         )
+
+        # Emit real-time update so admin panel reflects the check-in instantly
+        await socket_service.emit_reservation_updated(
+            reservation_id=reservation_id,
+            status="COMPLETED",
+            auction_id=getattr(reservation, "auctionId", None),
+        )
+
         return True
 
 

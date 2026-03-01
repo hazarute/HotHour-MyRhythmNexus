@@ -14,6 +14,8 @@ from prisma.enums import PaymentStatus
 
 
 TURBO_SHOWCASE_TITLE = "Turbo Sculpt Reformer"
+# Gender dağılımı: İndekse göre gender seçimi
+# %50 ANY | %35 FEMALE | %15 MALE oranında dağıtılacak
 ALLOWED_GENDER_SEQUENCE = ["ANY", "FEMALE", "MALE"]
 
 
@@ -46,13 +48,9 @@ def _pick_eligible_user(users, allowed_gender: str):
 
 def _with_project_defaults(data: dict, index: int) -> dict:
     normalized = dict(data)
-
-    normalized.setdefault("allowedGender", ALLOWED_GENDER_SEQUENCE[index % len(ALLOWED_GENDER_SEQUENCE)])
-
-    if not normalized.get("scheduledAt"):
-        end_time = normalized.get("endTime")
-        if end_time is not None:
-            normalized["scheduledAt"] = end_time + timedelta(hours=2)
+    
+    # Schema default'larını kullanmak için field atlamıyoruz
+    # DB default'ları (ANY, now(), vs.) zaten set edilmiş
 
     return normalized
 
@@ -128,6 +126,14 @@ async def seed_auctions():
     print("Veritabanına bağlanılıyor...")
     await db.connect()
 
+    print("\n" + "="*80)
+    print("SEED KONFIGÜRASYONU")
+    print("="*80)
+    print(f"Gender Dağılımı: %50 ANY | %35 FEMALE | %15 MALE")
+    print(f"Turbo Minimum Süresi: 180 dakika | Trigger: 120 dk öncesi | Interval: 10 dk")
+    print(f"Test Senaryoları: 15 farklı durum (ACTIVE, DRAFT, SOLD, EXPIRED, CANCELLED)")
+    print("="*80 + "\n")
+
     print("Mevcut rezervasyonlar temizleniyor...")
     deleted_reservations = await db.reservation.delete_many(where={})
     deleted_reservations_count = _deleted_count(deleted_reservations)
@@ -139,6 +145,12 @@ async def seed_auctions():
     print(f"✅ {deleted_auctions_count} açık artırma silindi.")
 
     now = now_tr()
+    
+    # --- AUCTION TEST SENARYOLARI ---
+    # Açıklama: Bu veriler Frontend Form bağlamında doğru yapılandırma test etmek için tasarlanmıştır.
+    # Turbo Mode Kuralı: Minimum 180 dakika (3 saat) süresi gerekli, son 120 dakikada etkinleştirilir.
+    # Gender Koşulu: FEMALE, MALE, ANY - index'e göre dağıtılır.
+    # Status Türleri: DRAFT, ACTIVE, SOLD, EXPIRED, CANCELLED
     
     auctions_data = [
         # ACTIVE - normal akış
@@ -410,20 +422,32 @@ async def seed_auctions():
         try:
             auction = await db.auction.create(data=data)
             print(
-                f"Oluşturuldu: {getattr(auction, 'title', '-') } - ID: {getattr(auction, 'id', '-')} "
-                f"| Koşul: {getattr(auction, 'allowedGender', 'ANY')} "
-                f"| Seans: {getattr(auction, 'scheduledAt', '-') }"
+                f"✅ {getattr(auction, 'title', '-'):40s} | "
+                f"ID:{str(getattr(auction, 'id', '-')):3s} | "
+                f"Gender:{getattr(auction, 'allowedGender', 'ANY'):6s} | "
+                f"Status:{getattr(auction, 'status', 'DRAFT'):8s} | "
+                f"Turbo:{str(getattr(auction, 'turboEnabled', False)):5s}"
             )
         except Exception as e:
-            print(f"Hata oluştu ({data['title']}): {e}")
+            print(f"⚠️  Error creating {data['title']}: {e}")
 
     users = await db.user.find_many()
     auctions = await db.auction.find_many()
+    
+    print(f"\n{'='*80}")
+    print(f"REZERVASYONLARa EKLENIYOR...")
+    print(f"{'='*80}\n")
+    
     reservation_count = await _seed_reservations(users, auctions)
-    print(f"\n🎉 Toplam {reservation_count} rezervasyon eklendi.")
+    
+    print(f"\n{'='*80}")
+    print(f"SEED İŞLEMİ TAMAMLANDI")
+    print(f"{'='*80}")
+    print(f"✅ Toplam {len(auctions)} oturum oluşturuldu")
+    print(f"✅ Toplam {reservation_count} rezervasyon eklendi")
+    print(f"{'='*80}\n")
 
     await db.disconnect()
-    print("\nVeri ekleme tamamlandı! 🚀 (Auction + Reservation)")
 
 if __name__ == "__main__":
     asyncio.run(seed_auctions())

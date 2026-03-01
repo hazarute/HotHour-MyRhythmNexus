@@ -8,6 +8,7 @@ export const useAuctionStore = defineStore('auction', () => {
     const currentAuction = ref(null)
     const loading = ref(false)
     const error = ref(null)
+    const pendingBookingAuctionId = ref(null)
 
     // Actions
     async function fetchAuctions() {
@@ -82,6 +83,32 @@ export const useAuctionStore = defineStore('auction', () => {
             currentAuction.value.turboStartedAt = turboStartedAt
             currentAuction.value.turbo_started_at = turboStartedAt
             currentAuction.value.turboActive = true
+        }
+    }
+
+    function handleAuctionCreated(auction) {
+        if (!auctions.value.find(a => a.id === auction.id)) {
+            auctions.value.push(auction)
+        }
+    }
+
+    function handleAuctionUpdated(auction) {
+        const index = auctions.value.findIndex(a => a.id === auction.id)
+        if (index !== -1) {
+            auctions.value[index] = { ...auctions.value[index], ...auction }
+        } else {
+            auctions.value.push(auction)
+        }
+        if (currentAuction.value && currentAuction.value.id === auction.id) {
+            currentAuction.value = { ...currentAuction.value, ...auction }
+        }
+    }
+
+    function handleAuctionDeleted(auctionId) {
+        auctions.value = auctions.value.filter(a => a.id !== auctionId)
+        if (currentAuction.value && currentAuction.value.id === auctionId) {
+            // we could either clear it or let the view handle it
+            currentAuction.value = null
         }
     }
 
@@ -201,7 +228,7 @@ export const useAuctionStore = defineStore('auction', () => {
             throw new Error("Admin kullanıcılar rezervasyon yapamaz.")
         }
         
-        loading.value = true
+        pendingBookingAuctionId.value = auctionId
         error.value = null
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
@@ -229,18 +256,19 @@ export const useAuctionStore = defineStore('auction', () => {
             }
 
             const reservation = await response.json()
-            // Ideally update local auction status to SOLD immediately
+            // Delay status update to next tick so AuctionCard can emit 'booking-success'
+            // before Vue removes it from the filtered list (activeAuctions)
             if (currentAuction.value && currentAuction.value.id === auctionId) {
                 currentAuction.value.status = 'SOLD'
             }
-            updateAuctionStatus(auctionId, 'SOLD')
+            setTimeout(() => updateAuctionStatus(auctionId, 'SOLD'), 0)
             return reservation
         } catch (err) {
             console.error("Booking error:", err)
             error.value = err.message
             throw err
         } finally {
-            loading.value = false
+            pendingBookingAuctionId.value = null
         }
     }
 
@@ -249,6 +277,7 @@ export const useAuctionStore = defineStore('auction', () => {
         currentAuction,
         loading,
         error,
+        pendingBookingAuctionId,
         fetchAuctions,
         fetchAuctionById,
         createAuction,
@@ -258,6 +287,9 @@ export const useAuctionStore = defineStore('auction', () => {
         bookAuction,
         updatePrice,
         updateAuctionStatus,
-        updateAuctionTurboStartedAt
+        updateAuctionTurboStartedAt,
+        handleAuctionCreated,
+        handleAuctionUpdated,
+        handleAuctionDeleted
     }
 })

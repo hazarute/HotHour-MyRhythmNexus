@@ -1,46 +1,38 @@
 # Proje Özeti (Project Brief)
 
 ## Genel Bakış
-**HotHour**, pilates stüdyoları için dinamik Hollanda açık artırması modeliyle boş seansları gelir fırsatına çeviren bir platformdur. Sistem çekirdeği (backend, fiyat motoru, rezervasyon, gerçek zamanlı event altyapısı) çalışır durumdadır.
+**HotHour**, pilates stüdyoları için dinamik Hollanda açık artırması modeliyle boş seansları gelir fırsatına çeviren bir platformdur. Kullanıcılara rekabetçi bir "fiyat düşüşü" deneyimi sunarak FOMO (Fear Of Missing Out) tetikler ve hızlı rezervasyon imkanı tanır.
 
-Bu yeniden planlama ile ana hedef, mevcut çalışan fonksiyonları bozmadan tüm frontend görsel arayüzünü `Referans Görseller/` klasöründeki tasarım diliyle yeniden hizalamaktır.
+Sistem çekirdeği (backend fiyat algoritmaları, socket tabanlı realtime altyapı, rezervasyon ve yetkilendirme modelleri) ile referans tasarımlara (Referans Görseller/) dayalı Frontend görsel arayüzü başarıyla tamamlanmış ve entegre edilmiştir. 
+
+Mevcut aşamadaki ana hedef; teknik borçları temizlemek, modülerliği artırmak ve **Faz R5** kapsamında **Admin Paneli Yapısal Refactoring** sürecini tamamlayarak projeyi üretime (production) hazır, tam sürdürülebilir bir yapıya kavuşturmaktır.
 
 ## Temel Hedefler
-1. **UI Tutarlılığı:** Home, rezervasyonlar, admin ekranları ve giriş ekranı arasında tek bir görsel dil oluşturmak.
-2. **Referans Sadakati:** Referans görsellerdeki tipografi, kart yapısı, glow/kontrast dengesi ve CTA hiyerarşisini korumak.
-3. **Fonksiyonel Güvenlik:** Yeniden tasarım sürecinde backend API sözleşmeleri ve mevcut iş akışları (login, book, realtime) değiştirilmeyecek.
-4. **Hızlı Yayınlanabilirlik:** Yeniden tasarım MVP’si minimum teknik riskle devreye alınacak.
+1. **Mimari Sürdürülebilirlik:** Özellikle Admin paneli gibi yoğun iş kuralı ve API isteği barındıran View sayfalarındaki monolitik kodları Composable, Component ve Utility modüllerine ayırmak.
+2. **Kod Tekrarını Engellemek:** Aynı statü renkleri, formatlama fonksiyonları ve API client yapılarını (fetch kalıplarını) merkezi ve tekil dosyalardan çekmek.
+3. **Fonksiyonel Bütünlük:** Refactoring yapılırken uygulamanın kusursuz çalışan mevcut yeteneklerini (Realtime yayınlar, rezervasyon yarış kuralı, yetkilendirme katmanları, bildirim kontrolü vb.) kesinlikle bozmamak.
+4. **Kalite Güvencesi:** Tüm ekranlarda mobil öncelikli (R2) başarımların ve test kapsamının korunmasını garanti altına almak.
 
-## Güncel Kapsam
+## Güncel Kapsam (Faz R5 ve Stabilizasyon)
 
-### Mevcut Durum (Özet)
-Backend ve Frontend geliştirme fazları (R1, R2, R3) tamamlanmıştır. Proje şu anda **Canlıya Geçiş Öncesi Doğrulama (R4)** aşamasındadır.
+### Tamamlananlar (R1, R2, R3, R4)
+- Tam kapsamlı Backend ve Frontend MVP uygulaması.
+- Görsel referanslarla (Cam efekti, neon glow, modern karanlık tema) uyuşan kusursuz UI ve mobil uyum.
+- Kayıt, giriş, rol tabanlı güvenlik, e-posta doğrulama akışları.
+- Turbo mod senkronizasyonları, eşzamanlı rezervasyon race condition engellemeleri, admin rezervasyon yasakları.
+- Otomatik iptal/no-show bildirimlerini kapsayan "Admin Notifications" altyapısı ve bildirim z-index/dış tıklama düzeltmeleri.
 
-### Dahil Olanlar
-- Kullanıcı ve admin için mevcut akışların görsel yeniden tasarımı (Tamamlandı)
-- Public ekranlar: Home, Auction Detail, My Reservations (Tamamlandı)
-- Admin ekranlar: Login, Dashboard, Auction Create, Reservations (Tamamlandı)
-- Global layout/navigation ve ortak bileşen stili (Tamamlandı)
-- Mevcut API/store/socket entegrasyonunun korunması (Tamamlandı)
-- **Manuel Testler ve Bug Fix:** Canlıya alma öncesi son kontroller.
+### Öncelikli Hedef: Neler Yapılacak? (R5 - Admin Refactor)
+- **Ortak Domain Metadata:** `utils/admin/` altında statü etiketleri ve renklerinin merkezileştirilmesi.
+- **Composable Katmanı:** `composables/admin/` altında veri çekme (fetch) ve local state yönetiminin logic'ten ayrıştırılması.
+- **API Client:** View'lardaki uzun `fetch` bloklarının `auth token + baseUrl` destekli tekil bir utils fonksiyonuna taşınması.
+- **View Parçalama:** AdminDashboard gibi devleşen view'ların alt bileşenlere (FilterToolbar, NotificationDropdown, ActionButtons vs.) bölünmesi.
 
 ### Dahil Olmayanlar
-- Yeni ürün özelliği ekleme (ödeme gateway, yeni business rule vb.)
-- Backend domain model değişiklikleri (Zorunlu olmadıkça)
-- Mevcut kapsam dışı analitik/raporlama modülleri
+- Bu oturumda sisteme yeni bir core "feature" EKLENMEYECEKTİR.
+- Sadece yapısal temizlik, teknik refactor ve clean-architecture adaptasyonu amaçlanmaktadır.
 
 ## Başarı Kriterleri
-- Tüm hedef ekranlar referans diliyle görsel olarak tutarlı olur
-- Mevcut kritik kullanıcı yolculukları bozulmadan çalışır:
-  - Login
-  - Auction görüntüleme
-  - Hemen Kap / rezervasyon oluşturma
-  - My Reservations görüntüleme
-  - Admin’de rezervasyon doğrulama
-- Frontend build ve mevcut temel testler çalışır durumda kalır
-
-## Son Kapsam Güncellemesi (R4.7)
-- Rezervasyon akışında rol bazlı güvenlik kuralı netleştirildi: **Admin kullanıcılar oturum rezerve edemez**.
-- Realtime tutarlılık artırıldı: bir kullanıcı rezervasyon yaptığında diğer kullanıcılarda oturum durumu anında kapanır.
-- Turbo mod görünürlüğü backend state + frontend socket senkronuyla dinamik hale getirildi.
-- Üretim kararlılığı için auction listeleme akışında bağlantı kopmasına karşı otomatik toparlanma eklendi.
+- Refactor sonrası tüm Admin sayfalarının görsel ve işlevsel olarak %100 aynı kalması ancak View dosya kod satır sayılarının dramatik şekilde düşmesi.
+- Yeni eklenen `composables` / `utils` yapısının hatasız import edilebilmesi.
+- Backend entegrasyon testlerinin ve frontend build aşamalarının başarıyla geçmesi.

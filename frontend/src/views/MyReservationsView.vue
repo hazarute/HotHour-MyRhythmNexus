@@ -128,6 +128,12 @@ const closeCancelConfirmation = () => {
 }
 
 const cancelReservation = async (reservationId) => {
+    // Defensive checks: ensure we are cancelling the reservation the user confirmed
+    if (!reservationId || confirmCancelReservationId.value !== reservationId) {
+        console.warn('Cancel action ignored due to ID mismatch or missing ID', { reservationId, confirmCancelReservationId: confirmCancelReservationId.value })
+        return
+    }
+
     try {
         if (!authStore.token) {
             router.push('/login')
@@ -163,11 +169,10 @@ const cancelReservation = async (reservationId) => {
             throw new Error(detail)
         }
 
-        const target = reservations.value.find((reservation) => reservation.id === reservationId)
-        if (target) {
-            target.status = 'CANCELLED'
-        }
+        // Refresh reservations from server to ensure UI state matches backend
+        await fetchMyReservations()
 
+        // Clear copied code if it belonged to cancelled reservation
         if (copiedReservationId.value === reservationId) {
             copiedReservationId.value = null
         }

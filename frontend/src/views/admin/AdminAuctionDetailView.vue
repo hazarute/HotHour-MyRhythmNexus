@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuctionStore } from '@/stores/auction'
 import { useAuthStore } from '@/stores/auth'
 import CountDownTimer from '@/components/CountDownTimer.vue'
+import { getAuctionStatusMeta, getAllowedGenderLabel } from '@/utils/admin/status_metadata'
+import { formatCurrency, formatShortDate as formatDate } from '@/utils/admin/formatters'
+import { adminFetch } from '@/utils/admin/api_client'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,44 +25,6 @@ const activeTab = ref('overview') // overview, reservations, bidders
 
 const hasWinningReservation = computed(() => !!winningReservation.value)
 const canEditAuction = computed(() => String(auction.value?.status || '').toUpperCase() === 'DRAFT')
-
-const statusLabel = computed(() => {
-    const value = String(auction.value?.status || '').toUpperCase()
-    const labels = {
-        DRAFT: 'TASLAK',
-        ACTIVE: 'AKTİF',
-        SOLD: 'SATILDI',
-        EXPIRED: 'SÜRESİ DOLDU',
-        CANCELLED: 'İPTAL EDİLDİ'
-    }
-    return labels[value] || value || '-'
-})
-
-const allowedGenderValue = computed(() => {
-    return String(auction.value?.allowed_gender || auction.value?.allowedGender || 'ANY').toUpperCase()
-})
-
-const allowedGenderLabel = computed(() => {
-    const value = allowedGenderValue.value
-    if (value === 'FEMALE') return 'Kadın'
-    if (value === 'MALE') return 'Erkek'
-    return 'Fark Etmez'
-})
-
-const formatCurrency = (val) => {
-    if (val === undefined || val === null) return '₺0.00'
-    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
-}
-
-const formatDate = (value) => {
-    if (!value) return '-'
-    return new Date(value).toLocaleString('tr-TR', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
 
 onMounted(async () => {
     const id = route.params.id
@@ -82,17 +47,7 @@ const fetchWinningReservation = async (auctionId) => {
     reservationError.value = null
 
     try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/all`, {
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-
-        if (!response.ok) {
-            throw new Error('Rezervasyon bilgileri getirilemedi')
-        }
-
-        const payload = await response.json()
+        const payload = await adminFetch(`/api/v1/reservations/admin/all`, {}, authStore)
         const reservations = Array.isArray(payload) ? payload : (payload.reservations || [])
         winningReservation.value = reservations.find(
             (item) => String(item.auction_id) === String(auctionId) && item.status !== 'CANCELLED'
@@ -146,10 +101,8 @@ const fetchWinningReservation = async (auctionId) => {
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Durum</span>
-                         <div class="mt-2">
-                            <span v-if="auction?.status === 'ACTIVE'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-primary/10 text-primary border border-primary/20">AKTİF</span>
-                            <span v-else-if="auction?.status === 'SOLD'" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#0bda5e]/10 text-[#0bda5e] border border-[#0bda5e]/20">SATILDI</span>
-                            <span v-else class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">{{ statusLabel }}</span>
+                        <div class="mt-2">
+                            <span :class="getAuctionStatusMeta(auction?.status).class" class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-semibold border">{{ getAuctionStatusMeta(auction?.status).label }}</span>
                         </div>
                     </div>
                      <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -171,8 +124,8 @@ const fetchWinningReservation = async (auctionId) => {
                         <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Katılımcı Koşulu</span>
                         <div class="mt-2">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border"
-                                  :class="allowedGenderLabel === 'Fark Etmez' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'">
-                                {{ allowedGenderLabel }}
+                                  :class="getAllowedGenderLabel(auction) === 'Karışık' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'">
+                                {{ getAllowedGenderLabel(auction) }}
                             </span>
                         </div>
                     </div>
@@ -213,7 +166,7 @@ const fetchWinningReservation = async (auctionId) => {
                                 </li>
                                 <li class="flex justify-between">
                                     <span>Katılımcı Koşulu:</span>
-                                    <span class="font-medium text-slate-900 dark:text-white">{{ allowedGenderLabel }}</span>
+                                    <span class="font-medium text-slate-900 dark:text-white">{{ getAllowedGenderLabel(auction) }}</span>
                                 </li>
                              </ul>
                         </div>

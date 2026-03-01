@@ -1,193 +1,37 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { sortReservationsByNewest } from '@/utils/sorting'
+import AdminNotificationDropdown from '@/components/admin/AdminNotificationDropdown.vue'
+
+import { useAdminReservations } from '@/composables/admin/useAdminReservations'
+import { formatShortDate } from '@/utils/admin/formatters'
+import { getReservationStatusMeta, RESERVATION_FILTERS } from '@/utils/admin/status_metadata'
 
 const router = useRouter()
-const authStore = useAuthStore()
-const reservations = ref([])
-const loading = ref(false)
-const searchQuery = ref('')
-const error = ref(null)
-const statusFilter = ref('ALL')
-const showFilterDropdown = ref(false)
+
+const {
+    loading,
+    error,
+    searchQuery,
+    statusFilter,
+    showFilterDropdown,
+    currentPage,
+    paginatedReservations,
+    filteredReservations,
+    totalPages,
+    shownStart,
+    shownEnd,
+    totalReservationsCount: totalReservations,
+    pendingCheckInsCount: pendingCheckIns,
+    checkedInTodayCount: checkedInToday,
+    fetchReservations,
+    goToPrevPage,
+    goToNextPage,
+    handleCheckIn,
+    handleCancel
+} = useAdminReservations()
+
 const filterDropdownRef = ref(null)
-const currentPage = ref(1)
-const pageSize = 15
-
-const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-
-// Fetch all reservations
-const fetchReservations = async () => {
-    loading.value = true
-    error.value = null
-    try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/all`, {
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`
-            }
-        })
-        
-        if (!response.ok) {
-            throw new Error('Reervasyonlar getirilemedi')
-        }
-        
-        const payload = await response.json()
-        reservations.value = Array.isArray(payload) ? payload : (payload.reservations || [])
-    } catch (err) {
-        console.error(err)
-        error.value = err.message
-    } finally {
-        loading.value = false
-    }
-}
-
-// Filtered list
-const filteredReservations = computed(() => {
-    let result = [...reservations.value]
-
-    if (statusFilter.value !== 'ALL') {
-        result = result.filter(res => String(res.status || '').toUpperCase() === statusFilter.value)
-    }
-
-    if (!searchQuery.value) return sortReservationsByNewest(result)
-
-    const query = searchQuery.value.toLowerCase()
-    const filtered = result.filter(res => 
-        String(res.booking_code || '').toLowerCase().includes(query) ||
-        String(res.user_name || '').toLowerCase().includes(query) ||
-        String(res.auction_title || '').toLowerCase().includes(query)
-    )
-    return sortReservationsByNewest(filtered)
-})
-
-const totalPages = computed(() => {
-    const pages = Math.ceil(filteredReservations.value.length / pageSize)
-    return pages > 0 ? pages : 1
-})
-
-const paginatedReservations = computed(() => {
-    const start = (currentPage.value - 1) * pageSize
-    const end = start + pageSize
-    return filteredReservations.value.slice(start, end)
-})
-
-const shownStart = computed(() => {
-    if (filteredReservations.value.length === 0) return 0
-    return (currentPage.value - 1) * pageSize + 1
-})
-
-const shownEnd = computed(() => {
-    if (filteredReservations.value.length === 0) return 0
-    return Math.min(currentPage.value * pageSize, filteredReservations.value.length)
-})
-
-watch([searchQuery, statusFilter], () => {
-    currentPage.value = 1
-})
-
-watch(filteredReservations, () => {
-    if (currentPage.value > totalPages.value) {
-        currentPage.value = totalPages.value
-    }
-})
-
-const goToPrevPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value -= 1
-    }
-}
-
-const goToNextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value += 1
-    }
-}
-
-const formatDate = (value) => {
-    if (!value) return '-'
-    return new Date(value).toLocaleString('tr-TR', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })
-}
-
-// Stats (Mocked or derived from real data if available)
-const totalReservations = computed(() => reservations.value.length)
-const pendingCheckIns = computed(() => reservations.value.filter(r => r.status === 'PENDING_ON_SITE' || r.status === 'CONFIRMED').length)
-const checkedInToday = computed(() => reservations.value.filter(r => r.status === 'COMPLETED').length) // Assuming COMPLETED means checked in
-
-const getStatusConfig = (status) => {
-    switch(status) {
-        case 'COMPLETED':
-        case 'CHECKED_IN':
-            return { label: 'Giriş Yapıldı', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
-        case 'PENDING_ON_SITE':
-        case 'CONFIRMED':
-            return { label: 'Bekliyor', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', dot: 'bg-amber-500' }
-        case 'CANCELLED':
-            return { label: 'İptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
-        default:
-            return { label: status, class: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300', dot: 'bg-slate-500' }
-    }
-}
-
-const handleCheckIn = async (reservationId) => {
-    if (!confirm('Bu rezervasyonu giriş yapıldı olarak işaretlemek istiyor musunuz?')) return
-    
-    try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${reservationId}/check-in`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-
-        if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.detail || 'Giriş işlemi başarısız')
-        }
-
-        // Update local state
-        const index = reservations.value.findIndex(r => r.id === reservationId)
-        if (index !== -1) {
-            reservations.value[index].status = 'COMPLETED'
-        }
-    } catch (err) {
-        alert('Hata: ' + err.message)
-    }
-}
-
-const handleCancel = async (reservationId) => {
-    if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?')) return
-    
-    try {
-        const response = await fetch(`${baseUrl}/api/v1/reservations/admin/${reservationId}/cancel`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authStore.token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-
-        if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.detail || 'İptal işlemi başarısız')
-        }
-
-        // Update local state
-        const index = reservations.value.findIndex(r => r.id === reservationId)
-        if (index !== -1) {
-            reservations.value[index].status = 'CANCELLED'
-        }
-    } catch (err) {
-        alert('Hata: ' + err.message)
-    }
-}
 
 const handleDocumentClick = (event) => {
     if (!showFilterDropdown.value) return
@@ -197,7 +41,6 @@ const handleDocumentClick = (event) => {
 }
 
 onMounted(() => {
-    fetchReservations()
     document.addEventListener('click', handleDocumentClick)
 })
 
@@ -216,31 +59,11 @@ onUnmounted(() => {
             <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm">Rezervasyonları yönet ve misafir girişlerini kontrol et.</p>
         </div>
         <div class="flex gap-3 w-full md:w-auto justify-end relative z-40 overflow-visible">
-            <div ref="filterDropdownRef" class="relative z-50" @click.stop>
-                <button @click.stop="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
-                    {{
-                        {
-                            'ALL': 'Tümü',
-                            'PENDING_ON_SITE': 'Bekliyor',
-                            'CONFIRMED': 'Onaylandı',
-                            'COMPLETED': 'Giriş Yapıldı',
-                            'CHECKED_IN': 'Giriş Yapıldı',
-                            'CANCELLED': 'İptal'
-                        }[statusFilter] || statusFilter
-                    }}
-                </button>
-                <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-[70] py-1 pointer-events-auto">
-                    <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
-                    <button @click="statusFilter = 'PENDING_ON_SITE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Bekliyor</button>
-                    <button @click="statusFilter = 'CONFIRMED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Onaylandı</button>
-                    <button @click="statusFilter = 'COMPLETED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Giriş Yapıldı</button>
-                    <button @click="statusFilter = 'CHECKED_IN'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Check-in</button>
-                    <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal</button>
-                </div>
-            </div>
-            <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
-                <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">autorenew</span> Yenile
+            <AdminNotificationDropdown />
+
+            <button @click.prevent="router.push({ name: 'admin-auction-create' })" class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
+                <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+                <span class="font-medium">Oturum Oluştur</span>
             </button>
         </div>
     </header>
@@ -249,17 +72,40 @@ onUnmounted(() => {
     <div class="flex-1 overflow-y-auto p-4 md:p-8">
         <div class="flex flex-col gap-6">
             
-            <!-- Search Bar -->
-            <div class="relative w-full">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
+            <!-- Toolbar: Search, Filters, Notifications, Create, Refresh (aligned like AdminDashboard) -->
+            <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="relative w-full md:max-w-lg">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
+                    </div>
+                    <input 
+                        v-model="searchQuery"
+                        class="w-full bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-600 shadow-sm transition-all outline-none" 
+                        placeholder="Rezervasyon Kodu, Misafir Adı veya Stüdyo ara..." 
+                        type="text"
+                    />
                 </div>
-                <input 
-                    v-model="searchQuery"
-                    class="w-full bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-600 shadow-sm transition-all outline-none" 
-                    placeholder="Rezervasyon Kodu, Misafir Adı veya Stüdyo ara..." 
-                    type="text"
-                />
+
+                <div class="flex items-center gap-3 md:gap-4">
+                    <div ref="filterDropdownRef" class="relative z-50" @click.stop>
+                        <button @click.stop="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+                            {{ RESERVATION_FILTERS[statusFilter] || statusFilter }}
+                        </button>
+                        <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-[70] py-1 pointer-events-auto">
+                            <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
+                            <button @click="statusFilter = 'PENDING_ON_SITE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Bekliyor</button>
+                            <button @click="statusFilter = 'CONFIRMED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Onaylandı</button>
+                            <button @click="statusFilter = 'COMPLETED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Giriş Yapıldı</button>
+                            <button @click="statusFilter = 'CHECKED_IN'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Check-in</button>
+                            <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal</button>
+                        </div>
+                    </div>
+
+                    <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
+                        <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">autorenew</span> Yenile
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Cards -->
@@ -325,11 +171,11 @@ onUnmounted(() => {
                                  <div class="font-mono font-bold text-lg text-slate-900 dark:text-white" :class="{'line-through opacity-50': res.status === 'CANCELLED'}">
                                      #{{ res.booking_code }}
                                  </div>
-                                 <div class="text-xs text-slate-400 mt-1">{{ formatDate(res.created_at) }}</div>
+                                 <div class="text-xs text-slate-400 mt-1">{{ formatShortDate(res.created_at) }}</div>
                              </div>
-                             <span :class="getStatusConfig(res.status).class" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border border-transparent">
-                                <span :class="getStatusConfig(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
-                                {{ getStatusConfig(res.status).label }}
+                             <span :class="getReservationStatusMeta(res.status).class" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border border-transparent">
+                                <span :class="getReservationStatusMeta(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
+                                {{ getReservationStatusMeta(res.status).label }}
                             </span>
                          </div>
                          
@@ -389,7 +235,7 @@ onUnmounted(() => {
                                     <div class="text-lg font-bold text-slate-900 dark:text-white font-mono tracking-tight decoration-slate-400" :class="{'line-through opacity-50': res.status === 'CANCELLED'}">
                                         #{{ res.booking_code }}
                                     </div>
-                                    <div class="text-xs text-slate-400">{{ formatDate(res.created_at) }}</div>
+                                    <div class="text-xs text-slate-400">{{ formatShortDate(res.created_at) }}</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="flex items-center gap-3">
@@ -404,9 +250,9 @@ onUnmounted(() => {
                                     <div class="text-xs text-slate-400">Stüdyo A</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
-                                    <span :class="getStatusConfig(res.status).class" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-transparent">
-                                        <span :class="getStatusConfig(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
-                                        {{ getStatusConfig(res.status).label }}
+                                    <span :class="getReservationStatusMeta(res.status).class" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-transparent">
+                                        <span :class="getReservationStatusMeta(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
+                                        {{ getReservationStatusMeta(res.status).label }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">

@@ -1,72 +1,19 @@
 # Ürün Bağlamı (Product Context)
 
 ## Çözdüğümüz Problem
-Stüdyoların boş kalan seansları gelir kaybı yaratır; kullanıcı tarafında ise doğru zamanda doğru fiyatı yakalamak için hızlı, güven veren ve anlaşılır bir deneyim gerekir.
+HotHour, boş kalan stüdyo seanslarını oyunlaştırılmış ve dinamik (zamanla düşen) fiyatlama ile satarak bir kazan-kazan modeli yaratır. Stüdyo gelir elde eder, kullanıcı kaliteli hizmeti ucuza yakalar. Sistemin mevcut durumunda bu iş akışı sorunsuz olarak işletilmekte olup kullanıcı tarafında referanslarla (HomView, MyReservationsView vb.) istenilen algı ve heyecan oluşturulmuştur.
 
-## Ürün Vaatleri
-- **FOMO + Hız:** Fiyatın düşüşünü canlı izleme ve tek tıkla rezervasyon
-- **Güven:** Yerinde ödeme modeli + net rezervasyon kodu
-- **Operasyonel Netlik:** Admin’in hızlı seans/rezervasyon yönetimi
+## Mevcut Ürün Durumu (Başarılanlar)
+- **FOMO + Hız:** Fiyatın düşüşünü canlı izleme ve tek tıkla rezervasyon deneyimi stabil çalışmaktadır.
+- **Güven ve Okunabilirlik:** Kullanıcıya rezervasyon kodu, statü değişimleri ve hata mesajları net görsel feedbacklerle (Pulse ikonlar, glowlu kartlar vb.) sağlanmaktadır.
+- **Operasyonel Temel:** Admin'in açık artırma planlama, filtreleme ve durumu düşen / iptal olan / tamamlanan seansları görmesi sağlanmıştır. Ancak admin tarafında işler büyüdükçe (UI karmaşıklaştıkça) yönetimsel arka plan kodu dağınıklaşmıştır.
 
-## Yeni UX Stratejisi (Yeniden Plan)
-Bu fazda odak, mevcut çalışan deneyimi görsel olarak yeniden inşa etmektir:
+## UX ve Operasyonel Hedefler (R5 Güncellemesi)
 
-1. **Referans-Öncelikli Tasarım:**
-   - Birincil referans kaynak: `Referans Görseller/HomeView.*` ve `Referans Görseller/MyReservationsView.*`
-   - Tüm ekranlar bu iki referansın görsel DNA’sına göre hizalanır.
+### Son Kullanıcı (Stabil)
+Kullanıcı deneyimi hedef noktasına ulaşmıştır. Mevcut "Live Arena" hissi, detaylardaki karar verme hiyerarşisi ve sorunsuz responsive davranış olduğu gibi korunacaktır. Hiçbir flow değişikliği yapılmayacaktır.
 
-2. **Tasarım Dili Bütünlüğü:**
-   - Koyu zemin + neon vurgu
-   - Cam (glass) kart estetiği
-   - Güçlü CTA (özellikle “Hemen Kap”)
-   - Kod/rezervasyon alanlarında yüksek okunabilirlik
-
-3. **Referans Dışı Ekran Türetilmesi:**
-   - Login, Admin Dashboard, Admin Reservations, Admin Create Auction, Auction Detail ekranları için ayrı mock yoksa referanslardan türetilmiş görsel sistem uygulanır.
-   - İşlev eklenmez; yalnızca sunum katmanı yeniden şekillenir.
-
-## UX Hedefleri
-
-### Son Kullanıcı
-- Home’da canlı arena hissi
-- Auction detayında karar verme hızını artıran net hiyerarşi
-- My Reservations ekranında kod ve seans bilgisine anında erişim
-
-### Admin
-- Login sonrası düşük bilişsel yük
-- Dashboard/Reservations ekranlarında veri-öncelikli, hızlı taranabilir yapı
-- Operasyon adımlarında görsel tutarlılık
-
-## Başarı Ölçümü
-- Ekranlar arası görsel birlik
-- Kritik akışlarda regressionsız çalışma
-- Kullanıcının birincil aksiyonlara (book/view/manage) daha kısa sürede ulaşması# Ürün Bağlamı (Product Context)
-
-## Çözdüğümüz Problem
-HotHour, boş kalan seansları dinamik fiyatlama ile satarken kullanıcıda oyunlaştırılmış bir “kaçırma” hissi oluşturur. Teknik akışlar çalışıyor olsa da ekranlar arasında görsel dil tam standardize değildir.
-
-## Yeni Strateji: Referans Tabanlı UX Birliği
-`Referans Görseller/` klasöründeki ekranlar ürünün görsel rehberi kabul edilir.
-
-- `HomeView` → Public arena’nın ana görsel dili
-- `MyReservationsView` → Kart yoğun veri ekranlarının görsel dili
-
-Bu iki referanstan türetilen tasarım sistemi, tüm diğer ekranlara uygulanacaktır.
-
-## UX Hedefleri (Revize)
-
-### Son Kullanıcı
-1. **Anında Anlaşılabilirlik:** Fiyat, kalan süre ve “Hemen Kap” CTA’sı ilk bakışta net olmalı.
-2. **Tutarlı Estetik:** Home → Detail → Reservations geçişlerinde aynı marka hissi korunmalı.
-3. **Güven ve Netlik:** Rezervasyon kodu ve durum etiketleri (Confirmed/Completed vb.) görsel olarak güçlü vurgulanmalı.
-
-### Admin
-1. **Operasyonel Hız:** Dashboard, rezervasyon doğrulama ve oluşturma ekranlarında bilgi hiyerarşisi sade ve hızlı okunabilir olmalı.
-2. **Görsel Tutarlılık:** Admin paneli, public taraftan kopmadan daha fonksiyonel bir yoğunlukta tasarlanmalı.
-
-## Tasarım İlkeleri
-- Karanlık tema ağırlıklı, yüksek kontrastlı metin
-- Neon vurgu renkleri ile canlı durum/CTA vurgusu
-- Cam efekti (glass), yumuşak glow ve net kart sınırları
-- Mobil öncelikli düzen, masaüstünde genişleyen grid yapısı
-- Gereksiz yeni etkileşim eklemeden mevcut akışları güçlendirme
+### Admin (Revizyon ve Refactor Odaklı)
+1. **Kodsal Sürdürülebilirlik:** Admin panelinin ön yüzündeki `AdminDashboardView.vue` başta olmak üzere, UI karmaşası yüzünden teknik müdahalelerin zorlaştığı noktalar sadeleştirilecektir.
+2. **Standardizasyon:** `AdminReservationsView`, `AdminAuctionDetailView` ve diğer alanlardaki statü metinleri, tarih/saat gösterimleri, iptal onayı modalı gibi öğeler %100 özdeş hale getirilecek ve tek bir kaynaktan render edilecektir.
+3. **Sorunsuz Bakım (Maintainability):** Admin'e ileride raporlama veya finans modülleri eklendiğinde aynı API call patternlerini doğrudan `composables` üzerinden çağırabileceği bir ortam yaratılacaktır.
