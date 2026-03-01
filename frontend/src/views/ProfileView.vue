@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { usePasswordStrength } from '../composables/usePasswordStrength'
+import { formatDateFull as formatDate } from '../utils/formatters'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
@@ -12,39 +14,7 @@ const message = ref('')
 const error = ref('')
 const loading = ref(false)
 
-const formatDate = (dateString) => {
-    if (!dateString) return ''
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    })
-}
-
-// Password strength helpers
-const getPasswordStrength = () => {
-    const pwd = newPassword.value
-    let strength = 0
-    if (pwd.length >= 8) strength++
-    if (pwd.length >= 12) strength++
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++
-    if (/\d/.test(pwd)) strength++
-    if (/[^a-zA-Z\d]/.test(pwd)) strength++
-    return strength
-}
-
-const getPasswordStrengthLabel = () => {
-    const strength = getPasswordStrength()
-    const labels = ['', 'Zayıf', 'Orta', 'İyi', 'Güçlü', 'Çok Güçlü']
-    return labels[strength] || ''
-}
-
-// Renk paleti SignUpView ile eşleşecek şekilde neon tonlara güncellendi
-const getPasswordStrengthColor = () => {
-    const strength = getPasswordStrength()
-    const colors = ['', 'text-red-500', 'text-amber-500', 'text-yellow-400', 'text-neon-green', 'text-green-400']
-    return colors[strength] || ''
-}
+const { getPasswordStrength, getPasswordStrengthLabel, getPasswordStrengthColor } = usePasswordStrength(newPassword)
 
 const handleChangePassword = async () => {
     message.value = ''

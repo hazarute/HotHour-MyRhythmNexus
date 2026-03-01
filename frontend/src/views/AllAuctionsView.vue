@@ -1,15 +1,17 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
-import { useSocketStore } from '../stores/socket'
+import { useAuctionSocket } from '../composables/useAuctionSocket'
 import AuctionCard from '../components/AuctionCard.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { getAuctionStatus, getAuctionField } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
-const socketStore = useSocketStore()
+
+// Socket bağlantısı, event handler'lar ve yaşam döngüsü composable'da yönetilir
+useAuctionSocket(store)
 
 const searchQuery = ref('')
 const filterStatus = ref('ACTIVE')
@@ -35,96 +37,20 @@ const filteredAuctions = computed(() => {
     : []
 
   result = result.filter(isWithinLastMonth)
-  
+
   if (filterStatus.value !== 'ALL') {
     result = result.filter(a => getAuctionStatus(a) === filterStatus.value)
   }
-  
+
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
-    result = result.filter(a => 
+    result = result.filter(a =>
       String(a?.title ?? '').toLowerCase().includes(query) ||
       String(a?.description ?? '').toLowerCase().includes(query)
     )
   }
-  
+
   return result
-})
-
-const subscribeToAuctionRooms = () => {
-  store.auctions.forEach((auction) => {
-    if (auction?.id) {
-      socketStore.subscribeAuction(auction.id)
-    }
-  })
-}
-
-const unsubscribeFromAuctionRooms = () => {
-  store.auctions.forEach((auction) => {
-    if (auction?.id) {
-      socketStore.unsubscribeAuction(auction.id)
-    }
-  })
-}
-
-const onPriceUpdate = (data) => {
-  if (!data?.auction_id) return
-  store.updatePrice(data.auction_id, data.current_price)
-}
-
-const onAuctionBooked = (data) => {
-  if (!data?.auction_id) return
-  if (store.pendingBookingAuctionId && String(store.pendingBookingAuctionId) === String(data.auction_id)) return
-  store.updateAuctionStatus(data.auction_id, 'SOLD')
-}
-
-const onTurboTriggered = (data) => {
-  if (!data?.auction_id) return
-  store.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
-}
-
-const onAuctionCreated = (data) => {
-  if (data?.auction) {
-    store.handleAuctionCreated(data.auction)
-    socketStore.subscribeAuction(data.auction.id)
-  }
-}
-
-const onAuctionUpdated = (data) => {
-  if (data?.auction) store.handleAuctionUpdated(data.auction)
-}
-
-const onAuctionDeleted = (data) => {
-  if (data?.auction_id) {
-    store.handleAuctionDeleted(data.auction_id)
-    socketStore.unsubscribeAuction(data.auction_id)
-  }
-}
-
-onMounted(async () => {
-  if (!socketStore.isConnected) {
-    socketStore.connect()
-  }
-
-  socketStore.on('price_update', onPriceUpdate)
-  socketStore.on('auction_booked', onAuctionBooked)
-  socketStore.on('turbo_triggered', onTurboTriggered)
-  socketStore.on('auction_created', onAuctionCreated)
-  socketStore.on('auction_updated', onAuctionUpdated)
-  socketStore.on('auction_deleted', onAuctionDeleted)
-
-  await store.fetchAuctions()
-  subscribeToAuctionRooms()
-})
-
-onUnmounted(() => {
-  unsubscribeFromAuctionRooms()
-  socketStore.off('price_update', onPriceUpdate)
-  socketStore.off('auction_booked', onAuctionBooked)
-  socketStore.off('turbo_triggered', onTurboTriggered)
-  socketStore.off('auction_created', onAuctionCreated)
-  socketStore.off('auction_updated', onAuctionUpdated)
-  socketStore.off('auction_deleted', onAuctionDeleted)
 })
 
 const handleFilterChange = (status) => {

@@ -1,20 +1,58 @@
 ﻿# Aktif Bağlam (Active Context)
 
 ## Mevcut Durum / Şu Anki Zihinsel Odak
-Proje vizyonu, tasarımı, backend mantığı ve tüm çekirdek bileşenleri hatasız olarak **çalışmaktadır**. Mobil öncelikli (R2) revizyonlarına, test (R3/R4) koşullarına kadar uygulama prod'a çıkacak yeterliliktedir.
-**Faz R5 — Admin Paneli Yapısal Refactoring BAŞARIYLA TAMAMLANDI.**
+**Faz R6 — Public Views Yapısal Refactoring BAŞARIYLA TAMAMLANDI.**
 
-2026-03-01 güncellemesi: Admin Dashboard üzerindeki **aktif + turbo** oturumların "İptal Et" aksiyonunda alınan `400 turbo mode requires at least 180 minutes auction duration` hatası giderildi. Kök neden, `update_auction` içinde sadece `status` güncellemesinde bile tam zaman/fiyat/turbo validasyonunun tetiklenmesiydi.
+2026-03-01: `frontend/src/views/` altındaki 8 public view dosyası (admin klasörü hariç) refactor edildi.
+- `npm run build` → ✅ 108 modules, 0 hata, 2.43s
+- `npm run test:unit` → ✅ 6/6 test geçti
 
-Tüm Yönetim Paneli (AdminDashboardView, AdminReservationsView, AdminAuctionDetailView, AdminReservationDetailView) sayfalarındaki karmaşık state'ler ve fetch operasyonları ayrıştırıldı, UI metadata'ları merkezileştirildi. Sistem modüler ve temiz bir mimariye (Composable ve Utils yapısına) taşındı. 
-`npm run build` ile ön yüzün prod derlemesi başarıyla oluşturuldu; bileşenler derlendi ve önemli varlıklar (`dist/`) yazıldı. UI düzeninde kritik bir bozulma gözlenmedi.
+### Tamamlanan Değişiklikler (R6)
 
-## Sıradaki Görev Planı (AI Seansı İçin)
-Refactoring kapsamının R5 adımları tüm View dosyaları özelinde başarıyla uygulandığı için projede "Bütünüyle Üretime Hazır (Production Ready)" duruma gelinmiştir.
+**Yeni dosyalar oluşturuldu:**
+- `frontend/src/utils/formatters.js` — `formatPrice`, `formatCurrency`, `formatDate`, `formatDateLong`, `formatTime`, `formatDateFull`
+- `frontend/src/utils/reservationStatus.js` — `getStatusConfig`, `isCompletedStatus`, `isCopyAllowedStatus`
+- `frontend/src/composables/useAuctionSocket.js` — socket bağlantısı, 6 event handler ve lifecycle yönetimi
+- `frontend/src/composables/useReservations.js` — rezervasyon fetch/cancel/copy mantığı ve state yönetimi
+- `frontend/src/composables/usePasswordStrength.js` — şifre gücü hesaplama
+- `frontend/src/components/PageBackground.vue` — tekrar eden neon arka plan blob bileşeni
 
-Sıradaki adım:
-Kullanıcının projeyi baştan sona E2E ile doğrulaması veya deployment/CI adımlarını tetiklemesidir. Ayrıca test altyapısının CI'ya entegrasyonu önerilir.
+**View refactorları:**
+- `HomeView.vue` — useAuctionSocket ile ~65 satır azaldı
+- `AllAuctionsView.vue` — useAuctionSocket ile ~70 satır azaldı
+- `AuctionDetailView.vue` — formatters import edildi, çift `auction_booked` off bug'ı giderildi
+- `MyReservationsView.vue` — useReservations + formatters + reservationStatus ile ~165 satır azaldı
+- `ProfileView.vue` — usePasswordStrength + formatDateFull ile ~25 satır azaldı
+- `SignUpView.vue` — usePasswordStrength ile ~20 satır azaldı
+- `LoginView.vue` — PageBackground bileşeni uygulandı
+- `VerifyEmailView.vue` — PageBackground bileşeni uygulandı
+
+## Son Tamamlanan (R6 Test Coverage)
+
+**2026-03-01:** R6 refactor edilen tüm modüller için kapsamlı test dosyaları oluşturuldu:
+
+| Test Dosyası | Testler | Durum |
+|---|---|---|
+| `tests/formatters.test.js` | 24 | ✅ |
+| `tests/reservationStatus.test.js` | 21 | ✅ |
+| `tests/usePasswordStrength.test.js` | 21 | ✅ |
+| `tests/useAuctionSocket.test.js` | 20 | ✅ (`vi.hoisted()` singleton mock pattern) |
+| `tests/useReservations.test.js` | 26 | ✅ |
+| Önceki admintest'ler (3 dosya) | 6 | ✅ |
+| **TOPLAM** | **118/118** | ✅ |
+
+`npm run test:unit -- --run` → **8 test dosyası, 118 test, 0 hata**
+
+## Sıradaki Görev (AI Seansı İçin)
+R6 + R6 test coverage tamamlandı. Proje "Üretime Hazır" durumunda.
+
+Sıradaki olası adımlar:
+1. **CI Entegrasyonu** — Vitest + pytest pipeline'a ekleme
+2. **E2E Test** — Playwright/Cypress user-flow
+3. **Deployment** — staging/prod
 
 ## Dikkat Edilmesi Gerekenler
-* Yapısal temizlik (Clean Architecture) projede başarıyla uygulanmıştır, yeni eklenecek admin view'ları için composables/admin veya utils/admin yönergeleri standart kabul edilmelidir.
-* Local build başarılıdır. Unit testler (Vitest) oluşturuldu ve yerel çalıştırmada geçti. Realtime entegrasyonlar composable seviyesinde socket abonelikleri ile sağlandı; görünümler (AdminDashboard, AdminReservations, NotificationDropdown) bu veri akışlarını kullanacak şekilde güncellendi.
+* Yeni view eklenirken socket aboneliği `useAuctionSocket` composable'ından kullanılmalı.
+* Format fonksiyonları için `utils/formatters.js` tek kaynak — inline tanımlama yapılmamalı.
+* `utils/reservationStatus.js` — rezervasyon durumu eşlemesi için tek kaynak.
+* Admin view'larına dokunulmadı — R5 ile zaten clean mimaride.

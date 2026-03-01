@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import BrandLogo from '@/components/BrandLogo.vue'
+import { usePasswordStrength } from '../composables/usePasswordStrength'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -62,28 +63,9 @@ const validatePhone = (phone) => {
   return digits.length >= 10
 }
 
-const getPasswordStrength = () => {
-  const pwd = formData.value.password
-  let strength = 0
-  if (pwd.length >= 8) strength++
-  if (pwd.length >= 12) strength++
-  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++
-  if (/\d/.test(pwd)) strength++
-  if (/[^a-zA-Z\d]/.test(pwd)) strength++
-  return strength
-}
-
-const getPasswordStrengthLabel = () => {
-  const strength = getPasswordStrength()
-  const labels = ['', 'Zayıf', 'Orta', 'İyi', 'Güçlü', 'Çok Güçlü']
-  return labels[strength] || ''
-}
-
-const getPasswordStrengthColor = () => {
-  const strength = getPasswordStrength()
-  const colors = ['', 'text-red-500', 'text-amber-500', 'text-yellow-400', 'text-neon-green', 'text-green-400']
-  return colors[strength] || ''
-}
+// Şifre gücü için computed ref + composable
+const passwordForStrength = computed(() => formData.value.password)
+const { getPasswordStrength, getPasswordStrengthLabel, getPasswordStrengthColor } = usePasswordStrength(passwordForStrength)
 
 const validateForm = () => {
   formErrors.value = {

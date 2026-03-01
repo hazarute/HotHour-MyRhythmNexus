@@ -1,104 +1,22 @@
 <script setup>
-import { onMounted, onUnmounted, computed, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuctionStore } from '../stores/auction'
-import { useSocketStore } from '../stores/socket'
+import { useAuctionSocket } from '../composables/useAuctionSocket'
 import AuctionCard from '../components/AuctionCard.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { isAuctionActive } from '../utils/auction'
 
 const router = useRouter()
 const store = useAuctionStore()
-const socketStore = useSocketStore()
 
-const activeAuctions = computed(() => {
-    return store.auctions.filter(isAuctionActive)
-})
+// Socket bağlantısı, event handler'lar ve yaşam döngüsü composable'da yönetilir
+useAuctionSocket(store)
 
-const subscribeToAuctionRooms = () => {
-    store.auctions.forEach((auction) => {
-        if (auction?.id) {
-            socketStore.subscribeAuction(auction.id)
-        }
-    })
-}
+const activeAuctions = computed(() => store.auctions.filter(isAuctionActive))
 
-const unsubscribeFromAuctionRooms = () => {
-    store.auctions.forEach((auction) => {
-        if (auction?.id) {
-            socketStore.unsubscribeAuction(auction.id)
-        }
-    })
-}
-
-const onPriceUpdate = (data) => {
-    if (!data?.auction_id) return
-    store.updatePrice(data.auction_id, data.current_price)
-}
-
-const onAuctionBooked = (data) => {
-    if (!data?.auction_id) return
-    if (store.pendingBookingAuctionId && String(store.pendingBookingAuctionId) === String(data.auction_id)) return
-    store.updateAuctionStatus(data.auction_id, 'SOLD')
-}
-
-const onTurboTriggered = (data) => {
-    if (!data?.auction_id) return
-    store.updateAuctionTurboStartedAt(data.auction_id, data.turbo_started_at)
-}
-
-const onAuctionCreated = (data) => {
-    if (data?.auction) {
-        store.handleAuctionCreated(data.auction)
-        // Subscribe to its room immediately
-        socketStore.subscribeAuction(data.auction.id)
-    }
-}
-
-const onAuctionUpdated = (data) => {
-    if (data?.auction) store.handleAuctionUpdated(data.auction)
-}
-
-const onAuctionDeleted = (data) => {
-    if (data?.auction_id) {
-        store.handleAuctionDeleted(data.auction_id)
-        socketStore.unsubscribeAuction(data.auction_id)
-    }
-}
-
-onMounted(async () => {
-    if (!socketStore.isConnected) {
-        socketStore.connect()
-    }
-
-    socketStore.on('price_update', onPriceUpdate)
-    socketStore.on('auction_booked', onAuctionBooked)
-    socketStore.on('turbo_triggered', onTurboTriggered)
-    socketStore.on('auction_created', onAuctionCreated)
-    socketStore.on('auction_updated', onAuctionUpdated)
-    socketStore.on('auction_deleted', onAuctionDeleted)
-
-    await store.fetchAuctions()
-    subscribeToAuctionRooms()
-})
-
-onUnmounted(() => {
-    unsubscribeFromAuctionRooms()
-    socketStore.off('price_update', onPriceUpdate)
-    socketStore.off('auction_booked', onAuctionBooked)
-    socketStore.off('turbo_triggered', onTurboTriggered)
-    socketStore.off('auction_created', onAuctionCreated)
-    socketStore.off('auction_updated', onAuctionUpdated)
-    socketStore.off('auction_deleted', onAuctionDeleted)
-})
-
-const goToAllAuctions = () => {
-  router.push({ name: 'all-auctions' })
-}
-
-const goToHowItWorks = () => {
-    router.push({ name: 'how-it-works' })
-}
+const goToAllAuctions = () => router.push({ name: 'all-auctions' })
+const goToHowItWorks = () => router.push({ name: 'how-it-works' })
 
 const showSuccessModal = ref(false)
 const bookingResult = ref(null)

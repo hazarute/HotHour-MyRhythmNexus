@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import BrandLogo from '@/components/BrandLogo.vue'
+import PageBackground from '../components/PageBackground.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -37,9 +38,7 @@ const handleLogin = async () => {
 <template>
   <div class="w-full min-h-screen bg-[#050505] flex items-center justify-center relative overflow-hidden font-sans text-slate-200 selection:bg-neon-blue/30 selection:text-white p-4">
     
-    <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-neon-blue/20 rounded-full blur-[120px] pointer-events-none mix-blend-screen"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#f20d80]/15 rounded-full blur-[120px] pointer-events-none mix-blend-screen"></div>
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50 z-0 pointer-events-none"></div>
+    <PageBackground color1="rgba(0,191,255,0.20)" color2="rgba(242,13,128,0.15)" />
 
     <div class="w-full max-w-md relative z-10">
       

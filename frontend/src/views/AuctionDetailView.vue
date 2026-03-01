@@ -8,6 +8,7 @@ import HemenKapButton from '../components/HemenKapButton.vue'
 import BookingConfirmModal from '../components/BookingConfirmModal.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { getAuctionField, getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, getAuctionStatus } from '../utils/auction'
+import { formatPrice, formatDateLong as formatDate } from '../utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -142,26 +143,6 @@ onMounted(async () => {
     }, 1000)
 })
 
-const formatPrice = (val) => {
-    return new Intl.NumberFormat('tr-TR', {
-        style: 'currency',
-        currency: 'TRY',
-        maximumFractionDigits: 0
-    }).format(Number(val || 0))
-}
-
-const formatDate = (val) => {
-    if (!val) return ''
-    return new Date(val).toLocaleDateString('tr-TR', {
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit'
-    })
-}
-
 const handleBook = async () => {
     if (!auction.value) return
 
@@ -220,7 +201,6 @@ onUnmounted(() => {
     }
 
     socketStore.off('price_update', onPriceUpdate)
-    socketStore.off('auction_booked', onAuctionBooked)
     socketStore.off('auction_booked', onAuctionBooked)
     socketStore.off('turbo_triggered', onTurboTriggered)
 
