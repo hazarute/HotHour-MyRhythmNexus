@@ -1,19 +1,26 @@
-# Ürün Bağlamı (Product Context)
+﻿# Ürün Bağlamı (Product Context)
 
-## Çözdüğümüz Problem
-HotHour, boş kalan stüdyo seanslarını oyunlaştırılmış ve dinamik (zamanla düşen) fiyatlama ile satarak bir kazan-kazan modeli yaratır. Stüdyo gelir elde eder, kullanıcı kaliteli hizmeti ucuza yakalar. Sistemin mevcut durumunda bu iş akışı sorunsuz olarak işletilmekte olup kullanıcı tarafında referanslarla (HomView, MyReservationsView vb.) istenilen algı ve heyecan oluşturulmuştur.
+## Problem ve Çözüm
+Pilates stüdyoları boş seanslardan gelir kaybeder. HotHour bu seansları dinamik (zamanla düşen) Hollanda açık artırma modeliyle satışa çıkarır; kullanıcı canlı fiyat düşüşünü izler ve uygun fiyatta tek tıkla rezervasyon yapar.
 
-## Mevcut Ürün Durumu (Başarılanlar)
-- **FOMO + Hız:** Fiyatın düşüşünü canlı izleme ve tek tıkla rezervasyon deneyimi stabil çalışmaktadır.
-- **Güven ve Okunabilirlik:** Kullanıcıya rezervasyon kodu, statü değişimleri ve hata mesajları net görsel feedbacklerle (Pulse ikonlar, glowlu kartlar vb.) sağlanmaktadır.
-- **Operasyonel Temel:** Admin'in açık artırma planlama, filtreleme ve durumu düşen / iptal olan / tamamlanan seansları görmesi sağlanmıştır. Ancak admin tarafında işler büyüdükçe (UI karmaşıklaştıkça) yönetimsel arka plan kodu dağınıklaşmıştır.
+## Mevcut Ürün Durumu
+Tüm kullanıcı ve admin akışları tamamlandı, üretim kalitesinde çalışıyor:
 
-## UX ve Operasyonel Hedefler (R5 Güncellemesi)
+| Alan | Durum |
+|---|---|
+| Rezervasyon + fiyat düşüşü (FOMO) | ✅ Stabil |
+| Canlı socket senkronizasyonu | ✅ Stabil |
+| Admin panel (planlama, filtreleme, aksiyon) | ✅ Stabil |
+| E-posta doğrulama | ✅ Stabil |
+| JWT auth + refresh token akışı | ✅ Stabil |
+| Mobil uyum (responsive) | ✅ Stabil |
 
-### Son Kullanıcı (Stabil)
-Kullanıcı deneyimi hedef noktasına ulaşmıştır. Mevcut "Live Arena" hissi, detaylardaki karar verme hiyerarşisi ve sorunsuz responsive davranış olduğu gibi korunacaktır. Hiçbir flow değişikliği yapılmayacaktır.
+## UX Prensipleri (Korunacak)
+- **Son Kullanıcı:** "Live Arena" hissi, glowlu kartlar, pulse ikonlar, anlık fiyat güncellemeleri — hiçbir flow değiştirilmeyecek.
+- **Admin:** Tek kaynaktan statü/formatlama; tüm composable/utility bağlantıları stabil.
 
-### Admin (Revizyon ve Refactor Odaklı)
-1. **Kodsal Sürdürülebilirlik:** Admin panelinin ön yüzündeki `AdminDashboardView.vue` başta olmak üzere, UI karmaşası yüzünden teknik müdahalelerin zorlaştığı noktalar sadeleştirilecektir.
-2. **Standardizasyon:** `AdminReservationsView`, `AdminAuctionDetailView` ve diğer alanlardaki statü metinleri, tarih/saat gösterimleri, iptal onayı modalı gibi öğeler %100 özdeş hale getirilecek ve tek bir kaynaktan render edilecektir.
-3. **Sorunsuz Bakım (Maintainability):** Admin'e ileride raporlama veya finans modülleri eklendiğinde aynı API call patternlerini doğrudan `composables` üzerinden çağırabileceği bir ortam yaratılacaktır.
+## Sonraki Ürün Adımları
+1. **Canlıya Çıkış (Deployment):** Staging → production pipeline.
+2. **CI Entegrasyonu:** Vitest + pytest CI pipeline.
+3. **Redis Aktivasyonu:** Kullanıcı/worker sayısı arttığında `.env` içinde `REDIS_URL` ayarlanarak tek adımda aktif edilir.
+4. **Ödeme Entegrasyonu:** `PAYMENTS_ENABLED=false` → gelecek faz.

@@ -1,36 +1,42 @@
-# Teknoloji Bağlamı (Tech Context)
+﻿# Teknoloji Bağlamı (Tech Context)
 
-## Başarıyla Oturtulmuş Teknoloji Yığını (KORUNACAK)
+## Teknoloji Yığını
 
-| Katman | Teknoloji | Not |
-| --- | --- | --- |
-| Backend | Python 3.10+, FastAPI, Uvicorn, fastapi-mail | Çalışır durumda, stabil. |
-| ORM/DB | Prisma Client Python, PostgreSQL | Migration'lar güncel, lock mekanizmaları çalışıyor. |
-| Realtime | Socket.IO AsyncServer + socket.io-client | Çoklu client desteği, performansı yüksek. |
-| Frontend | Vue 3 (Composition API), Pinia, Vue Router | State aktarımı, Route guard'ları işlevsel. |
-| Styling | Tailwind CSS (Vite/PostCSS) | Referans tasarımlara uyumlu tam set tokenlar. |
-| Test | pytest | E2E, Realtime, DB entegrasyon testleri (%90+). |
+| Katman | Teknoloji |
+|---|---|
+| Backend | Python 3.10+, FastAPI, Uvicorn |
+| ORM / DB | Prisma Client Python, PostgreSQL |
+| Realtime | Socket.IO AsyncServer + socket.io-client |
+| Görev Zamanlayıcı | APScheduler (interval, 60s) |
+| Auth | JWT (jose), refresh token, Redis revocation (opsiyonel) |
+| E-posta | fastapi-mail, SMTP (Gmail) |
+| Frontend | Vue 3 (Composition API), Pinia, Vue Router |
+| Stil | Tailwind CSS v4, PostCSS |
+| Build | Vite |
+| Test | pytest (backend), Vitest + @vue/test-utils (frontend) |
 
-## Admin Refactor Sürecindeki Teknik Kurallar (R5)
+## Kritik Teknik Kurallar
 
-### 1) Kapsüllü JavaScript / ES6 Modülleri
-- Refactoring araçları olan `composables` (.js) ve `utils` (.js) dosyalarında standart Javascript fonksiyonları tanımlanacak (Vue'nun `ref`, `computed` importlarıyla reaktivite sağlanacak).
-- Uygulamaya Axios vb. yeni bir bağımlılık eklemeden, mevcut native `fetch` API ile wrapper yazılacaktır.
+### API / Fetch
+- View içinde ham `fetch()` yasaktır (R5 sonrası kural).
+- Tüm API çağrıları `adminFetch` (admin) veya `authStore.fetchWithAuth()` (kullanıcı) üzerinden geçer.
+- 401 alındığında `fetchWithAuth()` otomatik refresh token deneme → başarısızsa `logout()`.
 
-### 2) Local State vs Global State Disiplini
-- UI bazlı loading (ör: butona  tıklandığında dönen spinner), error mesajları ve pagination **Local State**'tir. Bu state'ler doğrudan composable modüllerinde `ref()` olarak tutulup export edilecek, store'a şişirilmeyecektir.
-- Oturum (Auth token) ve Global veriler **Pinia'da** (Global State) kalmaya devam edecektir. Composable'lar gerektiğinde store'u (*useAuthStore*) kendi içlerinde çağırabilir.
+### State Yönetimi
+- **Local state:** loading, error, pagination → composable içinde `ref()`.
+- **Global state:** Auth token, user, auction socket → Pinia store.
 
-### 3) Komponent İletişimi (Props / Emits)
-- Büyük view'lar parçalanırken, parent (View) ile child (örn: ActionToolbar) arasındaki iletişim Vue 3'ün `defineProps` ve `defineEmits` fonksiyonlarıyla tip güvenli bir şekilde yapılacaktır.
-- Gereksiz Prop Drilling önlenecek, 2 seviyeden derine veri taşınması gerektiğinde Composable veya Provide/Inject düşünülmelidir.
+### Vue 3 Kuralları
+- `<script setup>` zorunlu; Options API / `export default { setup() }` yasaktır.
+- `onMounted`'da eklenen event listener `onUnmounted`'da mutlaka kaldırılır.
 
-### 4) Bağlantı ve Hata Toleransı
-- Backend connection'larında (Socket kesilmesi, Prisma reconnect vb.) sağlanan yüksek dayanıklılık aynen sürdürülecektir.
-- API wrapper yazılırken mutlaka HTTP çağrılarındaki "auth" hatası veya "server error" durumları global/local error state'ine yönlendirilmeli (mevcut toast veya error-alert bileşenleri kullanılmalı).
+### Auth / Token
+- `ACCESS_TOKEN_EXPIRE_MINUTES=2880` (2 gün)
+- `REFRESH_TOKEN_EXPIRE_DAYS=7`
+- Revocation: Redis varsa Redis blacklist (TTL=refresh süresi), yoksa in-memory fallback.
 
-## Redis (Opsiyonel Altyapı)
-
-- Redis, paylaşılan kısa süreli state (örn. revoked refresh token setleri), pub/sub (socket message queue) ve caching için kullanılması önerilen hafif, bellek tabanlı bir veri katmanıdır.
-- Bu projede refresh-token revocation için Redis destekli bir blacklist eklendi; `.env` içindeki `REDIS_URL` ayarı ile etkinleştirilebilir. Redis yoksa kod process-local in-memory fallback kullanır (çoklu worker ortamı için önerilmez).
-- Öneri: production ortamlarında `REDIS_URL` ve uygun TLS/auth ayarları ile Redis'i etkinleştiriniz; revocation kayıtları için token `jti` kullanımı ile saklama maliyetini düşürmeyi düşünün.
+### Redis (Opsiyonel)
+- Aktif etmek için: `.env` içinde `REDIS_URL=redis://localhost:6379/0`.
+- Boş bırakıldığında uygulama in-memory fallback ile çalışır (tek worker ortamı için yeterli).
+- Health kontrolü: `GET /health` → `"redis": "available" | "unavailable"`.
+- Gelecek aktif etme tetikleyicileri: çoklu worker, session revocation tutarsızlığı, yüksek kullanıcı sayısı.

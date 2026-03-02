@@ -1,26 +1,41 @@
-# Kodlama Standartları (Coding Standards)
+﻿# Kodlama Standartları (Coding Standards)
 
-## 1. Genel Mimari Standartlar
-* **Temiz Kod (Clean Code):** Fonksiyonlar tek boyutlu olmalı. Bir Vue dosyası `template`, `script` ve `style` içerse de `script` bölümü 100-150 satırı aştığında ilgili logic bir Composable veya dış fonksiyon olarak çıkartılmalıdır.
-* **Tasarım Kalıpları:** Frontend de dahi modüller birbiri ile gevşek (loosely coupled) şekilde bağlanmalıdır.
-* **Bozmama Garantisi (Regression-Free):** Mevcut iş kuralına (business logic) göre yazılmış tüm senaryolar (race condition alert, error status, z-index dış tıklama, iptal onayı vb.) refactoring yapıldıktan sonra aynı kalmalıdır.
+## Genel Mimari
+- Bir Vue dosyasının `<script>` bölümü 100-150 satırı aşıyorsa ilgili logic bir Composable'a taşınır.
+- Modüller gevşek bağlı (loosely coupled) olmalıdır.
+- Refactor sonrasında mevcut iş kuralları (race condition, status, iptal akışı vb.) bozulmamalıdır.
 
-## 2. İsimlendirme Kuralları (Adlandırma)
+## İsimlendirme Kuralları
 
-### Frontend (Vue 3, JS) Yeni Refactor Kuralları
-* **Composables:** Mutlaka `use` kelimesiyle başlar ve CamelCase adlandırılır. Örn: `useAdminNotifications.js`, `useAdminReservations.js`.
-* **Utils/Helpers:** Görevi anlatan basit `camelCase` dosyalar. Örn: `formatting.js`, `adminApi.js`.
-* **View (Page) İçin Alt Bileşenler:** Parent'ın adını referans alan PascalCase. Örn: `AdminDashboardView.vue`'nun parçası `AdminDashboardFilterBar.vue` veya genel ise `components/admin/AdminNotificationDropdown.vue`.
+### Frontend
+- **Composables:** `use` ön eki + CamelCase → `useAdminNotifications.js`
+- **Utils/Helpers:** camelCase → `formatters.js`, `reservationStatus.js`
+- **Alt Bileşenler:** Parent adını referans alan PascalCase → `AdminNotificationDropdown.vue`
 
-## 3. Vue 3 (Composition API) Standartları
-* Kodun başı `script setup` ile hazırlanmalı. Klasik `export default { setup() }` veya Options API **kesinlikle KULLANILMAYACAKTIR**.
-* Sadece gerektiği kadar data Reaktif (`ref`, `reactive`) olmalıdır. Sabit metadata'lar (örn. statü renk listesi) düz obje (Object) olmalı dışarıdan export edilmelidir.
-* Geri çağırma temizliği (Cleanup): `onMounted`'da event listener eklendiyse (ör: dışarı tıklama), **mutlaka** `onUnmounted`'da o listener kaldırılmalıdır.
+### Backend
+- **Servisler:** `snake_case` → `auction_service.py`, `booking_service.py`
+- **Modeller:** `snake_case` dosya, PascalCase sınıf → `class AuctionResponse`
+- **Endpointler:** REST, kebab-case URL → `/api/v1/auth/refresh`
 
-## 4. API / Fetch Standartları
-* Ham API call'larının View'da bulunması R5 sonrası yasaktır.
-* API call hataları (`!response.ok`), uygun şekilde catch edilip frontend hata mesajı/state değişkenleri güncellenmelidir. `console.error` ile bırakılmamalıdır.
-* Component, backend yanıt formatını deşifre etmek zorunda olmamalı; veri, Composable/Client seviyesinde parse edilip component'e saf bir şekilde sunulmalıdır.
+## Vue 3 Standartları
+- `<script setup>` zorunlu; Options API yasaktır.
+- Sadece gerçekten reaktif olan veriler `ref()` / `reactive()` kullanır; sabit metadata düz obje olarak export edilir.
+- `onMounted`'da eklenen her listener `onUnmounted`'da temizlenir.
 
-## 5. Metadata/Formatlama Standartları
-Tüm tarih formatlama, statü badge (etiket rengi belirleme) ve para birimi sembolleri `utils/` veya `constants/` altındaki `status_metadata.js`, `format_helpers.js` gibi dosyalardan import edilmelidir. Ayrı yerlerde kopyala/yapıştır (copy-paste) formatlama kod bloku **KESİNLİKLE OLMAMALIDIR**.
+## API / Fetch Standartları
+- Ham `fetch()` view içinde yasaktır (R5 kuralı).
+- Admin: `adminFetch(path, options?)` kullanılır.
+- Kullanıcı: `authStore.fetchWithAuth(path, options?)` kullanılır — 401 otomatik refresh içerir.
+- `!response.ok` her durumda yakalanır ve uygun hata state'ine yazılır.
+
+## Formatlama ve Metadata
+- Tarih/saat/para formatlama: `src/utils/formatters.js` (tek kaynak).
+- Rezervasyon statü haritası: `src/utils/reservationStatus.js` (tek kaynak).
+- Inline format tanımlaması kesinlikle yapılmaz.
+
+## Test Standartları
+- Backend: `pytest` — her yeni endpoint veya servis değişikliği için test yazılır.
+- Frontend: `vitest` — her yeni composable/store için unit test yazılır.
+- Test komutları:
+  - Backend: `$env:PYTHONPATH="..."; pytest -q`
+  - Frontend: `npm --prefix frontend run test:unit`

@@ -1,72 +1,39 @@
 ﻿# Aktif Bağlam (Active Context)
 
-## Mevcut Durum / Şu Anki Zihinsel Odak
-**Faz R6 — Public Views Yapısal Refactoring BAŞARIYLA TAMAMLANDI.**
+## Şu Anki Durum
+**Tüm fazlar tamamlandı. Proje üretime hazır.**
+Son tamamlanan faz: **Auth-R** — Refresh token akışı + Redis destekli revocation (2026-03-02).
 
-2026-03-01: `frontend/src/views/` altındaki 8 public view dosyası (admin klasörü hariç) refactor edildi.
-- `npm run build` → ✅ 108 modules, 0 hata, 2.43s
-- `npm run test:unit` → ✅ 6/6 test geçti
+---
 
-### Tamamlanan Değişiklikler (R6)
+## Son Yapılan Değişiklikler (Auth-R)
 
-**Yeni dosyalar oluşturuldu:**
-- `frontend/src/utils/formatters.js` — `formatPrice`, `formatCurrency`, `formatDate`, `formatDateLong`, `formatTime`, `formatDateFull`
-- `frontend/src/utils/reservationStatus.js` — `getStatusConfig`, `isCompletedStatus`, `isCopyAllowedStatus`
-- `frontend/src/composables/useAuctionSocket.js` — socket bağlantısı, 6 event handler ve lifecycle yönetimi
-- `frontend/src/composables/useReservations.js` — rezervasyon fetch/cancel/copy mantığı ve state yönetimi
-- `frontend/src/composables/usePasswordStrength.js` — şifre gücü hesaplama
-- `frontend/src/components/PageBackground.vue` — tekrar eden neon arka plan blob bileşeni
+| Dosya | Değişiklik |
+|---|---|
+| `app/core/config.py` | `ACCESS_TOKEN_EXPIRE_MINUTES=2880`, `REFRESH_TOKEN_EXPIRE_DAYS=7`, `REDIS_URL`, `REDIS_REVOKED_KEY_PREFIX` eklendi |
+| `app/core/security.py` | `create_refresh_token()` eklendi |
+| `app/api/auth.py` | `login`/`register` artık `refresh_token` döndürüyor; `/refresh`, `/revoke` endpointleri eklendi |
+| `app/core/token_revocation.py` | Redis destekli revocation (fallback: in-memory) |
+| `app/core/redis_client.py` | Lazy Redis client + `ping_redis()` (yeni dosya) |
+| `app/main.py` | `/health` endpoint'ine Redis ping durumu eklendi |
+| `app/models/user.py` | `Token` modeline `refresh_token` alanı eklendi |
+| `frontend/src/stores/auth.js` | `refreshToken` state, `fetchWithAuth()`, `refreshTokens()`, `logout()` revoke eklendi |
+| `requirements.txt` | `redis>=4.6.0` eklendi |
+| `.env` | `REDIS_URL`, `REDIS_REVOKED_KEY_PREFIX` eklendi |
+| `tests/test_auth_refresh.py` | Refresh/revoke akışı için yeni test (yeni dosya) |
+| `frontend/tests/useAuthStore.test.js` | Auth store unit testleri (yeni dosya) |
 
-**View refactorları:**
-- `HomeView.vue` — useAuctionSocket ile ~65 satır azaldı
-- `AllAuctionsView.vue` — useAuctionSocket ile ~70 satır azaldı
-- `AuctionDetailView.vue` — formatters import edildi, çift `auction_booked` off bug'ı giderildi
-- `MyReservationsView.vue` — useReservations + formatters + reservationStatus ile ~165 satır azaldı
-- `ProfileView.vue` — usePasswordStrength + formatDateFull ile ~25 satır azaldı
-- `SignUpView.vue` — usePasswordStrength ile ~20 satır azaldı
-- `LoginView.vue` — PageBackground bileşeni uygulandı
-- `VerifyEmailView.vue` — PageBackground bileşeni uygulandı
+**Test Sonuçları:** Backend pytest → 76 passed | Frontend vitest → 121 passed
 
-## Son Tamamlanan (R6 Test Coverage)
+---
 
-**2026-03-01:** R6 refactor edilen tüm modüller için kapsamlı test dosyaları oluşturuldu:
+## Sıradaki Görev
+`progress.md` içindeki `[ ]` işaretli ilk görev: **CI Pipeline yapılandırması**.
 
-| Test Dosyası | Testler | Durum |
-|---|---|---|
-| `tests/formatters.test.js` | 24 | ✅ |
-| `tests/reservationStatus.test.js` | 21 | ✅ |
-| `tests/usePasswordStrength.test.js` | 21 | ✅ |
-| `tests/useAuctionSocket.test.js` | 20 | ✅ (`vi.hoisted()` singleton mock pattern) |
-| `tests/useReservations.test.js` | 26 | ✅ |
-| Önceki admintest'ler (3 dosya) | 6 | ✅ |
-| **TOPLAM** | **118/118** | ✅ |
-
-`npm run test:unit -- --run` → **8 test dosyası, 118 test, 0 hata**
-
-## Sıradaki Görev (AI Seansı İçin)
-R6 + R6 test coverage tamamlandı. Proje "Üretime Hazır" durumunda.
-
-Sıradaki olası adımlar:
-1. **CI Entegrasyonu** — Vitest + pytest pipeline'a ekleme
-2. **E2E Test** — Playwright/Cypress user-flow
-3. **Deployment** — staging/prod
+---
 
 ## Dikkat Edilmesi Gerekenler
-* Yeni view eklenirken socket aboneliği `useAuctionSocket` composable'ından kullanılmalı.
-* Format fonksiyonları için `utils/formatters.js` tek kaynak — inline tanımlama yapılmamalı.
-* `utils/reservationStatus.js` — rezervasyon durumu eşlemesi için tek kaynak.
-* Admin view'larına dokunulmadı — R5 ile zaten clean mimaride.
-
-## Recent Changes (2026-03-02)
-
-- **Auth / Session:** Backend tarafında `ACCESS_TOKEN_EXPIRE_MINUTES` 8 günden 2 güne çekildi; `REFRESH_TOKEN_EXPIRE_DAYS` eklendi. (`app/core/config.py`)
-- **Refresh Token:** `create_refresh_token()` eklendi ve `login`/`register` endpointleri artık `refresh_token` döndürüyor; `/api/v1/auth/refresh` endpoint'i eklendi. (`app/core/security.py`, `app/api/auth.py`)
-- **Frontend auth:** `frontend/src/stores/auth.js` güncellendi — `refresh_token` saklanıyor, `refreshTokens()` ve `fetchWithAuth()` eklendi; 401 alındığında otomatik yenileme deneniyor, başarısızsa `logout()` yapılıyor.
-- **.env:** `ACCESS_TOKEN_EXPIRE_MINUTES` ve `REFRESH_TOKEN_EXPIRE_DAYS` değerleri `.env` içine eklendi (development overrides).
-
-- **Revocation & Redis:** Refresh-token revocation Redis destekli bir blacklist ile uygulandı; Redis yoksa process-local (in-memory) fallback kullanılıyor. Yeni yardımcılar eklendi: `app/core/redis_client.py` (lazy Redis client + `ping_redis()`), `app/core/token_revocation.py` (Redis-backed revoke/is_revoked API).
-- **Health check:** `/health` endpoint'i Redis ping bilgisini dönecek şekilde güncellendi (`app/main.py`).
-- **Requirements:** `redis>=4.6.0` `requirements.txt` içine eklendi.
-- **Testler:** Backend ve frontend testleri çalıştırıldı; backend `pytest` → 76 passed, frontend `vitest` → 121 passed. Revocation akışı için unit testler eklendi ve geçti.
-
-Bu değişiklikler backend ve frontend arasında oturum yenileme (refresh) akışı sağlamaya yönelik olup, frontend tarafında servislerin `fetchWithAuth()` kullanacak şekilde güncellenmesi önerilir.
+- Redis `REDIS_URL` boş bırakıldığında uygulama in-memory fallback ile çalışır — bu kasıtlı bir tasarım tercihidir.
+- `fetchWithAuth()` tüm kullanıcı API çağrılarında kullanılmalı; ham `fetch()` yasaktır.
+- Format fonksiyonları için `utils/formatters.js`, statü haritaları için `utils/reservationStatus.js` tek kaynak.
+- Yeni view eklenirken socket aboneliği `useAuctionSocket` composable'ından yapılmalı.
