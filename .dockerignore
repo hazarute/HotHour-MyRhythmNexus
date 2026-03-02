@@ -1,0 +1,20 @@
+.git
+.github
+.memory-bank
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+.pytest_cache
+.mypy_cache
+.vscode
+node_modules
+frontend/node_modules
+frontend/dist
+tests
+Referans Görseller
+.env
+.env.*
+!.env.example
