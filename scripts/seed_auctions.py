@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import os
 import asyncio
 import random
@@ -14,9 +14,17 @@ from prisma.enums import PaymentStatus
 
 
 TURBO_SHOWCASE_TITLE = "Turbo Sculpt Reformer"
-# Gender dağılımı: İndekse göre gender seçimi
-# %50 ANY | %35 FEMALE | %15 MALE oranında dağıtılacak
-ALLOWED_GENDER_SEQUENCE = ["ANY", "FEMALE", "MALE"]
+# Gender dağılımı: %50 ANY | %35 FEMALE | %15 MALE
+# 20 elemanlık döngü: 10 ANY, 7 FEMALE, 3 MALE
+GENDER_DISTRIBUTION_PATTERN = ["ANY"] * 10 + ["FEMALE"] * 7 + ["MALE"] * 3
+
+RESERVATION_SCENARIOS = [
+    ("HIIT Cardio Burn", PaymentStatus.COMPLETED),
+    ("Spinning Blast 45", PaymentStatus.PENDING_ON_SITE),
+    ("Özel Hamile Pilatesi", PaymentStatus.COMPLETED),
+    ("Mega Reformer Weekend", PaymentStatus.NO_SHOW),
+    ("Total Body Strength", PaymentStatus.CANCELLED),
+]
 
 
 def _deleted_count(result) -> int:
@@ -48,9 +56,21 @@ def _pick_eligible_user(users, allowed_gender: str):
 
 def _with_project_defaults(data: dict, index: int) -> dict:
     normalized = dict(data)
-    
-    # Schema default'larını kullanmak için field atlamıyoruz
-    # DB default'ları (ANY, now(), vs.) zaten set edilmiş
+
+    end_time = normalized.get("endTime")
+    scheduled_at = normalized.get("scheduledAt")
+
+    if scheduled_at is None and end_time is not None:
+        normalized["scheduledAt"] = end_time + timedelta(minutes=45)
+
+    if normalized.get("allowedGender") is None:
+        normalized["allowedGender"] = GENDER_DISTRIBUTION_PATTERN[index % len(GENDER_DISTRIBUTION_PATTERN)]
+
+    if not normalized.get("turboEnabled", False):
+        normalized["turboDropAmount"] = Decimal("0.00")
+        normalized["turboTriggerMins"] = 120
+        normalized["turboIntervalMins"] = 10
+        normalized["turboStartedAt"] = None
 
     return normalized
 
@@ -60,20 +80,24 @@ async def _seed_reservations(users, auctions):
         print("⚠️ Kullanıcı bulunamadı. Reservation seed adımı atlandı.")
         return 0
 
-    reservable_auctions = [
-        auction for auction in auctions
-        if getattr(auction, "status", None) in {"ACTIVE", "SOLD", "EXPIRED"}
-    ]
-
-    if not reservable_auctions:
+    if not auctions:
         print("⚠️ Rezervasyon için uygun auction bulunamadı.")
         return 0
 
-    print(f"\nRezervasyonlar oluşturuluyor... ({len(reservable_auctions)} uygun oturum, {len(users)} kullanıcı)")
+    by_title = {getattr(auction, "title", ""): auction for auction in auctions}
+
+    print(f"\nRezervasyonlar oluşturuluyor... ({len(RESERVATION_SCENARIOS)} hedef senaryo, {len(users)} kullanıcı)")
     reservation_count = 0
 
-    for auction in reservable_auctions:
-        if getattr(auction, "title", None) == TURBO_SHOWCASE_TITLE:
+    for title, status in RESERVATION_SCENARIOS:
+        auction = by_title.get(title)
+        if auction is None:
+            print(f"⚠️ Auction bulunamadı, rezervasyon senaryosu atlandı: {title}")
+            continue
+
+        auction_status = str(getattr(auction, "status", "")).upper()
+        if auction_status not in {"ACTIVE", "SOLD", "EXPIRED"}:
+            print(f"⚠️ Reservation için uygun status değil, atlandı: {title} ({auction_status})")
             continue
 
         allowed_gender = getattr(auction, "allowedGender", "ANY")
@@ -81,13 +105,6 @@ async def _seed_reservations(users, auctions):
         if user is None:
             print(f"⚠️ Uygun kullanıcı bulunamadı, rezervasyon atlandı: {getattr(auction, 'title', '-') } ({allowed_gender})")
             continue
-
-        status = random.choice([
-            PaymentStatus.PENDING_ON_SITE,
-            PaymentStatus.COMPLETED,
-            PaymentStatus.NO_SHOW,
-            PaymentStatus.CANCELLED,
-        ])
 
         auction_id = getattr(auction, "id", None)
         if auction_id is None:
@@ -115,8 +132,6 @@ async def _seed_reservations(users, auctions):
                 )
 
             reservation_count += 1
-            if reservation_count >= 5:
-                break
         except Exception as error:
             print(f"⚠️ Reservation hatası ({getattr(auction, 'title', '-') }): {error}")
 
@@ -160,51 +175,50 @@ async def seed_auctions():
             "startPrice": Decimal("500.00"),
             "floorPrice": Decimal("250.00"),
             "currentPrice": Decimal("480.00"),
-            "startTime": now - timedelta(minutes=15),
-            "endTime": now + timedelta(minutes=45),
+            "startTime": now - timedelta(minutes=30),
+            "endTime": now + timedelta(minutes=60),
             "dropIntervalMins": 5,
             "dropAmount": Decimal("10.00"),
             "status": "ACTIVE",
-            "turboEnabled": True,
+            "turboEnabled": False,
             "turboTriggerMins": 120,
-            "turboDropAmount": Decimal("6.00"),
+            "turboDropAmount": Decimal("0.00"),
             "turboIntervalMins": 10
         },
-        # ACTIVE - turbo başladı
+        # ACTIVE - turbo başladı (remaining <= 120)
         {
             "title": "HIIT Cardio Burn",
             "description": "30 dakikalık yüksek yoğunluklu antrenman. Terlemeye hazır olun!",
             "startPrice": Decimal("300.00"),
             "floorPrice": Decimal("100.00"),
-            "currentPrice": Decimal("120.00"),
-            "startTime": now - timedelta(minutes=50),
-            "endTime": now + timedelta(minutes=10),
-            "dropIntervalMins": 2,
-            "dropAmount": Decimal("5.00"),
+            "currentPrice": Decimal("180.00"),
+            "startTime": now - timedelta(hours=2, minutes=20),
+            "endTime": now + timedelta(minutes=100),
+            "dropIntervalMins": 20,
+            "dropAmount": Decimal("12.00"),
             "status": "ACTIVE",
             "turboEnabled": True,
             "turboTriggerMins": 120,
-            "turboDropAmount": Decimal("3.00"),
+            "turboDropAmount": Decimal("7.00"),
             "turboIntervalMins": 10,
-            "turboStartedAt": now - timedelta(minutes=5),
+            "turboStartedAt": now - timedelta(minutes=8),
         },
-        # ACTIVE - turbo görünürlüğü için ek fake senaryo
+        # ACTIVE - turbo eşiğine henüz girmedi (remaining > 120)
         {
             "title": "Turbo Sculpt Reformer",
             "description": "Turbo modda ilerleyen, hızlı fiyat değişimi olan vitrin seansı.",
             "startPrice": Decimal("640.00"),
             "floorPrice": Decimal("320.00"),
-            "currentPrice": Decimal("410.00"),
-            "startTime": now - timedelta(hours=1, minutes=10),
-            "endTime": now + timedelta(minutes=35),
-            "dropIntervalMins": 12,
-            "dropAmount": Decimal("11.00"),
+            "currentPrice": Decimal("590.00"),
+            "startTime": now - timedelta(minutes=90),
+            "endTime": now + timedelta(minutes=150),
+            "dropIntervalMins": 20,
+            "dropAmount": Decimal("14.00"),
             "status": "ACTIVE",
             "turboEnabled": True,
             "turboTriggerMins": 120,
-            "turboDropAmount": Decimal("6.00"),
+            "turboDropAmount": Decimal("8.00"),
             "turboIntervalMins": 10,
-            "turboStartedAt": now - timedelta(minutes=12),
         },
         # ACTIVE - turbo eşiğinde (tam 120 dk)
         {
@@ -212,8 +226,8 @@ async def seed_auctions():
             "description": "Kardiyo odaklı spinning seansı. Turbo sınır senaryosu.",
             "startPrice": Decimal("420.00"),
             "floorPrice": Decimal("210.00"),
-            "currentPrice": Decimal("390.00"),
-            "startTime": now - timedelta(hours=1),
+            "currentPrice": Decimal("360.00"),
+            "startTime": now - timedelta(hours=1, minutes=30),
             "endTime": now + timedelta(minutes=120),
             "dropIntervalMins": 15,
             "dropAmount": Decimal("12.00"),
@@ -265,7 +279,7 @@ async def seed_auctions():
             "floorPrice": Decimal("320.00"),
             "currentPrice": Decimal("800.00"),
             "startTime": now + timedelta(hours=4),
-            "endTime": now + timedelta(hours=10),
+            "endTime": now + timedelta(hours=9),
             "dropIntervalMins": 30,
             "dropAmount": Decimal("24.00"),
             "status": "DRAFT",
@@ -282,7 +296,7 @@ async def seed_auctions():
             "floorPrice": Decimal("275.00"),
             "currentPrice": Decimal("550.00"),
             "startTime": now + timedelta(days=1, hours=2),
-            "endTime": now + timedelta(days=1, hours=5),
+            "endTime": now + timedelta(days=1, hours=6),
             "dropIntervalMins": 20,
             "dropAmount": Decimal("18.00"),
             "status": "DRAFT",
@@ -299,7 +313,7 @@ async def seed_auctions():
             "floorPrice": Decimal("180.00"),
             "currentPrice": Decimal("370.00"),
             "startTime": now - timedelta(minutes=8),
-            "endTime": now + timedelta(hours=2, minutes=22),
+            "endTime": now + timedelta(hours=2, minutes=52),
             "dropIntervalMins": 12,
             "dropAmount": Decimal("11.00"),
             "status": "DRAFT",
@@ -315,8 +329,8 @@ async def seed_auctions():
             "startPrice": Decimal("600.00"),
             "floorPrice": Decimal("400.00"),
             "currentPrice": Decimal("450.00"),
-            "startTime": now - timedelta(hours=3),
-            "endTime": now - timedelta(hours=2),
+            "startTime": now - timedelta(hours=4),
+            "endTime": now - timedelta(hours=2, minutes=30),
             "dropIntervalMins": 10,
             "dropAmount": Decimal("25.00"),
             "status": "SOLD",
@@ -332,7 +346,7 @@ async def seed_auctions():
             "startPrice": Decimal("950.00"),
             "floorPrice": Decimal("500.00"),
             "currentPrice": Decimal("620.00"),
-            "startTime": now - timedelta(hours=6),
+            "startTime": now - timedelta(hours=8),
             "endTime": now - timedelta(hours=4),
             "dropIntervalMins": 20,
             "dropAmount": Decimal("20.00"),
@@ -341,7 +355,7 @@ async def seed_auctions():
             "turboTriggerMins": 120,
             "turboDropAmount": Decimal("12.00"),
             "turboIntervalMins": 10,
-            "turboStartedAt": now - timedelta(hours=4, minutes=50),
+            "turboStartedAt": now - timedelta(hours=5, minutes=40),
         },
         # EXPIRED - floor seviyesinde bitiş
         {
@@ -350,9 +364,9 @@ async def seed_auctions():
             "startPrice": Decimal("450.00"),
             "floorPrice": Decimal("225.00"),
             "currentPrice": Decimal("225.00"),
-            "startTime": now - timedelta(days=1),
-            "endTime": now - timedelta(days=1, hours=1),
-            "dropIntervalMins": 5,
+            "startTime": now - timedelta(hours=4),
+            "endTime": now - timedelta(hours=1),
+            "dropIntervalMins": 10,
             "dropAmount": Decimal("10.00"),
             "status": "EXPIRED",
             "turboEnabled": False,
@@ -360,14 +374,14 @@ async def seed_auctions():
             "turboDropAmount": Decimal("0.00"),
             "turboIntervalMins": 10
         },
-        # EXPIRED - turbo eşiğine girmeden bitmiş
+        # EXPIRED - turbo destekli, geçmişte tamamlanmış
         {
             "title": "TRX Core Challenge",
             "description": "Kısa süreli yüksek yoğunluk; turbo devreye girmeden biter.",
             "startPrice": Decimal("340.00"),
             "floorPrice": Decimal("170.00"),
             "currentPrice": Decimal("210.00"),
-            "startTime": now - timedelta(hours=5),
+            "startTime": now - timedelta(hours=7),
             "endTime": now - timedelta(hours=3, minutes=30),
             "dropIntervalMins": 15,
             "dropAmount": Decimal("9.00"),
@@ -435,7 +449,7 @@ async def seed_auctions():
     auctions = await db.auction.find_many()
     
     print(f"\n{'='*80}")
-    print(f"REZERVASYONLARa EKLENIYOR...")
+    print(f"REZERVASYONLAR EKLENIYOR...")
     print(f"{'='*80}\n")
     
     reservation_count = await _seed_reservations(users, auctions)

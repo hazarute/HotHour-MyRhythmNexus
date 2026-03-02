@@ -33,7 +33,10 @@ const handleLogout = () => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen bg-[#050505] selection:bg-neon-blue/30 selection:text-white">
+  <div class="relative flex flex-col min-h-screen overflow-x-hidden selection:bg-neon-blue/30 selection:text-white">
+    <div class="fixed inset-0 -z-30 pointer-events-none transition-colors duration-1000 bg-[#050505]"
+         style="background: radial-gradient(35% 35% at 15% 20%, rgba(0,191,255,0.12), rgba(5,5,5,0.6) 40%), radial-gradient(45% 45% at 85% 75%, rgba(128,0,255,0.08), rgba(5,5,5,0.75) 50%);">
+    </div>
     
     <header v-if="!isAdminRoute" class="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0a0f1a]/70 backdrop-blur-2xl transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -157,7 +160,7 @@ const handleLogout = () => {
       </div>
     </header>
 
-    <main class="flex-grow flex flex-col items-center w-full relative z-10">
+    <main class="flex-grow flex flex-col items-center w-full relative z-10 overflow-x-hidden">
         <router-view />
     </main>
   </div>

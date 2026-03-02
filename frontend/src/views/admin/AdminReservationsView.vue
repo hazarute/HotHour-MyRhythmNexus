@@ -72,41 +72,7 @@ onUnmounted(() => {
     <div class="flex-1 overflow-y-auto p-4 md:p-8">
         <div class="flex flex-col gap-6">
             
-            <!-- Toolbar: Search, Filters, Notifications, Create, Refresh (aligned like AdminDashboard) -->
-            <div class="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="relative w-full md:max-w-lg">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
-                    </div>
-                    <input 
-                        v-model="searchQuery"
-                        class="w-full bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-600 shadow-sm transition-all outline-none" 
-                        placeholder="Rezervasyon Kodu, Misafir Adı veya Stüdyo ara..." 
-                        type="text"
-                    />
-                </div>
-
-                <div class="flex items-center gap-3 md:gap-4">
-                    <div ref="filterDropdownRef" class="relative z-50" @click.stop>
-                        <button @click.stop="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
-                            <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
-                            {{ RESERVATION_FILTERS[statusFilter] || statusFilter }}
-                        </button>
-                        <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-[70] py-1 pointer-events-auto">
-                            <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
-                            <button @click="statusFilter = 'PENDING_ON_SITE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Bekliyor</button>
-                            <button @click="statusFilter = 'CONFIRMED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Onaylandı</button>
-                            <button @click="statusFilter = 'COMPLETED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Giriş Yapıldı</button>
-                            <button @click="statusFilter = 'CHECKED_IN'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Check-in</button>
-                            <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal</button>
-                        </div>
-                    </div>
-
-                    <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
-                        <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">autorenew</span> Yenile
-                    </button>
-                </div>
-            </div>
+            <!-- Toolbar moved into table container below -->
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,6 +123,42 @@ onUnmounted(() => {
 
             <!-- Table Container -->
             <div class="bg-white dark:bg-[#1a2230] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <!-- Toolbar: Search, Filters and Refresh (placed directly above the list) -->
+                <div class="flex flex-wrap items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div class="relative w-full md:max-w-2xl">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
+                        </div>
+                        <input
+                            v-model="searchQuery"
+                            class="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-400 dark:placeholder-slate-600 text-sm"
+                            placeholder="Rezervasyon Kodu, Misafir Adı veya Stüdyo ara..."
+                            type="text"
+                        />
+                    </div>
+
+                    <div class="flex items-center gap-3 md:gap-4">
+                        <div ref="filterDropdownRef" class="relative z-50" @click.stop>
+                            <button @click.stop="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span>
+                                {{ RESERVATION_FILTERS[statusFilter] || statusFilter }}
+                            </button>
+                            <div v-if="showFilterDropdown" class="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-[70] py-1 pointer-events-auto">
+                                <button @click="statusFilter = 'ALL'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Tümü</button>
+                                <button @click="statusFilter = 'PENDING_ON_SITE'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Bekliyor</button>
+                                <button @click="statusFilter = 'NO_SHOW'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Katılmadı</button>
+                                <button @click="statusFilter = 'CONFIRMED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Onaylandı</button>
+                                <button @click="statusFilter = 'COMPLETED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Giriş Yapıldı</button>
+                                <button @click="statusFilter = 'CHECKED_IN'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">Check-in</button>
+                                <button @click="statusFilter = 'CANCELLED'; showFilterDropdown = false" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f]">İptal</button>
+                            </div>
+                        </div>
+
+                        <button @click="fetchReservations" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 flex items-center">
+                            <span class="material-symbols-outlined align-middle mr-1 text-[18px] md:text-[20px]">autorenew</span> Yenile
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Mobile List View -->
                 <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
@@ -179,18 +181,19 @@ onUnmounted(() => {
                             </span>
                          </div>
                          
-                         <div class="flex items-center gap-3 bg-slate-50 dark:bg-[#232d3f]/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center gap-3 bg-slate-50 dark:bg-[#232d3f]/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                             <div class="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
                                 {{ (res.user_name || 'GK').substring(0,2).toUpperCase() }}
                             </div>
                             <div class="flex flex-col min-w-0">
                                 <span class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ res.user_name || 'Misafir' }}</span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ res.auction_title || 'Bilinmeyen Oturum' }}</span>
+                                <span class="text-xs text-slate-400 mt-1">Hizmet: {{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</span>
                             </div>
                          </div>
 
                          <div class="flex justify-end pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
-                            <template v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'">
+                            <template v-if="res.status === 'PENDING_ON_SITE'">
                                 <button @click="handleCancel(res.id)" class="flex-1 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-sm font-medium py-2.5 rounded-lg transition-all">
                                     İptal Et
                                 </button>
@@ -213,6 +216,7 @@ onUnmounted(() => {
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rezervasyon Kodu</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Misafir Adı</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Oturum Adı</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hizmet Zamanı</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Giriş Durumu</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">İşlem</th>
                             </tr>
@@ -220,11 +224,11 @@ onUnmounted(() => {
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                             
                             <tr v-if="loading" class="animate-pulse">
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-400">Yükleniyor...</td>
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-400">Yükleniyor...</td>
                             </tr>
                             
                             <tr v-else-if="paginatedReservations.length === 0">
-                                <td colspan="5" class="px-6 py-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
+                                <td colspan="6" class="px-6 py-12 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
                                     <span class="material-symbols-outlined text-4xl opacity-50">inbox</span>
                                     <p>Aramanızla eşleşen rezervasyon bulunamadı.</p>
                                 </td>
@@ -250,6 +254,10 @@ onUnmounted(() => {
                                     <div class="text-xs text-slate-400">Stüdyo A</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
+                                    <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</div>
+                                    <div class="text-xs text-slate-400">{{ res.scheduled_at ? new Date(res.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '' }}</div>
+                                </td>
+                                <td class="px-6 py-5 whitespace-nowrap">
                                     <span :class="getReservationStatusMeta(res.status).class" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-transparent">
                                         <span :class="getReservationStatusMeta(res.status).dot" class="w-1.5 h-1.5 rounded-full"></span>
                                         {{ getReservationStatusMeta(res.status).label }}
@@ -257,7 +265,7 @@ onUnmounted(() => {
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <template v-if="res.status !== 'CANCELLED' && res.status !== 'COMPLETED'">
+                                        <template v-if="res.status === 'PENDING_ON_SITE'">
                                         <button @click="handleCancel(res.id)" class="inline-flex items-center justify-center px-4 py-2 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-all">
                                             İptal
                                         </button>

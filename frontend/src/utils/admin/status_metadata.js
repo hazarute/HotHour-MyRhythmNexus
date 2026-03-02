@@ -28,8 +28,11 @@ export const getReservationStatusMeta = (status) => {
         case 'CHECKED_IN':
             return { label: 'Giriş Yapıldı', class: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' }
         case 'PENDING_ON_SITE':
-        case 'CONFIRMED':
             return { label: 'Bekliyor', class: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', dot: 'bg-amber-500' }
+        case 'NO_SHOW':
+            return { label: 'Katılmadı', class: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300', dot: 'bg-orange-500' }
+        case 'CONFIRMED':
+            return { label: 'Onaylandı', class: 'bg-primary/10 text-primary border-primary/20', dot: 'bg-primary' }
         case 'CANCELLED':
             return { label: 'İptal', class: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' }
         default:
@@ -47,6 +50,7 @@ export const getAllowedGenderLabel = (auction) => {
 export const RESERVATION_FILTERS = {
     'ALL': 'Tümü',
     'PENDING_ON_SITE': 'Bekliyor',
+    'NO_SHOW': 'Katılmadı',
     'CONFIRMED': 'Onaylandı',
     'COMPLETED': 'Giriş Yapıldı',
     'CHECKED_IN': 'Giriş Yapıldı',

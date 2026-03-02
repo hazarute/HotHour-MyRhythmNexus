@@ -217,7 +217,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="auctionStore.loading && !auction" class="flex flex-col items-center justify-center min-h-screen bg-[#050505] text-white">
+  <div v-if="auctionStore.loading && !auction" class="flex flex-col items-center justify-center min-h-screen text-white">
     <div class="relative w-24 h-24 mb-6">
         <div class="absolute inset-0 rounded-full border-t-2 border-neon-blue animate-spin"></div>
         <div class="absolute inset-2 rounded-full border-r-2 border-purple-500 animate-spin opacity-70" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
@@ -226,8 +226,7 @@ onUnmounted(() => {
   </div>
 
   <div v-else-if="auction" 
-       class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-1000 overflow-hidden font-sans"
-       :class="themeClasses.bgMain">
+       class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-1000 font-sans">
        
     <div class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none transition-colors duration-1000 mix-blend-screen"
          :style="{ backgroundColor: themeClasses.glowColor }"></div>
@@ -346,6 +345,16 @@ onUnmounted(() => {
                         class="w-full py-5 text-xl font-black uppercase tracking-widest rounded-2xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
                     />
                 </div>
+
+                <div class="w-full mt-4 text-center">
+                    <p class="text-xs text-slate-500">
+                        Rezervasyon yaparak 
+                        <router-link to="/terms-of-use" class="text-neon-blue hover:text-blue-400 underline transition-colors">
+                            kullanım şartlarını
+                        </router-link>
+                        kabul etmiş olursunuz.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -368,7 +377,7 @@ onUnmounted(() => {
 
   </div>
   
-  <div v-else class="min-h-screen flex flex-col items-center justify-center bg-[#050505] text-white">
+  <div v-else class="min-h-screen flex flex-col items-center justify-center text-white">
         <span class="material-symbols-outlined text-6xl text-slate-600 mb-4">search_off</span>
         <h2 class="text-2xl font-bold text-slate-400 mb-6">Oturum bulunamadı veya süresi dolmuş</h2>
         <button @click="router.push('/')" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold uppercase tracking-wider text-sm">
