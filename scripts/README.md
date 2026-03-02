@@ -7,6 +7,7 @@
 3. **delete_admin.py** - Admin hesabı silme
 4. **delete_user.py** - Herhangi bir kullanıcı hesabı silme
 5. **railway_debug.ps1** - Railway backend/frontend log ve SSH debug yardımcısı
+6. **railway_fetch_diagnose.py** - Failed to fetch/CORS/API URL teşhis scripti
 
 ---
 
@@ -47,6 +48,37 @@ $env:RAILWAY_ENVIRONMENT="production"
 - `ssh-backend`: backend servise SSH açar
 - `ssh-frontend`: frontend servise SSH açar
 - `help`: kısa yardım ekranı
+
+---
+
+## 🔎 railway_fetch_diagnose.py
+
+Frontend bundle içindeki API URL’i, backend erişilebilirliği ve CORS preflight durumunu tek komutta kontrol eder.
+
+### Kullanım
+
+```powershell
+python .\scripts\railway_fetch_diagnose.py \
+   --frontend-url https://hothour-frontend.up.railway.app \
+   --backend-url https://hothour-myrhythmnexus-production.up.railway.app \
+   --origin https://hothour-frontend.up.railway.app \
+   --origin https://kayraspace.com \
+   --origin https://www.kayraspace.com \
+   --origin https://tugbadanspor.kayraspace.com \
+   --railway-service-backend "HotHour-MyRhythmNexus" \
+   --railway-service-frontend "HotHour - FrontEnd" \
+   --railway-environment production \
+   --railway-lines 120
+```
+
+### Ne kontrol eder?
+
+- Frontend index + main bundle bulunuyor mu?
+- Bundle içinde doğru backend URL gömülü mü?
+- Bundle’da `localhost` izi var mı?
+- Backend `/health` ve `/api/v1/auctions` yanıt veriyor mu?
+- Verdiğin origin listesi için CORS preflight başarılı mı?
+- Opsiyonel olarak Railway backend/frontend son log örneklerini gösterir.
 
 ---
 

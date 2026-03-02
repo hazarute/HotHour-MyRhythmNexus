@@ -35,17 +35,17 @@ export const useAuctionStore = defineStore('auction', () => {
             const sameOriginBase = getSameOriginBase()
 
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
-                response = await authStore.fetchWithAuth('/api/v1/auctions?include_computed=true')
+                response = await authStore.fetchWithAuth('/api/v1/auctions/?include_computed=true')
             } else {
                 if (!primaryBase) {
                     throw new Error('VITE_API_URL tanımlı değil')
                 }
 
                 try {
-                    response = await fetch(`${primaryBase}/api/v1/auctions?include_computed=true`)
+                    response = await fetch(`${primaryBase}/api/v1/auctions/?include_computed=true`)
                 } catch (networkError) {
                     if (!sameOriginBase) throw networkError
-                    response = await fetch(`${sameOriginBase}/api/v1/auctions?include_computed=true`)
+                    response = await fetch(`${sameOriginBase}/api/v1/auctions/?include_computed=true`)
                 }
             }
 
