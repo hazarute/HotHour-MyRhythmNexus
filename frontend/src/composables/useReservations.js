@@ -54,9 +54,12 @@ export function useReservations() {
     try {
       if (!guardAuth()) return
 
-      const response = await fetch(`${getBaseUrl()}/api/v1/reservations/my/all`, {
-        headers: authHeaders()
-      })
+      let response
+      if (authStore && typeof authStore.fetchWithAuth === 'function') {
+        response = await authStore.fetchWithAuth('/api/v1/reservations/my/all', { method: 'GET' })
+      } else {
+        response = await fetch(`${getBaseUrl()}/api/v1/reservations/my/all`, { headers: authHeaders() })
+      }
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -107,10 +110,12 @@ export function useReservations() {
       cancellationFeedback.value = null
       cancellationFeedbackReservationId.value = null
 
-      const response = await fetch(`${getBaseUrl()}/api/v1/reservations/${reservationId}`, {
-        method: 'DELETE',
-        headers: authHeaders()
-      })
+      let response
+      if (authStore && typeof authStore.fetchWithAuth === 'function') {
+        response = await authStore.fetchWithAuth(`/api/v1/reservations/${reservationId}`, { method: 'DELETE' })
+      } else {
+        response = await fetch(`${getBaseUrl()}/api/v1/reservations/${reservationId}`, { method: 'DELETE', headers: authHeaders() })
+      }
 
       if (!response.ok) {
         if (response.status === 401) {

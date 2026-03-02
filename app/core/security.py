@@ -19,6 +19,18 @@ def create_access_token(subject: Union[str, Any], expires_delta: timedelta = Non
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
+def create_refresh_token(subject: Union[str, Any], expires_delta: timedelta = None) -> str:
+    """Create a refresh token JWT. By default uses REFRESH_TOKEN_EXPIRE_DAYS from settings."""
+    if expires_delta:
+        expire = now_tr() + expires_delta
+    else:
+        expire = now_tr() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
 def create_verification_token(email: str) -> str:
     """Creates a JWT specifically for email verification"""
     expires_delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)

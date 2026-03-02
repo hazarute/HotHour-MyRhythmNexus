@@ -23,8 +23,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # Security
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 # 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 2 # 2 days
+    # Refresh tokens lifetime (in days)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7 # 7 days
     SECRET_KEY: str = "change-me-locally" # Bu değer .env'den ezilir
+    # Redis (optional) for shared state like token revocation
+    REDIS_URL: str | None = None
+    # Key prefix used in Redis for revoked tokens
+    REDIS_REVOKED_KEY_PREFIX: str = "revoked_refresh:"
 
     # Email
     SMTP_HOST: str | None = None

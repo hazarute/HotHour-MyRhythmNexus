@@ -67,10 +67,15 @@ def create_application() -> FastAPI:
 
     @application.get("/health")
     async def health_check():
+        # Include Redis health information when available
+        from app.core.redis_client import ping_redis
+
+        redis_ok = ping_redis()
         return {
-            "status": "active", 
+            "status": "active",
             "version": settings.PROJECT_VERSION,
-            "project": settings.PROJECT_NAME
+            "project": settings.PROJECT_NAME,
+            "redis": "available" if redis_ok else "unavailable",
         }
 
     return application

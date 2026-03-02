@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
+from pydantic import BaseModel
 from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserPasswordUpdate
 from app.services.user_service import user_service
 from app.core import security
 from app.core.deps import get_current_user
+from app.core.token_revocation import is_refresh_token_revoked, revoke_refresh_token
+from app.core.db import db
 from app.core.email import send_verification_email
 from datetime import timedelta
 from app.core.config import settings
@@ -65,6 +68,8 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
         access_token = security.create_access_token(
             subject=user.id, expires_delta=access_token_expires
         )
+        refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
         
         # Build user response with Prisma->Pydantic field mappings
         # Note: Prisma Client Python converts schema fields (camelCase) to snake_case attributes
@@ -82,6 +87,7 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
         return {
             "access_token": access_token,
             "token_type": "bearer",
+            "refresh_token": refresh_token,
             "user": user_response,
         }
     except Exception as e:
@@ -166,6 +172,8 @@ async def login(user_in: UserLogin):
     access_token = security.create_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
     
     # Build user response with Prisma->Pydantic field mappings
     user_response = UserResponse(
@@ -182,8 +190,69 @@ async def login(user_in: UserLogin):
     return {
         "access_token": access_token,
         "token_type": "bearer",
+        "refresh_token": refresh_token,
         "user": user_response,
     }
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_token(req: RefreshRequest):
+    # Reject if this refresh token has been revoked
+    if is_refresh_token_revoked(req.refresh_token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked")
+
+    payload = security.decode_token(req.refresh_token)
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
+
+    sub = payload.get("sub")
+    if not sub:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+
+    user = await db.user.find_unique(where={"id": int(sub)})
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(subject=user.id, expires_delta=access_token_expires)
+    refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    new_refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
+
+    user_response = UserResponse(
+        id=user.id,
+        email=getattr(user, 'email', ''),
+        full_name=getattr(user, 'full_name', getattr(user, 'fullName', '')),
+        phone=getattr(user, 'phone', ''),
+        gender=getattr(user, 'gender', 'FEMALE'),
+        role=getattr(user, 'role', 'USER'),
+        is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
+        created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": new_refresh_token,
+        "user": user_response,
+    }
+
+
+@router.post("/revoke", status_code=status.HTTP_200_OK)
+async def revoke_token(req: RefreshRequest):
+    """Revoke a refresh token so it can no longer be exchanged."""
+    payload = security.decode_token(req.refresh_token)
+    if not payload or payload.get("type") != "refresh":
+        # Still accept and mark token string as revoked to be safe
+        revoke_refresh_token(req.refresh_token)
+        return {"message": "Token revoked"}
+
+    # Mark token as revoked
+    revoke_refresh_token(req.refresh_token)
+    return {"message": "Token revoked"}
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user=Depends(get_current_user)):

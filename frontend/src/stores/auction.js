@@ -15,7 +15,13 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions?include_computed=true`)
+            const authStore = useAuthStore()
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth('/api/v1/auctions?include_computed=true')
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions?include_computed=true`)
+            }
             if (!response.ok) {
                 throw new Error('Failed to fetch auctions')
             }
@@ -32,7 +38,13 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`)
+            const authStore = useAuthStore()
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth(`/api/v1/auctions/${id}`)
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`)
+            }
             if (!response.ok) {
                 throw new Error('Failed to fetch auction details')
             }
@@ -118,15 +130,12 @@ export const useAuctionStore = defineStore('auction', () => {
         loading.value = true
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-            const response = await fetch(`${baseUrl}/api/v1/auctions/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authStore.token}`
-                },
-                body: JSON.stringify(payload)
-            })
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth('/api/v1/auctions/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
+            }
 
             if (!response.ok) {
                 const errData = await response.json()
@@ -150,19 +159,17 @@ export const useAuctionStore = defineStore('auction', () => {
         error.value = null
         
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            // const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
             // Extract id from payload
             const { id, ...data } = payload
             if (!id) throw new Error("Auction ID is required for update")
 
-            const response = await fetch(`${baseUrl}/api/v1/auctions/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authStore.token}`
-                },
-                body: JSON.stringify(data)
-            })
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth(`/api/v1/auctions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(data) })
+            }
 
             if (!response.ok) {
                 const errData = await response.json()
@@ -194,13 +201,12 @@ export const useAuctionStore = defineStore('auction', () => {
         error.value = null
 
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-            const response = await fetch(`${baseUrl}/api/v1/auctions/${auctionId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${authStore.token}`
-                }
-            })
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth(`/api/v1/auctions/${auctionId}`, { method: 'DELETE' })
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${auctionId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authStore.token}` } })
+            }
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}))
@@ -231,20 +237,17 @@ export const useAuctionStore = defineStore('auction', () => {
         pendingBookingAuctionId.value = auctionId
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
             const payload = {
                 auction_id: auctionId,
                 user_id: authStore.user.id
             }
 
-            const response = await fetch(`${baseUrl}/api/v1/reservations/book`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authStore.token}`
-                },
-                body: JSON.stringify(payload)
-            })
+            let response
+            if (authStore && typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth('/api/v1/reservations/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            } else {
+                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/reservations/book`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
+            }
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))

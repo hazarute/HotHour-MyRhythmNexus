@@ -10,6 +10,7 @@ Field mappings:
 """
 
 from pydantic import BaseModel, EmailStr, field_validator
+from typing import Optional
 from enum import Enum
 from datetime import datetime
 import re
@@ -243,6 +244,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse  # Include user data with token
+    refresh_token: Optional[str] = None
 
 
 class TokenData(BaseModel):

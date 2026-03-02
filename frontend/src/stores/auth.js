@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
     // State
     const user = ref(JSON.parse(localStorage.getItem('user')) || null)
     const token = ref(localStorage.getItem('token') || null)
+    const refreshToken = ref(localStorage.getItem('refresh_token') || null)
     const loading = ref(false)
     const error = ref(null)
 
@@ -40,12 +41,14 @@ export const useAuthStore = defineStore('auth', () => {
             
             // Set State
             token.value = data.access_token
+            refreshToken.value = data.refresh_token || null
             // Ideally decode token or fetch /me to get user details
             // For now, we'll fetch the user profile immediately
             await fetchUserProfile(data.access_token)
 
             // Persist
             localStorage.setItem('token', token.value)
+            if (refreshToken.value) localStorage.setItem('refresh_token', refreshToken.value)
             
             return true
         } catch (err) {
@@ -63,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
             // Endpoint is currently under the auth router prefix
             const response = await fetch(`${baseUrl}/api/v1/auth/me`, {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken || token.value}`
                 }
             })
             
@@ -82,11 +85,10 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null
         try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-            const response = await fetch(`${baseUrl}/api/v1/auth/change-password`, {
+            const response = await fetchWithAuth('/api/v1/auth/change-password', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token.value}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
             })
@@ -107,16 +109,82 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     function logout() {
+        // Try to revoke refresh token on server (best-effort)
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            if (refreshToken.value) {
+                fetch(`${baseUrl}/api/v1/auth/revoke`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh_token: refreshToken.value })
+                }).catch(() => {})
+            }
+        } catch (_e) {
+            // ignore
+        }
+
         user.value = null
         token.value = null
+        refreshToken.value = null
         localStorage.removeItem('user')
         localStorage.removeItem('token')
-        // router.push('/login') // Can be handled by component
+        localStorage.removeItem('refresh_token')
+        router.push('/login')
+    }
+
+    async function refreshTokens() {
+        if (!refreshToken.value) return false
+        try {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const resp = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken.value })
+            })
+            if (!resp.ok) return false
+            const data = await resp.json()
+            token.value = data.access_token
+            refreshToken.value = data.refresh_token || refreshToken.value
+            localStorage.setItem('token', token.value)
+            if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token)
+            await fetchUserProfile(token.value)
+            return true
+        } catch (err) {
+            console.error('Refresh token failed', err)
+            return false
+        }
+    }
+
+    async function fetchWithAuth(path, options = {}) {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+        const url = `${baseUrl}${path}`
+        options.headers = options.headers || {}
+        if (token.value) {
+            options.headers['Authorization'] = `Bearer ${token.value}`
+        }
+
+        let resp = await fetch(url, options)
+        if (resp.status !== 401) return resp
+
+        // Try to refresh once
+        const ok = await refreshTokens()
+        if (!ok) {
+            // Logout and optionally redirect
+            logout()
+            router.push('/login')
+            return resp
+        }
+
+        // Retry original request with new token
+        options.headers['Authorization'] = `Bearer ${token.value}`
+        resp = await fetch(url, options)
+        return resp
     }
 
     return {
         user,
         token,
+        refreshToken,
         loading,
         error,
         isAuthenticated,
@@ -124,6 +192,8 @@ export const useAuthStore = defineStore('auth', () => {
         login,
         logout,
         fetchUserProfile,
-        changePassword
+        changePassword,
+        fetchWithAuth,
+        refreshTokens
     }
 })

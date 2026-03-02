@@ -22,14 +22,14 @@ onMounted(async () => {
         return
     }
 
-    try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-        const response = await fetch(`${baseUrl}/api/v1/auth/verify-email?token=${token}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
+  try {
+    let response
+    if (authStore && typeof authStore.fetchWithAuth === 'function') {
+      response = await authStore.fetchWithAuth(`/api/v1/auth/verify-email?token=${token}`, { method: 'GET' })
+    } else {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+      response = await fetch(`${baseUrl}/api/v1/auth/verify-email?token=${token}`, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+    }
 
         if (response.ok) {
             success.value = true

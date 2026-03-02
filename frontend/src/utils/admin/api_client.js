@@ -24,7 +24,13 @@ export const adminFetch = async (endpoint, options = {}, authStore) => {
         }
     }
 
-    const response = await fetch(url, fetchOptions)
+    // If an authStore with fetchWithAuth is provided, prefer it (supports auto-refresh)
+    let response
+    if (authStore && typeof authStore.fetchWithAuth === 'function') {
+        response = await authStore.fetchWithAuth(url.replace(baseUrl, ''), fetchOptions)
+    } else {
+        response = await fetch(url, fetchOptions)
+    }
 
     if (!response.ok) {
         let errorMsg = 'Sunucu isteği başarısız oldu'

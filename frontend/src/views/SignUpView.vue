@@ -110,26 +110,27 @@ const handleSignUp = async () => {
 
   loading.value = true
   error.value = ''
-  try {
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
-    const registerData = {
-      email: formData.value.email,
-      password: formData.value.password,
-      full_name: formData.value.full_name,
-      phone: formData.value.phone,
-      gender: formData.value.gender
-    }
+    try {
+      const registerData = {
+        email: formData.value.email,
+        password: formData.value.password,
+        full_name: formData.value.full_name,
+        phone: formData.value.phone,
+        gender: formData.value.gender
+      }
 
-    const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(registerData)
-    })
+      let response
+      if (authStore && typeof authStore.fetchWithAuth === 'function') {
+        response = await authStore.fetchWithAuth('/api/v1/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registerData) })
+      } else {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+        response = await fetch(`${baseUrl}/api/v1/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(registerData) })
+      }
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}))
-      throw new Error(errData.detail || 'Kayıt başarısız')
-    }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.detail || 'Kayıt başarısız')
+      }
 
     success.value = 'Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...'
     error.value = ''
