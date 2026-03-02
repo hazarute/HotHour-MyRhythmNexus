@@ -32,3 +32,12 @@ Refactoring yapılırken;
 - Pinia Store'lar (ör: global auth/auction socket) **bozulmayacaktır**.
 - Backend Endpoint ve Prisma şemasına **kesinlikle** dokunulmayacaktır (mevcut backend mükemmel çalışmaktadır).
 - Refactor sonrası tüm view'lar mevcut HTML iskeleti ile ayni id/class yapılarına derlenmeli, tasarımda piksel kayması yaşanmamalıdır.
+
+## Sağlık ve Operasyonel Pattern'lar
+
+- `/health` endpoint'i uygulamanın temel durumunu döndürmelidir (status, version, project) ve opsiyonel olarak çevresel bağımlılıkların (DB, Redis, vs.) basit ping sonuçlarını içermelidir. Bu sayede load balancer veya orkestratörler kolayca servis sağlığını denetleyebilir.
+- Redis gibi opsiyonel bağımlılıklar için lazy init ve `ping`-bazlı health check pattern'ı uygulanmalıdır (`app/core/redis_client.py` örneği). Bağlantı başarısızsa kodun güvenli fallback kullanması sağlanmalıdır.
+
+## Güvenlik Notu: `jti` vs Full Token
+
+- Revocation saklarken tam token stringini tutmak yerine JWT içindeki `jti` (token id) tutmak genellikle daha verimlidir ve veri tabanında saklama maliyetini azaltır. Eğer `jti` kullanılırsa, refresh akışında gelen token'ın `jti` değeri kontrol edilir ve blacklist'te ise reddedilir.

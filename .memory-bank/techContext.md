@@ -28,3 +28,9 @@
 ### 4) Bağlantı ve Hata Toleransı
 - Backend connection'larında (Socket kesilmesi, Prisma reconnect vb.) sağlanan yüksek dayanıklılık aynen sürdürülecektir.
 - API wrapper yazılırken mutlaka HTTP çağrılarındaki "auth" hatası veya "server error" durumları global/local error state'ine yönlendirilmeli (mevcut toast veya error-alert bileşenleri kullanılmalı).
+
+## Redis (Opsiyonel Altyapı)
+
+- Redis, paylaşılan kısa süreli state (örn. revoked refresh token setleri), pub/sub (socket message queue) ve caching için kullanılması önerilen hafif, bellek tabanlı bir veri katmanıdır.
+- Bu projede refresh-token revocation için Redis destekli bir blacklist eklendi; `.env` içindeki `REDIS_URL` ayarı ile etkinleştirilebilir. Redis yoksa kod process-local in-memory fallback kullanır (çoklu worker ortamı için önerilmez).
+- Öneri: production ortamlarında `REDIS_URL` ve uygun TLS/auth ayarları ile Redis'i etkinleştiriniz; revocation kayıtları için token `jti` kullanımı ile saklama maliyetini düşürmeyi düşünün.

@@ -56,3 +56,17 @@ Sıradaki olası adımlar:
 * Format fonksiyonları için `utils/formatters.js` tek kaynak — inline tanımlama yapılmamalı.
 * `utils/reservationStatus.js` — rezervasyon durumu eşlemesi için tek kaynak.
 * Admin view'larına dokunulmadı — R5 ile zaten clean mimaride.
+
+## Recent Changes (2026-03-02)
+
+- **Auth / Session:** Backend tarafında `ACCESS_TOKEN_EXPIRE_MINUTES` 8 günden 2 güne çekildi; `REFRESH_TOKEN_EXPIRE_DAYS` eklendi. (`app/core/config.py`)
+- **Refresh Token:** `create_refresh_token()` eklendi ve `login`/`register` endpointleri artık `refresh_token` döndürüyor; `/api/v1/auth/refresh` endpoint'i eklendi. (`app/core/security.py`, `app/api/auth.py`)
+- **Frontend auth:** `frontend/src/stores/auth.js` güncellendi — `refresh_token` saklanıyor, `refreshTokens()` ve `fetchWithAuth()` eklendi; 401 alındığında otomatik yenileme deneniyor, başarısızsa `logout()` yapılıyor.
+- **.env:** `ACCESS_TOKEN_EXPIRE_MINUTES` ve `REFRESH_TOKEN_EXPIRE_DAYS` değerleri `.env` içine eklendi (development overrides).
+
+- **Revocation & Redis:** Refresh-token revocation Redis destekli bir blacklist ile uygulandı; Redis yoksa process-local (in-memory) fallback kullanılıyor. Yeni yardımcılar eklendi: `app/core/redis_client.py` (lazy Redis client + `ping_redis()`), `app/core/token_revocation.py` (Redis-backed revoke/is_revoked API).
+- **Health check:** `/health` endpoint'i Redis ping bilgisini dönecek şekilde güncellendi (`app/main.py`).
+- **Requirements:** `redis>=4.6.0` `requirements.txt` içine eklendi.
+- **Testler:** Backend ve frontend testleri çalıştırıldı; backend `pytest` → 76 passed, frontend `vitest` → 121 passed. Revocation akışı için unit testler eklendi ve geçti.
+
+Bu değişiklikler backend ve frontend arasında oturum yenileme (refresh) akışı sağlamaya yönelik olup, frontend tarafında servislerin `fetchWithAuth()` kullanacak şekilde güncellenmesi önerilir.

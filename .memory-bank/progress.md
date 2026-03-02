@@ -160,6 +160,29 @@ Status → renk/label mapping'i `statusMetadata` yardımcı dosyasına taşınab
   - `tests/useReservations.test.js` — 26 test ✅
   - **Toplam: 118/118 test geçti** (`npm run test:unit -- --run`)
 
+  ---
+
+  ## Yeni Küçük Görevler (2026-03-02)
+
+  Bu oturumda yapılan hızlı operasyonel değişiklikler:
+
+  - **Auth: Token süreleri ve refresh token desteği** — `app/core/config.py`, `app/core/security.py`, `app/api/auth.py`, `app/models/user.py` dosyaları güncellendi. (Durum: TAMAMLANDI)
+  - **Frontend auth store güncellemesi** — `frontend/src/stores/auth.js` artık `refresh_token` saklıyor, `fetchWithAuth()` ve `refreshTokens()` ile 401 sonrası otomatik yenileme yapıyor. (Durum: TAMAMLANDI)
+  - **.env güncellemesi** — `ACCESS_TOKEN_EXPIRE_MINUTES` ve `REFRESH_TOKEN_EXPIRE_DAYS` eklendi. (Durum: TAMAMLANDI)
+
+  - **Revocation & Redis** — Redis destekli revocation ve yardımcı modüller eklendi: `app/core/redis_client.py`, `app/core/token_revocation.py`. `.env` içinde `REDIS_URL` ve `REDIS_REVOKED_KEY_PREFIX` eklendi. (Durum: TAMAMLANDI)
+  - **Requirements** — `redis>=4.6.0` `requirements.txt` içine eklendi.
+  - **Sağlık Kontrolü** — `/health` endpoint'ine Redis ping bilgisini döndürecek kod eklendi (`app/main.py`).
+  - **Testler** — Backend ve frontend testleri çalıştırıldı; backend `pytest` → 76 passed, frontend `vitest` → 121 passed.
+
+  Önerilen takip görevleri:
+
+  1. Frontend servislerini `fetchWithAuth()` kullanacak şekilde güncelle (tüm fetch çağrılarını tekilleştir).
+  2. Refresh token revocation / blacklist mekanizması ekle (DB tablosu) — güvenlik için önerilir.
+  3. Kısa entegrasyon testi: login -> access token expiry simülasyonu -> refresh akışı testi.
+
+  Bu küçük değişiklikler uygulandı ve kod tabanına işlendi; takip adımlarını istersen uygulayayım.
+
 ---
 
 ### Beklenen Kazanımlar

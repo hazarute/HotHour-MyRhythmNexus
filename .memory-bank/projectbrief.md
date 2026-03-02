@@ -21,6 +21,8 @@ Mevcut aşamadaki ana hedef; teknik borçları temizlemek, modülerliği artırm
 - Kayıt, giriş, rol tabanlı güvenlik, e-posta doğrulama akışları.
 - Turbo mod senkronizasyonları, eşzamanlı rezervasyon race condition engellemeleri, admin rezervasyon yasakları.
 - Otomatik iptal/no-show bildirimlerini kapsayan "Admin Notifications" altyapısı ve bildirim z-index/dış tıklama düzeltmeleri.
+ - Refresh-token revocation için Redis destekli blacklist eklendi; fallback olarak process-local in-memory kullanım devam ediyor. (`app/core/redis_client.py`, `app/core/token_revocation.py`)
+ - Backend & frontend testleri güncellendi ve çalıştırıldı (backend pytest: 76 passed; frontend vitest: 121 passed).
 
 ### Öncelikli Hedef: Neler Yapılacak? (R5 - Admin Refactor)
 - **Ortak Domain Metadata:** `utils/admin/` altında statü etiketleri ve renklerinin merkezileştirilmesi.
