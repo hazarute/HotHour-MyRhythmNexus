@@ -2,6 +2,20 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAuthStore } from './auth'
 
+const normalizeBaseUrl = (value) => {
+    if (!value || typeof value !== 'string') return ''
+    return value.trim().replace(/\/+$/, '')
+}
+
+const getPrimaryApiBase = () => {
+    return normalizeBaseUrl(import.meta.env.VITE_API_URL)
+}
+
+const getSameOriginBase = () => {
+    if (typeof window === 'undefined' || !window.location?.origin) return ''
+    return normalizeBaseUrl(window.location.origin)
+}
+
 export const useAuctionStore = defineStore('auction', () => {
     // State
     const auctions = ref([])
@@ -17,17 +31,30 @@ export const useAuctionStore = defineStore('auction', () => {
         try {
             const authStore = useAuthStore()
             let response
+            const primaryBase = getPrimaryApiBase()
+            const sameOriginBase = getSameOriginBase()
+
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth('/api/v1/auctions?include_computed=true')
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions?include_computed=true`)
+                if (!primaryBase) {
+                    throw new Error('VITE_API_URL tanımlı değil')
+                }
+
+                try {
+                    response = await fetch(`${primaryBase}/api/v1/auctions?include_computed=true`)
+                } catch (networkError) {
+                    if (!sameOriginBase) throw networkError
+                    response = await fetch(`${sameOriginBase}/api/v1/auctions?include_computed=true`)
+                }
             }
+
             if (!response.ok) {
                 throw new Error('Failed to fetch auctions')
             }
             auctions.value = await response.json()
         } catch (err) {
-            error.value = err.message
+            error.value = err?.message || 'Bağlantı hatası oluştu'
             console.error("Failed to fetch auctions:", err)
         } finally {
             loading.value = false
@@ -43,7 +70,11 @@ export const useAuctionStore = defineStore('auction', () => {
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth(`/api/v1/auctions/${id}`)
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`)
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) {
+                    throw new Error('VITE_API_URL tanımlı değil')
+                }
+                response = await fetch(`${primaryBase}/api/v1/auctions/${id}`)
             }
             if (!response.ok) {
                 throw new Error('Failed to fetch auction details')
@@ -134,7 +165,9 @@ export const useAuctionStore = defineStore('auction', () => {
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth('/api/v1/auctions/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) throw new Error('VITE_API_URL tanımlı değil')
+                response = await fetch(`${primaryBase}/api/v1/auctions/`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
             }
 
             if (!response.ok) {
@@ -168,7 +201,9 @@ export const useAuctionStore = defineStore('auction', () => {
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth(`/api/v1/auctions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(data) })
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) throw new Error('VITE_API_URL tanımlı değil')
+                response = await fetch(`${primaryBase}/api/v1/auctions/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(data) })
             }
 
             if (!response.ok) {
@@ -205,7 +240,9 @@ export const useAuctionStore = defineStore('auction', () => {
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth(`/api/v1/auctions/${auctionId}`, { method: 'DELETE' })
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auctions/${auctionId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authStore.token}` } })
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) throw new Error('VITE_API_URL tanımlı değil')
+                response = await fetch(`${primaryBase}/api/v1/auctions/${auctionId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authStore.token}` } })
             }
 
             if (!response.ok) {
@@ -246,7 +283,9 @@ export const useAuctionStore = defineStore('auction', () => {
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
                 response = await authStore.fetchWithAuth('/api/v1/reservations/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
             } else {
-                response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/reservations/book`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) throw new Error('VITE_API_URL tanımlı değil')
+                response = await fetch(`${primaryBase}/api/v1/reservations/book`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authStore.token}` }, body: JSON.stringify(payload) })
             }
 
             if (!response.ok) {

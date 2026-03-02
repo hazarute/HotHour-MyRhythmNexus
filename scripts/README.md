@@ -6,6 +6,47 @@
 2. **list_admins.py** - Admin hesaplarını listeleme
 3. **delete_admin.py** - Admin hesabı silme
 4. **delete_user.py** - Herhangi bir kullanıcı hesabı silme
+5. **railway_debug.ps1** - Railway backend/frontend log ve SSH debug yardımcısı
+
+---
+
+## 🚆 railway_debug.ps1
+
+Railway üzerinde canlıya alınmış backend/frontend servislerine bağlanıp log ve SSH debug yapmak için kullanılır.
+
+### Gereksinimler
+
+- Railway CLI kurulu olmalı
+- Railway hesabına login yapılmış olmalı
+
+```bash
+npm i -g @railway/cli
+railway login
+```
+
+### Kullanım
+
+```powershell
+.\scripts\railway_debug.ps1 -Mode logs -BackendService <backend-service> -FrontendService <frontend-service> -Lines 300 -Follow
+.\scripts\railway_debug.ps1 -Mode ssh-backend -BackendService <backend-service>
+.\scripts\railway_debug.ps1 -Mode ssh-frontend -FrontendService <frontend-service>
+```
+
+### Opsiyonel Env Değişkenleri
+
+```powershell
+$env:RAILWAY_BACKEND_SERVICE="HotHour-MyRhythmNexus"
+$env:RAILWAY_FRONTEND_SERVICE="HotHour-FrontEnd"
+$env:RAILWAY_ENVIRONMENT="production"
+.\scripts\railway_debug.ps1 -Mode logs -Follow
+```
+
+### Modlar
+
+- `logs`: backend/frontend loglarını çeker
+- `ssh-backend`: backend servise SSH açar
+- `ssh-frontend`: frontend servise SSH açar
+- `help`: kısa yardım ekranı
 
 ---
 
