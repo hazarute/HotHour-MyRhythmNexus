@@ -1,16 +1,19 @@
-from typing import List
+import base64
+from email.message import EmailMessage
+import json
+
+import aiohttp
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import EmailStr, NameEmail, SecretStr
 from app.core.config import settings
-from app.core.security import create_verification_token
 import logging
-import asyncio
 
 logger = logging.getLogger(__name__)
 
-# Gmail kontrol
 if settings.EMAILS_ENABLED:
     logger.info(f"📧 Email servisi etkinleştirildi - SMTP: {settings.SMTP_HOST}:{settings.SMTP_PORT}")
+    if settings.GMAIL_API_ENABLED:
+        logger.info("📧 Gmail API email provider aktif")
     logger.info(f"📧 Gönderen email: {settings.EMAILS_FROM_EMAIL}")
 
 conf = ConnectionConfig(
@@ -28,14 +31,82 @@ conf = ConnectionConfig(
     USE_CREDENTIALS=True,
     VALIDATE_CERTS=False  # Gmail için sertifika doğrulama devre dışı
 )
-async def send_email(email_to: EmailStr, subject_template: str, html_template: str):
-    """
-    Base function to send emails
-    """
-    if not settings.EMAILS_ENABLED:
-        logger.info(f"Emails disabled. Skipping email to {email_to}")
-        return
 
+
+def _smtp_configured() -> bool:
+    return bool(settings.SMTP_HOST and settings.SMTP_PORT and settings.EMAILS_FROM_EMAIL)
+
+
+def _gmail_api_configured() -> bool:
+    return bool(
+        settings.GMAIL_API_ENABLED
+        and settings.GMAIL_CLIENT_ID
+        and settings.GMAIL_CLIENT_SECRET
+        and settings.GMAIL_REFRESH_TOKEN
+        and (settings.GMAIL_SENDER_EMAIL or settings.EMAILS_FROM_EMAIL)
+    )
+
+
+async def _get_gmail_access_token() -> str:
+    token_endpoint = "https://oauth2.googleapis.com/token"
+    payload = {
+        "client_id": settings.GMAIL_CLIENT_ID,
+        "client_secret": settings.GMAIL_CLIENT_SECRET,
+        "refresh_token": settings.GMAIL_REFRESH_TOKEN,
+        "grant_type": "refresh_token",
+    }
+
+    timeout = aiohttp.ClientTimeout(total=20)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(token_endpoint, data=payload) as response:
+            text = await response.text()
+            if response.status != 200:
+                raise RuntimeError(f"Gmail token alınamadı ({response.status}): {text[:300]}")
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError("Gmail token yanıtı JSON değil") from exc
+
+    access_token = data.get("access_token")
+    if not access_token:
+        raise RuntimeError("Gmail token yanıtında access_token yok")
+
+    return access_token
+
+
+async def _send_email_via_gmail_api(email_to: EmailStr, subject_template: str, html_template: str) -> None:
+    access_token = await _get_gmail_access_token()
+    sender_email = settings.GMAIL_SENDER_EMAIL or settings.EMAILS_FROM_EMAIL
+
+    if not sender_email:
+        raise RuntimeError("Gmail sender email tanımlı değil")
+
+    message = EmailMessage()
+    message["To"] = str(email_to)
+    message["From"] = sender_email
+    message["Subject"] = subject_template
+    message.set_content("Bu e-posta HTML içerik barındırır.")
+    message.add_alternative(html_template, subtype="html")
+
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
+    payload = {"raw": raw_message}
+
+    timeout = aiohttp.ClientTimeout(total=30)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        ) as response:
+            text = await response.text()
+            if response.status not in (200, 202):
+                raise RuntimeError(f"Gmail API mail gönderimi başarısız ({response.status}): {text[:300]}")
+
+
+async def _send_email_via_smtp(email_to: EmailStr, subject_template: str, html_template: str) -> None:
     recipient_email = str(email_to)
     recipient = NameEmail(name=recipient_email, email=recipient_email)
 
@@ -47,13 +118,40 @@ async def send_email(email_to: EmailStr, subject_template: str, html_template: s
     )
 
     fm = FastMail(conf)
-    try:
-        logger.debug(f"Attempting to send email to {email_to} via {settings.SMTP_HOST}:{settings.SMTP_PORT}")
-        await fm.send_message(message)
-        logger.info(f"✅ Email successfully sent to {email_to}")
-    except Exception as e:
-        logger.error(f"❌ Error sending email to {email_to}: {type(e).__name__}: {str(e)}")
-        raise
+    await fm.send_message(message)
+
+
+async def send_email(email_to: EmailStr, subject_template: str, html_template: str):
+    """
+    Base function to send emails
+    """
+    if not settings.EMAILS_ENABLED:
+        logger.info(f"Emails disabled. Skipping email to {email_to}")
+        return
+
+    if _gmail_api_configured():
+        try:
+            logger.debug(f"Attempting Gmail API email to {email_to}")
+            await _send_email_via_gmail_api(email_to, subject_template, html_template)
+            logger.info(f"✅ Email successfully sent via Gmail API to {email_to}")
+            return
+        except Exception as e:
+            logger.error(f"❌ Gmail API send error for {email_to}: {type(e).__name__}: {str(e)}")
+            if not _smtp_configured():
+                raise
+
+    if _smtp_configured():
+        try:
+            logger.debug(f"Attempting SMTP email to {email_to} via {settings.SMTP_HOST}:{settings.SMTP_PORT}")
+            await _send_email_via_smtp(email_to, subject_template, html_template)
+            logger.info(f"✅ Email successfully sent via SMTP to {email_to}")
+            return
+        except Exception as e:
+            logger.error(f"❌ SMTP send error for {email_to}: {type(e).__name__}: {str(e)}")
+            raise
+
+    logger.error("❌ Email provider yapılandırılmamış. Gmail API veya SMTP ayarlarını kontrol edin.")
+    raise RuntimeError("Email provider not configured")
 
 async def send_verification_email(email_to: str, token: str) -> None:
     """
@@ -255,8 +353,11 @@ async def send_verification_email(email_to: str, token: str) -> None:
     </html>
     """
     
-    await send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=html_content
-    )
+    try:
+        await send_email(
+            email_to=email_to,
+            subject_template=subject,
+            html_template=html_content
+        )
+    except Exception as e:
+        logger.error(f"Verification email could not be sent to {email_to}: {type(e).__name__}: {str(e)}")

@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     SMTP_PORT: int | None = None
     SMTP_user: str | None = None
     SMTP_PASSWORD: str | None = None
+    GMAIL_API_ENABLED: bool = False
+    GMAIL_CLIENT_ID: str | None = None
+    GMAIL_CLIENT_SECRET: str | None = None
+    GMAIL_REFRESH_TOKEN: str | None = None
+    GMAIL_SENDER_EMAIL: str | None = None
     EMAILS_FROM_EMAIL: str | None = None
     EMAILS_FROM_NAME: str | None = None
 
@@ -52,7 +57,15 @@ class Settings(BaseSettings):
 
     @validator("EMAILS_ENABLED", pre=True)
     def get_emails_enabled(cls, v: bool | str, values: dict[str, any]) -> bool:
-        return bool(values.get("SMTP_HOST") and values.get("SMTP_PORT") and values.get("EMAILS_FROM_EMAIL"))
+        smtp_ready = bool(values.get("SMTP_HOST") and values.get("SMTP_PORT") and values.get("EMAILS_FROM_EMAIL"))
+        gmail_ready = bool(
+            values.get("GMAIL_API_ENABLED")
+            and values.get("GMAIL_CLIENT_ID")
+            and values.get("GMAIL_CLIENT_SECRET")
+            and values.get("GMAIL_REFRESH_TOKEN")
+            and (values.get("GMAIL_SENDER_EMAIL") or values.get("EMAILS_FROM_EMAIL"))
+        )
+        return smtp_ready or gmail_ready
 
     class Config:
         case_sensitive = True

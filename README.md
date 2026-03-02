@@ -146,6 +146,13 @@ FRONTEND_URL=https://your-domain.com
 SMTP_HOST=smtp.sendgrid.net
 SMTP_user=apikey
 SMTP_PASSWORD=your-sendgrid-api-key
+
+# Gmail API alternatifi (SMTP timeout durumları için önerilir)
+GMAIL_API_ENABLED=true
+GMAIL_CLIENT_ID=your-google-oauth-client-id
+GMAIL_CLIENT_SECRET=your-google-oauth-client-secret
+GMAIL_REFRESH_TOKEN=your-google-refresh-token
+GMAIL_SENDER_EMAIL=kayraspaceinc@gmail.com
 ```
 cp .env.example .env
 # .env dosyasındaki DATABASE_URL bilgisini düzenleyin
