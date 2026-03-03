@@ -8,6 +8,7 @@
 4. **delete_user.py** - Herhangi bir kullanıcı hesabı silme
 5. **railway_debug.ps1** - Railway backend/frontend log ve SSH debug yardımcısı
 6. **railway_fetch_diagnose.py** - Failed to fetch/CORS/API URL teşhis scripti
+7. **clear_db.py** - Veritabanını temizleme (tümünü veya sadece oturum/rezervasyonları)
 
 ---
 
@@ -361,6 +362,30 @@ Bu kullanıcı hesabını silmek istediğinize emin misiniz? (evet/hayır): evet
 - Silme işlemi **geri alınamaz**
 - Admin hesaplarını silmek için `delete_user.py` veya `delete_admin.py` kullanabilirsiniz
 - Kullanıcı ile ilişkili tüm veriler (rezervasyonlar, teklifler, vb) silinecektir
+
+---
+
+## 🧹 clear_db.py
+
+Veritabanını hızlıca temizlemek veya sadece oturum/veritabanı kalıntılarını silmek için kullanılır.
+
+- **Varsayılan** davranış: tüm rezervasyonlar, bildirimler, açık artırmalar ve kullanıcılar (adminler dahil) silinir.
+- `--sessions-only` seçeneği ile **sadece rezervasyonlar** ve **revoked refresh token** anahtarları (Redis veya in-memory) temizlenir; diğer kayıtlar korunur.
+
+### Kullanım
+
+```bash
+# Tüm veritabanını sil
+python scripts/clear_db.py
+
+# Sadece rezervasyonlar ve oturum anahtarlarını sil
+python scripts/clear_db.py --sessions-only
+```
+
+### Notlar
+
+- İşlem başlamadan önce kullanıcıdan onay istenir.
+- Redis yapılandırılmışsa ilgili anahtarlar taranıp silinir; yoksa bellek içi liste temizlenir.
 
 ---
 
