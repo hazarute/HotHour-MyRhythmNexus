@@ -130,7 +130,7 @@ onMounted(async () => {
           </div>
           <div class="text-[10px] text-slate-500 uppercase tracking-widest pt-4">
             <p class="mb-1">Destek için:</p>
-            <p class="text-slate-400 font-bold">support@hothour.com</p>
+            <p class="text-slate-400 font-bold">kayraspaceinc@gmail.com</p>
           </div>
         </div>
 

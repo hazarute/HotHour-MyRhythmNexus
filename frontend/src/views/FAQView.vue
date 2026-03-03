@@ -79,7 +79,7 @@ const toggleFaq = (index) => {
 
       <div class="mt-12 p-6 bg-neon-magenta/5 border border-neon-magenta/20 rounded-2xl text-center">
         <p class="text-sm text-slate-300 mb-2">Aradığınız cevabı bulamadınız mı?</p>
-        <a href="mailto:support@hothour.com" class="inline-flex items-center gap-2 text-neon-magenta font-bold hover:text-white transition-colors">
+        <a href="mailto:kayraspaceinc@gmail.com" class="inline-flex items-center gap-2 text-neon-magenta font-bold hover:text-white transition-colors">
           <span class="material-symbols-outlined text-[18px]">mail</span>
           Bize Ulaşın
         </a>

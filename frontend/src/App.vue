@@ -196,7 +196,7 @@ const handleLogout = () => {
             
             <div class="flex flex-col gap-3">
               <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Destek</span>
-              <a href="mailto:kayraspace@gmail.com" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors flex items-center gap-1.5 justify-center md:justify-start">
+              <a href="mailto:kayraspaceinc@gmail.com" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors flex items-center gap-1.5 justify-center md:justify-start">
                 <span class="material-symbols-outlined text-[14px]">mail</span>
                 İletişim
               </a>

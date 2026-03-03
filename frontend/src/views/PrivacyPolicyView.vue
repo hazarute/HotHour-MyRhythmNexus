@@ -65,7 +65,7 @@ const lastUpdated = "3 Mart 2026"
           </h2>
           <p>
             Kişisel verilerinizle ilgili her türlü soru ve talebiniz için bizimle iletişime geçebilirsiniz:<br>
-            <strong class="text-neon-blue">E-posta:</strong> <a href="mailto:kayraspace@gmail.com" class="hover:text-white transition-colors">kayraspace@gmail.com</a>
+            <strong class="text-neon-blue">E-posta:</strong> <a href="mailto:kayraspaceinc@gmail.com" class="hover:text-white transition-colors">kayraspaceinc@gmail.com</a>
           </p>
         </section>
 
