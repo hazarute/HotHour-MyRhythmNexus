@@ -1,21 +1,78 @@
 # HotHour ⏳🔥
 
-[![CI Status](https://img.shields.io/github/actions/workflow/status/hothour/core/main?style=flat-square&logo=github)](https://github.com/hothour/core/actions)
-[![Python Version](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![CI](https://img.shields.io/github/actions/workflow/status/hazarute/HotHour-MyRhythmNexus/ci.yml?branch=main&style=flat-square&logo=github)](https://github.com/hazarute/HotHour-MyRhythmNexus/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![ORM](https://img.shields.io/badge/Prisma-Client-blueviolet?style=flat-square&logo=prisma)](https://prisma.io)
 [![License](https://img.shields.io/badge/License-Noncommercial-orange.svg?style=flat-square)](./LICENSE)
 
 > **"Boş Seans Yok, Maksimum Verim."**
-> Pilates stüdyoları ve randevu bazlı işletmeler için "Dinamik Hollanda Açık Artırması" (Dutch Auction) ve "Fırsat Yönetimi" (Yield Management) platformu.
+> Pilates stüdyoları ve randevu bazlı işletmeler için dinamik Hollanda açık artırması (Dutch Auction) + fırsat yönetimi platformu.
 
 ---
 
-## 🏗 Mimari Özeti ve Sistem Akışı
+## 🚀 Hızlı Başlangıç (Quickstart)
 
-HotHour, atıl kapasiteyi gelire dönüştürmek için oyunlaştırılmış (gamified) bir fiyatlandırma motoru kullanır. Sistem, "Hemen Kap" (Booking) mantığı üzerine kuruludur ve online ödeme bariyerini kaldırarak **"Rezervasyon Yap & Yerinde Ödeme"** modelini benimser.
+Backend ve frontend'i yerelde hızlıca ayağa kaldırmak için:
 
-Aşağıdaki **Teknik Mimari**, sistemin veri akışını özetlemektedir:
+```bash
+git clone https://github.com/hazarute/HotHour-MyRhythmNexus.git
+cd HotHour-MyRhythmNexus
+
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
+# source .venv/bin/activate
+
+pip install -r requirements.txt
+cp .env.example .env
+prisma generate
+uvicorn app.main:app --reload
+```
+
+Frontend için ayrı terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- API Docs: `http://localhost:8000/api/v1/docs`
+- Frontend (Vite): `http://localhost:5173`
+
+---
+
+## 🧭 İçindekiler
+
+- [Proje Özeti](#-proje-özeti)
+- [Mimari ve Akış](#-mimari-ve-akış)
+- [Temel Özellikler](#-temel-özellikler)
+- [Teknoloji Yığını](#-teknoloji-yığını)
+- [Kurulum](#-kurulum)
+- [Yapılandırma](#️-yapılandırma)
+- [Kullanım](#-kullanım)
+- [API Örnekleri](#-api-örnekleri)
+- [Test](#-test)
+- [Yol Haritası](#-yol-haritası)
+- [Katkı](#-katkı)
+- [Lisans](#️-lisans)
+
+---
+
+## 🎯 Proje Özeti
+
+**Problem:** Pilates stüdyoları, özellikle hafta içi gündüz saatlerinde boş kalan seansları (dead inventory) satmakta zorlanıyor.
+
+**Çözüm:** HotHour seansları tavan fiyattan başlatır, taban fiyata doğru gerçek zamanlı düşürür ve kullanıcıda FOMO etkisi oluşturarak dönüşüm artırmayı hedefler.
+
+**Değer Teklifi:**
+- Gerçek zamanlı fiyat düşüşü + Socket.IO senkronizasyonu
+- Race-condition korumalı “ilk alan kazanır” rezervasyon akışı
+- Online ödeme zorunluluğu olmadan “rezervasyon yap, stüdyoda öde” modeli
+- Admin paneli ile operasyonel kontrol (turbo tetikleme, yayın, bildirimler)
+
+## 🏗 Mimari ve Akış
 
 ```mermaid
 graph TD
@@ -23,181 +80,184 @@ graph TD
     Admin((Stüdyo Yöneticisi))
 
     subgraph "HotHour Core"
-        FE[Frontend SPA<br/>(Vue.js + Tailwind)]
+        FE[Frontend SPA<br/>(Vue 3 + Pinia + Tailwind)]
         API[Backend API<br/>(FastAPI)]
-        WS[WebSocket Engine<br/>(Socket.io)]
-        Prisma[Prisma Client Py]
+        WS[WebSocket Engine<br/>(Socket.IO)]
+        ORM[Prisma Client Python]
         DB[(PostgreSQL)]
+        REDIS[(Redis - Opsiyonel)]
     end
 
-    User -- "HTTP (Rezervasyon)" --> API
-    User -- "WS (Canlı Fiyat)" --> WS
-    Admin -- "HTTP (Seans Girişi)" --> API
-    API -- "ORM Queries" --> Prisma
-    Prisma -- "SQL" --> DB
-    WS -- "Fiyat Broadcast" --> FE
-    API -- "Turbo Mod Tetikleyici" --> WS
-
+    User -- "HTTP" --> API
+    User -- "WS" --> WS
+    Admin -- "HTTP (Admin)" --> API
+    API -- "ORM Query" --> ORM
+    ORM -- "SQL" --> DB
+    API -- "Revocation / Cache" --> REDIS
+    WS -- "Price Broadcast" --> FE
 ```
 
-## 🎯 Proje Özeti (Project Overview)
+## ✨ Temel Özellikler
 
-**Problem:** Pilates stüdyoları, özellikle hafta içi 10:00 - 17:00 saatleri arasında boş kalan seansları (Dead Inventory) satmakta zorlanmaktadır.
+- 📉 **Dinamik Hollanda Açık Artırması:** Fiyat, tanımlı aralıklarda otomatik düşer.
+- 🔥 **Turbo Mode:** Seans başlangıcına yaklaşınca daha agresif düşüş kuralı devreye girer.
+- ⚡ **Hemen Kap:** Rezervasyon anında fiyat kilitlenir (`locked_price`) ve yarış koşulu korunur.
+- 🔐 **Auth-R Akışı:** Access token (2 gün) + refresh token (7 gün) + token revoke.
+- 🧠 **Redis Opsiyonel Revocation:** Redis varsa merkezi blacklist, yoksa in-memory fallback.
+- 📧 **E-posta Doğrulama:** Kayıt sonrası doğrulama linki ile aktivasyon.
 
-**Çözüm:** HotHour, bu seansları belirlenen bir tavan fiyattan başlatıp, taban fiyata doğru **gerçek zamanlı** olarak düşürür. Kullanıcıda yaratılan "Fırsatı Kaçırma Korkusu" (FOMO), dönüşüm oranlarını artırır.
+## 🛠 Teknoloji Yığını
 
-## ✨ Temel Özellikler (Key Features)
+| Katman | Teknoloji |
+| --- | --- |
+| Backend | Python, FastAPI, Uvicorn, Gunicorn |
+| ORM / DB | Prisma Client Python, PostgreSQL |
+| Realtime | Socket.IO (python-socketio + socket.io-client) |
+| Scheduler | APScheduler |
+| Auth | JWT (python-jose), refresh token, revoke mekanizması |
+| Frontend | Vue 3, Pinia, Vue Router, Vite |
+| Stil | Tailwind CSS v4 |
+| Test | pytest (backend), Vitest (frontend) |
+| Konteyner | Docker / Docker Compose |
 
-* **📉 Dinamik Hollanda Açık Artırması:** Fiyatlar admin tarafından belirlenen aralıklarla (örn: her 30 dakikada bir) otomatik olarak düşer.
-* **🔥 Turbo Mode (Sıcak Saat):** Seansın başlamasına (örn: 2 saat) az kaldığında devreye giren agresif algoritma. Fiyat düşüş hızı artar (örn: her dakika 3₺) ve arayüzde görsel uyarıcılar devreye girer.
-* **⚡ Hemen Kap (Instant Booking):** "Yarış Durumu" (Race Condition) korumalı rezervasyon sistemi. Butona ilk basan fiyatı kilitler (`lockedPrice`) ve seansı kapatır.
-* **🤝 Yerinde Ödeme (Pay-at-Venue):** Kredi kartı zorunluluğu yoktur. Sistem benzersiz bir **Rezervasyon Kodu** (örn: `HOT-8X2A`) üretir; ödeme stüdyoda fiziksel olarak yapılır.
-* **📊 Prisma ORM Entegrasyonu:** Karmaşık SQL sorguları yerine, tip güvenli (type-safe) ve modern veritabanı yönetimi.
+## ⚙️ Kurulum
 
-## 🛠 Teknoloji Yığını (Tech Stack)
+### Önkoşullar
 
-Proje, modern ve ölçeklenebilir bir Micro-SaaS mimarisine uygun olarak tasarlanmıştır.
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL 14+
+- Prisma CLI (`npm i -g prisma`)
 
-| Kategori | Teknoloji | Açıklama |
-| --- | --- | --- |
-| **Backend** | Python, FastAPI | Asenkron, yüksek performanslı API. |
-| **Database** | PostgreSQL | Ana veri saklama alanı. |
-| **ORM** | **Prisma Client Python** | Veritabanı şeması ve migration yönetimi. |
-| **Real-time** | Socket.io | Fiyat senkronizasyonu ve Turbo Mod bildirimleri. |
-| **Frontend** | Vue.js / Tailwind CSS | Reaktif, mobil uyumlu ve neon temalı arayüz. |
-| **Infrastructure** | Docker | Konteynerizasyon. |
+### 1) Repo ve backend bağımlılıkları
 
-## 🚀 Başlangıç Rehberi (Getting Started)
-
-Geliştirme ortamını kurmak için aşağıdaki adımları izleyin.
-
-### Gereksinimler (Prerequisites)
-
-* Python 3.10+
-* PostgreSQL 14+
-* Node.js (Prisma CLI için gereklidir)
-
-### Kurulum (Installation)
-
-1. **Repoyu Klonlayın:**
 ```bash
-git clone [https://github.com/hazarute/HotHour-MyRhythmNexus.git](https://github.com/hazarute/HotHour-MyRhythmNexus.git)
-cd hothour
+git clone https://github.com/hazarute/HotHour-MyRhythmNexus.git
+cd HotHour-MyRhythmNexus
 
-```
-
-
-2. **Sanal Ortam ve Bağımlılıklar:**
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-
 ```
 
-
-3. **Çevresel Değişkenler (.env):**
-
-Copy `.env.example` to `.env` and fill in your configuration:
+### 2) Ortam değişkenleri
 
 ```bash
 cp .env.example .env
 ```
 
-**Temel Ayarlar (.env):**
+`.env` içinde en az aşağıdaki değerleri düzenleyin:
+- `DATABASE_URL`
+- `SECRET_KEY`
+- `FRONTEND_URL`
+- SMTP ayarları (email doğrulama için)
 
-```dotenv
-# Development
-APP_ENV=development
-DEBUG=true
-SECRET_KEY=change-me-locally
+### 3) Prisma
 
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/hothour_db
-
-# Frontend URL (Email links içinde kullanılır)
-FRONTEND_URL=http://localhost:3000
-
-# Email (Gmail örneği)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_user=your-email@gmail.com
-SMTP_PASSWORD=your-app-password  # Gmail App Password (2FA gereklidir)
-EMAILS_FROM_EMAIL=noreply@hothour.com
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-```
-
-**Production Deployment için:**
-
-```dotenv
-APP_ENV=production
-DEBUG=false
-SECRET_KEY=your-secure-random-key
-
-# Production database
-DATABASE_URL=postgresql://user:secure-password@prod-host:5432/hothour_db
-
-# Production Frontend URL
-FRONTEND_URL=https://your-domain.com
-
-# Production SMTP (SendGrid, AWS SES, vb)
-SMTP_HOST=smtp.sendgrid.net
-SMTP_user=apikey
-SMTP_PASSWORD=your-sendgrid-api-key
-
-# Gmail API alternatifi (SMTP timeout durumları için önerilir)
-GMAIL_API_ENABLED=true
-GMAIL_CLIENT_ID=your-google-oauth-client-id
-GMAIL_CLIENT_SECRET=your-google-oauth-client-secret
-GMAIL_REFRESH_TOKEN=your-google-refresh-token
-GMAIL_SENDER_EMAIL=kayraspaceinc@gmail.com
-```
-cp .env.example .env
-# .env dosyasındaki DATABASE_URL bilgisini düzenleyin
-
-```
-
-
-4. **Veritabanı Şeması (Prisma):**
-Prisma şemasını veritabanına uygulayın ve Python client'ı oluşturun.
 ```bash
-prisma db push
 prisma generate
-
+prisma db push
 ```
 
+### 4) Uygulamayı çalıştırma
 
-5. **Uygulamayı Başlatın:**
 ```bash
-uvicorn main:app --reload
-
+uvicorn app.main:app --reload
 ```
 
+### 5) Frontend
 
-*Swagger UI:* `http://localhost:8000/docs`
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## 📡 API Endpoints (Örnek)
+## 🧩 Yapılandırma
 
-| Metot | Endpoint | Açıklama |
-| --- | --- | --- |
-| `GET` | `/api/v1/auctions/live` | Şu an aktif olan ve fiyatı düşen seansları getirir. |
-| `POST` | `/api/v1/reservations` | Seansı o anki fiyattan kilitler ve rezervasyon kodu üretir. |
-| `POST` | `/api/v1/admin/turbo-trigger` | Manuel olarak Turbo Modu tetikler. |
+- `REDIS_URL`: Boşsa sistem token revocation için in-memory fallback ile çalışır.
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: Varsayılan `2880` (2 gün).
+- `REFRESH_TOKEN_EXPIRE_DAYS`: Varsayılan `7`.
+- `BACKEND_CORS_ORIGINS`: Frontend origin'lerini burada yönetin.
+- `PAYMENTS_ENABLED`: Şu an `false` (ödeme entegrasyonu sonraki faz).
 
-## ⚖️ Lisans (License)
+Docker ile PostgreSQL ayağa kaldırmak için:
 
-Bu proje, varsayılan olarak **yalnızca ticari olmayan kullanım** için lisanslanmıştır.
+```bash
+docker compose up -d db
+```
+
+> Varsayılan compose map'i: host `5433` -> container `5432`.
+
+## 💡 Kullanım
+
+- API dokümantasyonu: `http://localhost:8000/api/v1/docs`
+- Health kontrolü: `GET /health` (Redis durumu dahil)
+- Frontend local: `http://localhost:5173`
+
+Auth akışında frontend tarafında token yönetimi `fetchWithAuth()` üzerinden yapılır; 401 durumunda otomatik refresh denenir.
+
+## 📡 API Örnekleri
+
+### Auth
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/revoke`
+- `GET /api/v1/auth/me`
+
+### Auctions
+- `GET /api/v1/auctions`
+- `GET /api/v1/auctions/{auction_id}`
+- `POST /api/v1/auctions/{auction_id}/trigger-turbo`
+- `POST /api/v1/auctions/{auction_id}/broadcast-price` (admin)
+
+### Reservations
+- `POST /api/v1/reservations/book`
+- `GET /api/v1/reservations/my/all`
+- `DELETE /api/v1/reservations/{reservation_id}`
+- `GET /api/v1/reservations/admin/all` (admin)
+
+## ✅ Test
+
+Backend:
+
+```bash
+pytest -q
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm run test:unit -- --run
+```
+
+## 🗺 Yol Haritası
+
+Mevcut odak alanları:
+- CI pipeline iyileştirmeleri
+- Deployment (staging -> production)
+- Redis'in çok worker senaryolarında aktif kullanımı
+- Opsiyonel E2E test katmanı
+- Ödeme entegrasyonu (`PAYMENTS_ENABLED=true` gelecekte)
+
+## 🤝 Katkı
+
+Katkılar memnuniyetle karşılanır. Şu anda ayrı bir `CONTRIBUTING.md` bulunmuyor; lütfen issue açarak veya PR ile önerilerinizi paylaşın.
+
+## ⚖️ Lisans
+
+Bu proje varsayılan olarak **yalnızca ticari olmayan kullanım** için lisanslanmıştır.
 
 - ✅ Bireysel öğrenme, inceleme, deneme ve açık kaynak katkı amaçlı kullanım
 - ✅ Ticari olmayan projelerde uyarlama
 - ❌ Ticari kullanım, gelir elde etme amacıyla kullanım, SaaS/ürün içinde kullanım
 
-Ticari kullanım için özel lisans gereklidir. Bu durumda lütfen benimle iletişime geçin:
+Ticari kullanım için özel lisans gereklidir:
 
-- 👤 Ad Soyad: `Hazar Üte`
-- 📩 E-mail: `kayraspaceinc@gmail.com`
+- 👤 Hazar Üte
+- 📩 kayraspaceinc@gmail.com
 - 📄 Detay: `COMMERCIAL-LICENSE.md`
 
 Yasal metin için `LICENSE` dosyasına bakınız.
