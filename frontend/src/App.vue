@@ -113,7 +113,6 @@ const handleLogout = () => {
 
       <div v-if="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-[#0a0f1a]/95 backdrop-blur-3xl border-b border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.7)] flex flex-col origin-top animate-in slide-in-from-top-2 duration-300">
         <div class="px-4 py-6 flex flex-col gap-2">
-            
             <router-link to="/" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
                 <span class="material-symbols-outlined">home</span> Ana Sayfa
             </router-link>
@@ -163,9 +162,69 @@ const handleLogout = () => {
     <main class="flex-grow flex flex-col items-center w-full relative z-10 overflow-x-hidden">
         <router-view />
     </main>
+
+    <footer v-if="!isAdminRoute" class="w-full border-t border-white/5 bg-[#0a0f1a]/80 backdrop-blur-xl mt-auto relative z-20">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 md:py-12">
+        <div class="flex flex-col md:flex-row justify-between items-center md:items-start gap-10">
+          
+          <div class="flex flex-col items-center md:items-start text-center md:text-left">
+            <router-link to="/" class="flex items-center gap-3 mb-4 group">
+              <div class="w-10 h-10 flex items-center justify-center bg-black/50 border border-white/10 rounded-xl group-hover:border-neon-blue/50 transition-colors shadow-[0_0_15px_rgba(0,191,255,0.1)]">
+                <BrandLogo className="w-5 h-5 text-white" />
+              </div>
+              <span class="text-xl font-black tracking-tighter text-white">HotHour</span>
+            </router-link>
+            <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
+              Pilates stüdyoları için tasarlanmış dinamik fiyatlandırma ve son dakika rezervasyon platformu. Fırsatları yakalayın, stüdyoya katılın.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-8 sm:gap-16 text-center md:text-left">
+            
+            <div class="flex flex-col gap-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Kurumsal</span>
+              <router-link to="/terms-of-use" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors">
+                Kullanım Şartları
+              </router-link>
+              <router-link to="/privacy-policy" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors">
+                Gizlilik Politikası
+              </router-link>
+              <router-link to="/how-it-works" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors">
+                Sistem Nasıl Çalışır?
+              </router-link>
+            </div>
+            
+            <div class="flex flex-col gap-3">
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Destek</span>
+              <a href="mailto:kayraspace@gmail.com" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors flex items-center gap-1.5 justify-center md:justify-start">
+                <span class="material-symbols-outlined text-[14px]">mail</span>
+                İletişim
+              </a>
+              <router-link to="/faq" class="text-xs font-medium text-slate-300 hover:text-neon-blue transition-colors flex items-center gap-1.5 justify-center md:justify-start">
+                <span class="material-symbols-outlined text-[14px]">help</span>
+                S.S.S.
+              </router-link>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-8"></div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+            &copy; 2026 KayraSpace Inc. Tüm Hakları Saklıdır.
+          </p>
+          <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
+            Powered by 
+            <a href="https://kayraspace.com" target="_blank" rel="noopener noreferrer" class="text-neon-magenta hover:text-white transition-colors">KAYRA SPACE INC</a>
+          </p>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
 <style scoped>
-/* Mobil menü ikon geçişi için ufak bir animasyon sınıfı eklenebilir */
+/* Opsiyonel menü animasyonları */
 </style>

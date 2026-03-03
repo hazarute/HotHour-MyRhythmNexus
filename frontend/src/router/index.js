@@ -47,9 +47,19 @@ const router = createRouter({
       component: () => import('../views/HowItWorksView.vue')
     },
     {
+      path: '/faq',
+      name: 'faq',
+      component: () => import('../views/FAQView.vue')
+    },
+    {
       path: '/terms-of-use',
       name: 'terms-of-use',
       component: () => import('../views/TermsOfUseView.vue')
+    },
+    {
+      path: '/privacy-policy',
+      name: 'privacy-policy',
+      component: () => import('../views/PrivacyPolicyView.vue')
     },
     {
       path: '/my-reservations',
