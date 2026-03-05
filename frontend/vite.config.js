@@ -10,5 +10,20 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  server: {
+    proxy: {
+      // Dev'de /api isteklerini backend'e yönlendir
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true
+      },
+      // Socket.IO WebSocket bağlantılarını yönlendir
+      '/socket.io': {
+        target: 'http://127.0.0.1:8000',
+        ws: true,
+        changeOrigin: true
+      }
+    }
   }
 })

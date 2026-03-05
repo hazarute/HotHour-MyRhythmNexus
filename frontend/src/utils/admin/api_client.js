@@ -3,7 +3,7 @@ export const adminFetch = async (endpoint, options = {}, authStore) => {
         throw new Error('Yetkilendirme hatası: Oturum bulunamadı.')
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+    const baseUrl = import.meta.env.VITE_API_URL || ''
     // endpoint starts with /
     const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`
 

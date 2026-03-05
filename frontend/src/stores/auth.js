@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
         loading.value = true
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || ''
             
             // NOTE: Using JSON body for this specific endpoint implementation
             const response = await fetch(`${baseUrl}/api/v1/auth/login`, {
@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function fetchUserProfile(accessToken) {
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || ''
             // Endpoint is currently under the auth router prefix
             const response = await fetch(`${baseUrl}/api/v1/auth/me`, {
                 headers: {
@@ -84,7 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
         loading.value = true
         error.value = null
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || ''
             const response = await fetchWithAuth('/api/v1/auth/change-password', {
                 method: 'POST',
                 headers: {
@@ -111,7 +111,7 @@ export const useAuthStore = defineStore('auth', () => {
     function logout() {
         // Try to revoke refresh token on server (best-effort)
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || ''
             if (refreshToken.value) {
                 fetch(`${baseUrl}/api/v1/auth/revoke`, {
                     method: 'POST',
@@ -135,7 +135,7 @@ export const useAuthStore = defineStore('auth', () => {
     async function refreshTokens() {
         if (!refreshToken.value) return false
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+            const baseUrl = import.meta.env.VITE_API_URL || ''
             const resp = await fetch(`${baseUrl}/api/v1/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -156,7 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function fetchWithAuth(path, options = {}) {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+        const baseUrl = import.meta.env.VITE_API_URL || ''
         const url = `${baseUrl}${path}`
         options.headers = options.headers || {}
         if (token.value) {

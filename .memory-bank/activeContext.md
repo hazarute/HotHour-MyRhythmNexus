@@ -2,28 +2,28 @@
 
 ## Şu Anki Durum
 **Tüm fazlar tamamlandı. Proje üretime hazır.**
-Son tamamlanan faz: **Auth-R** — Refresh token akışı + Redis destekli revocation (2026-03-02).
+Son tamamlanan faz: **Admin-R** — Real-time user creation socket broadcast (2026-03-03).
 
 ---
 
-## Son Yapılan Değişiklikler (Auth-R)
+## Son Yapılan Değişiklikler (Admin-R: Real-time Users Socket Integration)
 
 | Dosya | Değişiklik |
 |---|---|
-| `app/core/config.py` | `ACCESS_TOKEN_EXPIRE_MINUTES=2880`, `REFRESH_TOKEN_EXPIRE_DAYS=7`, `REDIS_URL`, `REDIS_REVOKED_KEY_PREFIX` eklendi |
-| `app/core/security.py` | `create_refresh_token()` eklendi |
-| `app/api/auth.py` | `login`/`register` artık `refresh_token` döndürüyor; `/refresh`, `/revoke` endpointleri eklendi |
-| `app/core/token_revocation.py` | Redis destekli revocation (fallback: in-memory) |
-| `app/core/redis_client.py` | Lazy Redis client + `ping_redis()` (yeni dosya) |
-| `app/main.py` | `/health` endpoint'ine Redis ping durumu eklendi |
-| `app/models/user.py` | `Token` modeline `refresh_token` alanı eklendi |
-| `frontend/src/stores/auth.js` | `refreshToken` state, `fetchWithAuth()`, `refreshTokens()`, `logout()` revoke eklendi |
-| `requirements.txt` | `redis>=4.6.0` eklendi |
-| `.env` | `REDIS_URL`, `REDIS_REVOKED_KEY_PREFIX` eklendi |
-| `tests/test_auth_refresh.py` | Refresh/revoke akışı için yeni test (yeni dosya) |
-| `frontend/tests/useAuthStore.test.js` | Auth store unit testleri (yeni dosya) |
+| `app/services/socket_service.py` | `emit_user_created(user: dict)` eklendi; sanitize + ISO timestamp payload |
+| `app/api/auth.py` | Register endpointinde `await emit_user_created()` çağrısı (try-catch wrapper) |
+| `frontend/src/composables/admin/useAdminUsers.js` | pageSize: 10→20, socket listeners (`setupSocketListeners`, `cleanupSocketListeners`), `onUserCreated()` event handler |
+| `frontend/src/views/admin/AdminUsersView.vue` | `onUnmounted()` hook ile listener cleanup entegrasyonu |
+| `tests/test_users_api.py` | Socket event broadcast testleri (6 test case) |
+| `.memory-bank/progress.md` | Temizlendi ve yeniden yapılandırıldı (v2 format) |
 
-**Test Sonuçları:** Backend pytest → 76 passed | Frontend vitest → 121 passed
+**Test Sonuçları:** Backend pytest → 82 passed | Frontend vitest → 121 passed
+
+**Özellikler:**
+- ✅ Yeni kullanıcı kaydedildiğinde tüm admin panellere broadcast
+- ✅ Sayfa başına maksimum 20 kayıt (pagination)
+- ✅ En yeni kullanıcılar liste başında (createdAt DESC)
+- ✅ Socket listener dinamik cleanup (memory leak önleme)
 
 ---
 
@@ -36,4 +36,6 @@ Son tamamlanan faz: **Auth-R** — Refresh token akışı + Redis destekli revoc
 - Redis `REDIS_URL` boş bırakıldığında uygulama in-memory fallback ile çalışır — bu kasıtlı bir tasarım tercihidir.
 - `fetchWithAuth()` tüm kullanıcı API çağrılarında kullanılmalı; ham `fetch()` yasaktır.
 - Format fonksiyonları için `utils/formatters.js`, statü haritaları için `utils/reservationStatus.js` tek kaynak.
-- Yeni view eklenirken socket aboneliği `useAuctionSocket` composable'ından yapılmalı.
+- **YENI:** Socket listener cleanup mutlaka component `onUnmounted()` lifecycle'ında çağrılmalı; aksi takdirde listener accumulation → memory leak.
+- **YENI:** Prisma Client Python dict döndürür (Pydantic model değil); `_sanitize_dict()` ile serialization yapılmalı.
+- **YENI:** Frontend `fetchWithAuth()` Response object döndürür; `.json()` method mutlaka çağrılmalı veri parse etmek için.

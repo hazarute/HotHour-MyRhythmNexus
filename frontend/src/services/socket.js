@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
 
-// Using Vite environment variables (import.meta.env)
-// If VITE_API_URL is not set, default to 127.0.0.1:8000
-const SOCKET_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+// VITE_API_URL production ortamında Railway env variable olarak build-time set edilmeli.
+// Set edilmemişse window.location.origin (same-origin) kullanılır; dev proxy devreye girer.
+const SOCKET_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 class SocketService {
   constructor() {

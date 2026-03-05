@@ -16,7 +16,7 @@ export function useAdminUsers() {
     const showRoleDropdown = ref(false)
     
     const currentPage = ref(1)
-    const pageSize = ref(10)
+    const pageSize = ref(20)  // Max 20 users visible per page
     
     // Socket event handlers
     const onUserCreated = (payload) => {
