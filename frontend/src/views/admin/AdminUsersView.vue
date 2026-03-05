@@ -28,7 +28,7 @@ onMounted(() => {
 const editingUser = ref(null)
 
 const startEdit = (user) => {
-    editingUser.value = { ...user } // clone
+    editingUser.value = { ...user, fullName: user.fullName || user.full_name } // clone and normalize name
 }
 
 const cancelEdit = () => {
@@ -38,7 +38,7 @@ const cancelEdit = () => {
 const saveEdit = async () => {
     if (!editingUser.value) return
     const success = await updateUser(editingUser.value.id, {
-        full_name: editingUser.value.full_name,
+        full_name: editingUser.value.fullName || editingUser.value.full_name,
         email: editingUser.value.email,
         phone: editingUser.value.phone,
         role: editingUser.value.role,
@@ -129,7 +129,7 @@ const saveEdit = async () => {
                             <!-- Editing Row -->
                             <template v-if="editingUser && editingUser.id === user.id">
                                 <td class="px-6 py-4">
-                                    <input v-model="editingUser.full_name" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white mb-2" placeholder="Ad Soyad" />
+                                    <input v-model="editingUser.fullName" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white mb-2" placeholder="Ad Soyad" />
                                     <select v-model="editingUser.gender" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white">
                                         <option value="FEMALE">Kadın</option>
                                         <option value="MALE">Erkek</option>
@@ -165,10 +165,10 @@ const saveEdit = async () => {
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="size-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 font-bold text-slate-600 dark:text-slate-400">
-                                            {{ user.full_name ? user.full_name[0].toUpperCase() : '?' }}
+                                            {{ (user.fullName || user.full_name) ? (user.fullName || user.full_name)[0].toUpperCase() : '?' }}
                                         </div>
                                         <div>
-                                            <p class="font-medium text-slate-900 dark:text-white">{{ user.full_name }}</p>
+                                            <p class="font-medium text-slate-900 dark:text-white">{{ user.fullName || user.full_name }}</p>
                                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ user.gender === 'FEMALE' ? 'Kadın' : 'Erkek' }}</p>
                                         </div>
                                     </div>

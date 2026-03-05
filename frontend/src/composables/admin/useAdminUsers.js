@@ -45,7 +45,7 @@ export function useAdminUsers() {
         if (searchQuery.value) {
             const q = searchQuery.value.toLowerCase()
             result = result.filter(u => 
-                (u.full_name && u.full_name.toLowerCase().includes(q)) ||
+                ((u.fullName || u.full_name) && (u.fullName || u.full_name).toLowerCase().includes(q)) ||
                 (u.email && u.email.toLowerCase().includes(q)) ||
                 (u.phone && u.phone.includes(q))
             )
