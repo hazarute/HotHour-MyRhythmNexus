@@ -173,10 +173,10 @@ const studioName = computed(() => props.auction.description || 'Açıklama bilgi
 
                         <HemenKapButton
                             variant="card"
-                                                        :loading="bookingLoading"
-                            :card-label="isTurbo ? 'Hemen Kap ⚡' : 'Hemen Kap'"
+                            :loading="bookingLoading"
+                            :card-label="isAuctionActive ? (isTurbo ? 'Hemen Kap ⚡' : 'Hemen Kap') : 'TÜKENDİ'"
                             :show-trailing-icon="!isTurbo"
-                                                        :disabled="bookingDisabled"
+                            :disabled="bookingDisabled"
                             @click="handleHemenKap"
                         />
         </div>
