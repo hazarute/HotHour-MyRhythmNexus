@@ -1,45 +1,24 @@
-﻿# Sistem Mimarisi (System Patterns)
+# Sistem Mimari Desenleri (System Patterns)
 
 ## Genel Mimari
-HotHour; backend'de API-first FastAPI, frontend'de Vue 3 + Pinia SPA mimarisine sahiptir. İletişim REST API ve Socket.IO (gerçek zamanlı fiyat/statü akışı) üzerinden yürütülür.
+- **Backend:** FastAPI (Python) - RESTful API & WebSockets.
+- **Frontend:** Vue 3 (Composition API) Vite ile derlenen, Pinia mağazası ve Vue Router içeren Tek Sayfa Uygulaması (SPA).
+- **Veritabanı:** PostgreSQL (Prisma ORM ile bağlanır).
+- **Önbellek & Pub/Sub:** Redis (Socket.io mesajlaşması ve performans için).
 
-## Temel Pattern'lar
+## Katmanlar (Backend)
+- `app/api/`: Sadece endpoint'leri barındırır, yetkilendirme (`Depends`) işlemleri yapılır.
+- `app/services/`: Tüm iş mantığı (Business Logic) burada çalışır. API katmanından soyutlanmıştır. CRUD, bildirimler, Socket yollamaları buradadır.
+- `app/models/`: Pydantic V2 ile Request/Response doğrulamaları. Prisma tipleri ile olan uyumsuzluklar için (örn. `from_attributes=True`) önemlidir.
+- `app/core/`: Scheduler (Zamanlanmış görevler), Security, Redis entegrasyonu, DB bağlantıları.
 
-### 1. Centralized Domain Metadata
-Durum (status) etiketleri, renkler ve formatlama tek bir dosyadan import edilir. View içinde inline tanım yasaktır.
-- `src/utils/formatters.js` → Tarih/saat/para formatlama
-- `src/utils/reservationStatus.js` → Rezervasyon statü haritası
-- `src/utils/admin/status_metadata.js` → Admin açık artırma/rezervasyon statü haritası
+## Katmanlar (Frontend)
+- `src/views/`: Ana sayfalar (Admin, Müşteri).
+- `src/composables/`: Sayfalara ait iş/UI mantığını sarmalar. (Örn: `useAdminAuctions.js`). Vue Composition API kuralları geçerlidir.
+- `src/stores/`: Pinia global durum yönetimi (Auth, UI, Realtime veriler).
+- `src/services/` & `src/utils/`: Socket istemci bağlantısı ve tarih/para formatlama araçları.
 
-### 2. Composable Split Pattern
-iş mantığı (fetch, state, validasyon) view'dan ayrılarak composable'lara taşınmıştır:
-- `composables/useAuctionSocket.js` — socket abonelik yaşam döngüsü
-- `composables/useReservations.js` — rezervasyon fetch/cancel/copy
-- `composables/usePasswordStrength.js` — şifre gücü hesaplama
-- `composables/admin/useAdminAuctions.js`, `useAdminReservations.js`, `useAdminNotifications.js`, `useAdminStudio.js`
-
-### 3. Service Layer Architecture (Backend)
-API route'ları (`app/api/*`) içerisinde iş kuralları ve Prisma DB çağrıları bulundurulmaz. Bunlar ilgili modüllerin servis katmanına (`app/services/*`) devredilir (Örn: `app/services/studio_service.py` vb.). Modeller ise `app/models/*` (Pydantic validasyonları) içerisinde yer alır.
-
-### 4. Admin API Fetch Abstraction
-Admin API çağrıları `utils/admin/api_client.js` içindeki `adminFetch()` üzerinden geçer; auth token ve baseUrl otomatik eklenir.
-
-### 4. Centralized Auth Flow (fetchWithAuth)
-Kullanıcı API çağrıları `authStore.fetchWithAuth()` kullanır:
-- Authorization header otomatik eklenir.
-- 401 alındığında `/auth/refresh` denenir; başarısızsa `logout()`.
-
-### 5. Redis-Opsiyonel Revocation Pattern
-Refresh-token revocation için lazy Redis client kullanılır (`app/core/redis_client.py`):
-- `REDIS_URL` tanımlıysa → Redis blacklist (TTL = refresh token süresi).
-- `REDIS_URL` boşsa → in-memory set (tek process için yeterli).
-- `/health` endpoint'i Redis ping durumunu raporlar.
-
-### 6. Health Check Pattern
-`GET /health` endpoint'i load balancer / orkestratör için temel sağlık bilgisi döner:
-```json
-{ "status": "active", "version": "...", "project": "...", "redis": "available|unavailable" }
-```
-
-### 7. Vue Component Decomposition
-Büyük view'lar parçalanırken parent-child iletişimi `defineProps` / `defineEmits` ile yapılır. 2 seviyeden derin veri taşıma gerekirse Composable veya `provide/inject` kullanılır.
+## Kritik Akışlar (AI İçin Not)
+- **Asenkron Veri (Fetch/JSON):** Frontend'deki Pinia `authStore.fetchWithAuth` geriye saf `Response` objesi döner. Composable içinde DAİMA `await response.json()` ile işlenmelidir, aksi takdirde veriler undefined olur.
+- **Fiyat Motoru:** `apscheduler` döngüsünde `update_auction_prices` çalışır. Herhangi bir "fiyat düşmüyor" şikayetinde `core/scheduler.py` ve `services/price_service.py` modülleri incelenmelidir.
+- **Prisma & Pydantic Uyumsuzluğu:** Prisma'nın döneceği `Include` (ilişkili veriler - ör: Auction -> Studio) işlemlerini Pydantic response modellerinde (Örn. `StudioResponse=None`) titizlikle nullable tanımlanmalıdır.

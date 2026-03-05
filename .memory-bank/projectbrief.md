@@ -1,21 +1,16 @@
-﻿# Proje Özeti (Project Brief)
+# Proje Özeti (Project Brief)
 
-## Genel Bakış
-**HotHour** — pilates stüdyoları için dinamik Hollanda açık artırması modeliyle boş seansları gelir fırsatına çeviren bir platformdur. Zamana karşı yarışan fiyat düşüşü mekanizması (FOMO), canlı socket senkronizasyonu ve rol tabanlı admin paneli ile tam kapsamlı bir SaaS çözümüdür.
+**Proje Adı:** HotHour (MyRhythmNexus)
+**Mevcut Durum:** ✅ Tamamlandı / Stabil Sürüm - Bakım Modunda (Maintenance Mode)
 
-## Temel Hedefler
-1. **Sürdürülebilir Mimari:** Vue 3 Composable/Utility katmanı ile temiz, ölçeklenebilir frontend.
-2. **Güvenli Auth:** JWT access token (2 gün) + refresh token (7 gün) + Redis destekli revocation (opsiyonel).
-3. **Üretim Kalitesi:** Backend ve frontend test kapsamı, canlı socket bağlantısı, e-posta doğrulaması ile tam çalışır durumda.
-4. **Ölçeklenebilirlik:** Redis, çok-worker/çok-sunucu ortamında kolayca aktif edilebilir (`REDIS_URL` ayarı).
+## Temel Konsept
+Platform, dans ve spor stüdyoları gibi işletmelerin boş kontenjanlarını "Düşen Fiyatlı Açık Artırma" (Dutch Auction) mantığıyla satmasını sağlayan dinamik bir biletleme ve rezervasyon sistemidir. Fiyatlar zamanla düşer (HotHour/Turbo indirimleri) ve kullanıcılar FOMO (Fırsatı Kaçırma Korkusu) ile hızlıca satın alma yapar.
 
-## Mevcut Kapsam ve Durum
-Tüm MVP ve refactor fazları tamamlandı. Proje üretime hazır:
-- Backend: FastAPI, Prisma/PostgreSQL, Socket.IO, JWT auth, refresh token, revocation, e-posta.
-- Frontend: Vue 3, Pinia, Tailwind, Composable/Utility mimarisi, reactive auth store.
-- Test: Backend pytest (76 passed) + frontend vitest (121 passed) yeşil.
+## Başlıca Modüller
+- **Kullanıcı Modülü:** Kayıt, giriş, cüzdan (bakiye) yönetimi, gerçek zamanlı fiyat takibi, rezervasyon yapma.
+- **Admin/Stüdyo Modülü:** Çoklu kiracı (Multi-tenant) mantığıyla çalışır. Her admin kendi stüdyosuna atanır; sadece kendi stüdyosunun açık artırmalarını, logolarını, istatistiklerini ve rezervasyonlarını yönetir.
+- **Dinamik Fiyatlandırma Motoru:** APScheduler arka plan görevleriyle düzenli periyotlarda (veya Turbo tetikleyicilerle) fiyat güncellemeleri.
+- **Gerçek Zamanlı Çekirdek (WebSocket):** Fiyat düşüşleri ve rezervasyon durumlarını (Satıldı/Dolu vb.) anlık olarak (Socket.io) tüm kullanıcılara iletir.
 
-## Dahil Olmayanlar (Şimdilik)
-- Redis zorunlu bağımlılık değil; `REDIS_URL` boş bırakıldığında in-memory fallback ile çalışır.
-- Ödeme entegrasyonu (`PAYMENTS_ENABLED=false`).
-- CI/CD pipeline (henüz yapılandırılmadı).
+## Proje Hedefi (AI İçin Not)
+Projenin özellik geliştirme (feature development) aşaması tamamlanmıştır. Bundan sonra yapılacak işlemler **yalnızca hata ayıklama (bug-fixing), sistem monitörleme ve bakım** odaklı olacaktır.

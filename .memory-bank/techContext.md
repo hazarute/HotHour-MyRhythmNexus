@@ -1,42 +1,21 @@
-﻿# Teknoloji Bağlamı (Tech Context)
+# Teknoloji Bağlamı (Tech Context)
 
-## Teknoloji Yığını
+## Temel Teknolojiler
+- **Backend:** Python 3.11+, FastAPI, Prisma ORM (python-prisma), python-socketio, APScheduler, Redis (asyncio destekli).
+- **Frontend:** Vue 3, Vite, Tailwind CSS, Pinia, socket.io-client.
+- **Veritabanı:** PostgreSQL, Redis.
 
-| Katman | Teknoloji |
-|---|---|
-| Backend | Python 3.10+, FastAPI, Uvicorn |
-| ORM / DB | Prisma Client Python, PostgreSQL |
-| Realtime | Socket.IO AsyncServer + socket.io-client |
-| Görev Zamanlayıcı | APScheduler (interval, 60s) |
-| Auth | JWT (jose), refresh token, Redis revocation (opsiyonel) |
-| E-posta | fastapi-mail, SMTP (Gmail) |
-| Frontend | Vue 3 (Composition API), Pinia, Vue Router |
-| Stil | Tailwind CSS v4, PostCSS |
-| Build | Vite |
-| Test | pytest (backend), Vitest + @vue/test-utils (frontend) |
+## Ortam ve Çalıştırma
+- Proje kökünde `.env` dosyası okunur (Python `dotenv`).
+- Geliştirme: `uvicorn app.main:app --reload`
+- Frontend: `npm run dev`
 
-## Kritik Teknik Kurallar
+## Veritabanı Modeli / İlişkiler
+- `User`: Admin veya Customer rollerini barındırır. Adminler `studioId` ile bir stüdyoya bağlanabilir.
+- `Studio`: Ad, logo, adres barındırır. `User` ve `Auction` tablolarına bire-çok bağlıdır.
+- `Auction`: "Oturumlar"dır. Başlangıç/Bitiş zamanı, Taban/Tavan fiyatı, dahil olduğu `studioId` bilgilerini tutar.
+- `Reservation`: Satın alımları tutar. `userId` ve `auctionId` birleştirici kaydıdır (Pivot).
 
-### API / Fetch
-- View içinde ham `fetch()` yasaktır (R5 sonrası kural).
-- Tüm API çağrıları `adminFetch` (admin) veya `authStore.fetchWithAuth()` (kullanıcı) üzerinden geçer.
-- 401 alındığında `fetchWithAuth()` otomatik refresh token deneme → başarısızsa `logout()`.
-
-### State Yönetimi
-- **Local state:** loading, error, pagination → composable içinde `ref()`.
-- **Global state:** Auth token, user, auction socket → Pinia store.
-
-### Vue 3 Kuralları
-- `<script setup>` zorunlu; Options API / `export default { setup() }` yasaktır.
-- `onMounted`'da eklenen event listener `onUnmounted`'da mutlaka kaldırılır.
-
-### Auth / Token
-- `ACCESS_TOKEN_EXPIRE_MINUTES=2880` (2 gün)
-- `REFRESH_TOKEN_EXPIRE_DAYS=7`
-- Revocation: Redis varsa Redis blacklist (TTL=refresh süresi), yoksa in-memory fallback.
-
-### Redis (Opsiyonel)
-- Aktif etmek için: `.env` içinde `REDIS_URL=redis://localhost:6379/0`.
-- Boş bırakıldığında uygulama in-memory fallback ile çalışır (tek worker ortamı için yeterli).
-- Health kontrolü: `GET /health` → `"redis": "available" | "unavailable"`.
-- Gelecek aktif etme tetikleyicileri: çoklu worker, session revocation tutarsızlığı, yüksek kullanıcı sayısı.
+## Geliştirici Standartları & Bakım Kuralları
+- FastAPI router'ında Pydantic ValidationError ('500 Internal Server') uyarısı gelirse, `include={}` (Prisma Relation) verilerinin Pydantic modelinde olup olmadığını kontrol edin.
+- Frontend'deki tüm fetch isteklerinde `.catch()` ve `.ok` kontrolleri yapılarak, UI'a hata veya yükleme (loading=false) bitişi yansıtılmalıdır.

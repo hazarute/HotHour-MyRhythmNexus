@@ -1,26 +1,13 @@
-﻿# Ürün Bağlamı (Product Context)
+# Ürün Bağlamı (Product Context)
 
-## Problem ve Çözüm
-Pilates stüdyoları boş seanslardan gelir kaybeder. HotHour bu seansları dinamik (zamanla düşen) Hollanda açık artırma modeliyle satışa çıkarır; kullanıcı canlı fiyat düşüşünü izler ve uygun fiyatta tek tıkla rezervasyon yapar.
+## Neden Bu Ürün?
+Hizmet sektöründe (özellikle stüdyo seanslarında) boş kalan kontenjanlar zarar yazar. "HotHour" modeli ile seans saati yaklaştıkça fiyat düşerek potansiyel müşteriler satın almaya teşvik edilir. Ayrıca `Turbo` mantığı ile belirli bir süre kalan seanslarda ani fiyat düşüşleri yapılarak satış garantilenmeye çalışılır.
 
-## Mevcut Ürün Durumu
-Tüm kullanıcı ve admin akışları tamamlandı, üretim kalitesinde çalışıyor:
+## UX (Kullanıcı Deneyimi) Hedefleri
+1. **Oyunlaştırma (Gamification):** Sayaçlar, periyodik düşen fiyatlar ve ani (Turbo) fırsat bildirimleri ile kullanıcıyı platformda tutmak.
+2. **Hızlı Reaksiyon:** Fiyat güncellemeleri anlık (real-time) geldiği için sayfayı yenilemeye gerek kalmadan "Hemen Al" dürtüsünü harekete geçirmek.
+3. **Kolay Stüdyo Yönetimi:** Admin panelinde yöneticiyi sadece kendi kurumuna ait (Studio ID) veriler, grafikler ve rezervasyonlara yönlendirerek karmaşayı engellemek (Tenant-isolation).
 
-| Alan | Durum |
-|---|---|
-| Rezervasyon + fiyat düşüşü (FOMO) | ✅ Stabil |
-| Canlı socket senkronizasyonu | ✅ Stabil |
-| Admin panel (planlama, filtreleme, aksiyon) | ✅ Stabil |
-| E-posta doğrulama | ✅ Stabil |
-| JWT auth + refresh token akışı | ✅ Stabil |
-| Mobil uyum (responsive) | ✅ Stabil |
-
-## UX Prensipleri (Korunacak)
-- **Son Kullanıcı:** "Live Arena" hissi, glowlu kartlar, pulse ikonlar, anlık fiyat güncellemeleri — hiçbir flow değiştirilmeyecek.
-- **Admin:** Tek kaynaktan statü/formatlama; tüm composable/utility bağlantıları stabil.
-
-## Sonraki Ürün Adımları
-1. **Canlıya Çıkış (Deployment):** Staging → production pipeline.
-2. **CI Entegrasyonu:** Vitest + pytest CI pipeline.
-3. **Redis Aktivasyonu:** Kullanıcı/worker sayısı arttığında `.env` içinde `REDIS_URL` ayarlanarak tek adımda aktif edilir.
-4. **Ödeme Entegrasyonu:** `PAYMENTS_ENABLED=false` → gelecek faz.
+## Bakım İpuçları (AI İçin)
+- Müşterinin "gerçek zamanlılık" beklentisi yüksektir. WebSocket (Socket.io) çökmeleri anında satışları durdurur. Kritik sorunlarda ilk kontrol edilmesi gereken yer `socket_service.py` ve `frontend SocketStore/Composables` bağlantılarıdır.
+- Adminlerin kendi verilerini görmesi önemlidir. Query'lerde `studioId` sızıntısı olmamasına dikkat edilmelidir.

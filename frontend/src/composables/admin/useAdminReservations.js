@@ -67,9 +67,16 @@ export function useAdminReservations() {
         SocketService.off('reservation_cancelled')
     })
 
+    // Filter reservations for the logged-in admin's studio
+    const myStudioReservations = computed(() => {
+        const myStudioId = authStore.user?.studioId
+        if (!myStudioId) return [] // No studio assigned
+        return reservations.value.filter(res => res.studio_id === myStudioId)
+    })
+
     // Filter logic
     const filteredReservations = computed(() => {
-        let result = [...reservations.value]
+        let result = [...myStudioReservations.value]
 
         if (statusFilter.value !== 'ALL') {
             result = result.filter(res => String(res.status || '').toUpperCase() === statusFilter.value)
@@ -131,9 +138,9 @@ export function useAdminReservations() {
     }
 
     // Stats
-    const totalReservationsCount = computed(() => reservations.value.length)
-    const pendingCheckInsCount = computed(() => reservations.value.filter(r => r.status === 'PENDING_ON_SITE' || r.status === 'CONFIRMED').length)
-    const checkedInTodayCount = computed(() => reservations.value.filter(r => r.status === 'COMPLETED').length) 
+    const totalReservationsCount = computed(() => myStudioReservations.value.length)
+    const pendingCheckInsCount = computed(() => myStudioReservations.value.filter(r => r.status === 'PENDING_ON_SITE' || r.status === 'CONFIRMED').length)
+    const checkedInTodayCount = computed(() => myStudioReservations.value.filter(r => r.status === 'COMPLETED').length) 
 
     // Actions
     const handleCheckIn = async (reservationId) => {

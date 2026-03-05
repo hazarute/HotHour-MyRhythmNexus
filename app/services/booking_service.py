@@ -334,6 +334,7 @@ class BookingService:
                 "user_name": res.user.fullName if res.user else "Unknown User",
                 "auction_title": res.auction.title if res.auction else "Unknown Auction",
                 "scheduled_at": getattr(res.auction, "scheduledAt", None) if res.auction else None,
+                "studio_id": getattr(res.auction, "studioId", None) if res.auction else None,
                 "locked_price": str(res.lockedPrice),
                 "booking_code": res.bookingCode,
                 "status": getattr(res.status, 'name', str(res.status)) if res.status else 'CONFIRMED',

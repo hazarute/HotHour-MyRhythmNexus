@@ -1,11 +1,13 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuctionStore } from '@/stores/auction'
+import { useAuthStore } from '@/stores/auth'
 import { sortAuctionsByNewest } from '@/utils/sorting'
 import SocketService from '@/services/socket'
 
 export function useAdminAuctions() {
     const store = useAuctionStore()
-    
+    const authStore = useAuthStore()
+
     // Filters & Pagination
     const searchQuery = ref('')
     const statusFilter = ref('ALL') // ALL, ACTIVE, SOLD, DRAFT
@@ -18,14 +20,16 @@ export function useAdminAuctions() {
         await store.fetchAuctions()
     }
 
+    // Filter auctions for the logged-in admin's studio
+    const myStudioAuctions = computed(() => {
+        const myStudioId = authStore.user?.studioId
+        if (!myStudioId) return [] // No studio assigned, return empty
+        return store.auctions.filter(a => a.studioId === myStudioId)
+    })
+
     // List and Filtering
     const filteredAuctions = computed(() => {
-        let result = [...store.auctions]
-        
-        if (statusFilter.value !== 'ALL') {
-            result = result.filter(a => a.status === statusFilter.value)
-        }
-        
+        let result = [...myStudioAuctions.value]
         if (searchQuery.value) {
             const query = searchQuery.value.toLowerCase()
             result = result.filter(a => 
@@ -97,11 +101,11 @@ export function useAdminAuctions() {
     }
 
     // Statistics
-    const activeAuctionsCount = computed(() => store.auctions.filter((a) => a.status === 'ACTIVE').length)
-    const soldAuctionsCount = computed(() => store.auctions.filter((a) => a.status === 'SOLD').length)
+    const activeAuctionsCount = computed(() => myStudioAuctions.value.filter((a) => a.status === 'ACTIVE').length)
+    const soldAuctionsCount = computed(() => myStudioAuctions.value.filter((a) => a.status === 'SOLD').length)
 
     const totalRevenue = computed(() => {
-        return store.auctions
+        return myStudioAuctions.value
             .filter(a => a.status === 'SOLD' && (a.current_price || a.currentPrice))
             .reduce((sum, a) => sum + Number(a.current_price || a.currentPrice), 0)
     })
@@ -165,7 +169,7 @@ export function useAdminAuctions() {
         ;(async () => {
             try {
                 await fetchAuctions()
-                store.auctions.forEach(a => {
+                myStudioAuctions.value.forEach(a => {
                     if (a?.id) SocketService.subscribeAuction(a.id)
                 })
             } catch (err) {
@@ -176,7 +180,7 @@ export function useAdminAuctions() {
 
     onUnmounted(() => {
         try {
-            store.auctions.forEach(a => {
+            myStudioAuctions.value.forEach(a => {
                 if (a?.id) SocketService.unsubscribeAuction(a.id)
             })
         } finally {
@@ -198,7 +202,7 @@ export function useAdminAuctions() {
         pageSize,
 
         // Computed
-        allAuctionsStoreRef: computed(() => store.auctions),
+        allAuctionsStoreRef: myStudioAuctions,
         filteredAuctions,
         paginatedAuctions,
         totalPages,
