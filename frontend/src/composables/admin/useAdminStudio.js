@@ -26,7 +26,13 @@ export function useAdminStudio() {
         successMessage.value = ''
 
         try {
-            const data = await authStore.fetchWithAuth('/api/v1/studios/me')
+            const response = await authStore.fetchWithAuth('/api/v1/studios/me')
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.detail || 'Failed to fetch studio info')
+            }
+            
+            const data = await response.json()
             studio.value = {
                 name: data.name || '',
                 address: data.address || '',
@@ -47,11 +53,21 @@ export function useAdminStudio() {
         successMessage.value = ''
 
         try {
-            const data = await authStore.fetchWithAuth('/api/v1/studios/me', {
+            const response = await authStore.fetchWithAuth('/api/v1/studios/me', {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(studio.value)
             })
-            
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.detail || 'Failed to update studio info')
+            }
+
+            const data = await response.json()
+
             studio.value = {
                 name: data.name || '',
                 address: data.address || '',
@@ -90,11 +106,18 @@ export function useAdminStudio() {
         formData.append('file', file)
 
         try {
-            const data = await authStore.fetchWithAuth('/api/v1/studios/me/logo', {
+            const response = await authStore.fetchWithAuth('/api/v1/studios/me/logo', {
                 method: 'POST',
                 // FormData sets the content-type automatically with boundaries
                 body: formData
             })
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.detail || 'Failed to upload logo')
+            }
+
+            const data = await response.json()
 
             studio.value.logoUrl = data.logoUrl || ''
 
