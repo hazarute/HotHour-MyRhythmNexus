@@ -2,7 +2,8 @@ from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
+from app.models.studio import StudioResponse
 
 
 class AuctionStatus(str, Enum):
@@ -35,6 +36,7 @@ class AuctionBase(BaseModel):
     turbo_drop_amount: Optional[Decimal] = None
     turbo_interval_mins: Optional[int] = 10
     current_price: Optional[Decimal] = None
+    studioId: Optional[int] = None
 
 
 class AuctionCreate(AuctionBase):
@@ -67,6 +69,9 @@ class AuctionResponse(AuctionBase):
     turbo_started_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    
+    studioId: Optional[int] = None
+    studio: Optional[StudioResponse] = None
     
     # Allow camelCase aliasing for frontend ease if needed, but standard is keep consistency
     # For now, let's add current_price to AuctionBase so it gets picked up from DB model

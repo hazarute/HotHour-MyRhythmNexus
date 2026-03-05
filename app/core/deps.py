@@ -15,7 +15,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
-    user = await db.user.find_unique(where={"id": int(sub)})
+    user = await db.user.find_unique(
+        where={"id": int(sub)},
+        include={"studio": True}
+    )
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user

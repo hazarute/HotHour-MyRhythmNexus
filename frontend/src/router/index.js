@@ -75,7 +75,6 @@ const router = createRouter({
     },
     {
       path: '/admin',
-      name: 'admin',
       component: () => import('../views/admin/AdminView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true },
       children: [
@@ -113,6 +112,11 @@ const router = createRouter({
           path: 'auctions/:id',
           name: 'admin-auction-detail',
           component: () => import('../views/admin/AdminAuctionDetailView.vue')
+        },
+        {
+          path: 'studio',
+          name: 'admin-studio-settings',
+          component: () => import('../views/admin/AdminStudioSettingsView.vue')
         }
       ]
     }

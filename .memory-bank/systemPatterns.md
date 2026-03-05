@@ -16,9 +16,12 @@ iş mantığı (fetch, state, validasyon) view'dan ayrılarak composable'lara ta
 - `composables/useAuctionSocket.js` — socket abonelik yaşam döngüsü
 - `composables/useReservations.js` — rezervasyon fetch/cancel/copy
 - `composables/usePasswordStrength.js` — şifre gücü hesaplama
-- `composables/admin/useAdminAuctions.js`, `useAdminReservations.js`, `useAdminNotifications.js`
+- `composables/admin/useAdminAuctions.js`, `useAdminReservations.js`, `useAdminNotifications.js`, `useAdminStudio.js`
 
-### 3. Admin API Fetch Abstraction
+### 3. Service Layer Architecture (Backend)
+API route'ları (`app/api/*`) içerisinde iş kuralları ve Prisma DB çağrıları bulundurulmaz. Bunlar ilgili modüllerin servis katmanına (`app/services/*`) devredilir (Örn: `app/services/studio_service.py` vb.). Modeller ise `app/models/*` (Pydantic validasyonları) içerisinde yer alır.
+
+### 4. Admin API Fetch Abstraction
 Admin API çağrıları `utils/admin/api_client.js` içindeki `adminFetch()` üzerinden geçer; auth token ve baseUrl otomatik eklenir.
 
 ### 4. Centralized Auth Flow (fetchWithAuth)

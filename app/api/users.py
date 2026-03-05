@@ -16,7 +16,8 @@ class UserUpdate(BaseModel):
 async def get_all_users(current_admin = Depends(get_current_admin_user)):
     try:
         users = await db.user.find_many(
-            order={"createdAt": "desc"}
+            order={"createdAt": "desc"},
+            include={"studio": True}
         )
         # Omit hashed password
         result = []
@@ -42,7 +43,8 @@ async def update_user(user_id: int, user_in: UserUpdate, current_admin = Depends
                 "phone": user_in.phone,
                 "role": user_in.role,
                 "gender": user_in.gender
-            }
+            },
+            include={"studio": True}
         )
         u_dict = updated_user.model_dump() if hasattr(updated_user, "model_dump") else updated_user.dict() if hasattr(updated_user, "dict") else dict(updated_user)
         u_dict.pop("hashedPassword", None)

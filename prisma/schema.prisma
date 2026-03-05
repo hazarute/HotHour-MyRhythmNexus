@@ -70,10 +70,27 @@ model User {
   createdAt      DateTime @default(now())
   
   // Relations
+  studioId       Int?
+  studio         Studio?  @relation(fields: [studioId], references: [id])
   reservations   Reservation[]
   notifications  Notification[]
 
   @@map("users")
+}
+
+model Studio {
+  id            Int      @id @default(autoincrement())
+  name          String
+  logoUrl       String?
+  googleMapsUrl String?
+  address       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+  auctions      Auction[]
+
+  @@map("studios")
 }
 
 model Auction {
@@ -109,11 +126,14 @@ model Auction {
   updatedAt     DateTime      @updatedAt
 
   // Relations
+  studioId      Int?
+  studio        Studio?       @relation(fields: [studioId], references: [id])
   reservation   Reservation?
   notifications Notification[]
 
   @@index([status])
   @@index([endTime])
+  @@index([studioId])
   @@map("auctions")
 }
 

@@ -11,7 +11,11 @@ router = APIRouter()
 @router.post("/", response_model=AuctionResponse, status_code=status.HTTP_201_CREATED)
 async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_admin_user)):
     try:
-        auction = await auction_service.create_auction(auction_in.model_dump())
+        auction_data = auction_in.model_dump()
+        if getattr(admin, "studioId", None):
+            auction_data["studioId"] = admin.studioId
+            
+        auction = await auction_service.create_auction(auction_data)
         return {
             "id": auction.id,
             "title": auction.title,
@@ -27,7 +31,9 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
             "status": auction.status,
             "turbo_started_at": getattr(auction, "turboStartedAt", None),
             "created_at": getattr(auction, "createdAt", None),
-            "updated_at": getattr(auction, "updatedAt", None)
+            "updated_at": getattr(auction, "updatedAt", None),
+            "studioId": getattr(auction, "studioId", None),
+            "studio": getattr(auction, "studio", None),
         }
     except ValidationError as e:
         raise HTTPException(
@@ -67,7 +73,9 @@ async def update_auction(
             "current_price": updated.currentPrice,
             "turbo_started_at": getattr(updated, "turboStartedAt", None),
             "created_at": getattr(updated, "createdAt", None),
-            "updated_at": getattr(updated, "updatedAt", None)
+            "updated_at": getattr(updated, "updatedAt", None),
+            "studioId": getattr(updated, "studioId", None),
+            "studio": getattr(updated, "studio", None),
         }
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -117,7 +125,9 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "current_price": a.currentPrice if hasattr(a, 'currentPrice') else a.startPrice,
                 "turbo_started_at": getattr(a, "turboStartedAt", None),
                 "created_at": getattr(a, "createdAt", None),
-                "updated_at": getattr(a, "updatedAt", None)
+                "updated_at": getattr(a, "updatedAt", None),
+                "studioId": getattr(a, "studioId", None),
+                "studio": getattr(a, "studio", None),
             })
         else:
             # item already contains computed fields from service
@@ -145,7 +155,9 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
                 "current_price": current_p,
                 "turbo_started_at": a.get("turbo_started_at") if a.get("turbo_started_at") is not None else a.get("turboStartedAt"),
                 "created_at": a.get("created_at"),
-                "updated_at": a.get("updated_at")
+                "updated_at": a.get("updated_at"),
+                "studioId": a.get("studioId"),
+                "studio": a.get("studio")
             })
     return mapped
 
@@ -176,7 +188,9 @@ async def get_auction(auction_id: int = Path(..., gt=0)):
         "status": auction.status,
         "current_price": auction.currentPrice,
         "created_at": getattr(auction, "createdAt", None),
-        "updated_at": getattr(auction, "updatedAt", None)
+        "updated_at": getattr(auction, "updatedAt", None),
+        "studioId": getattr(auction, "studioId", None),
+        "studio": getattr(auction, "studio", None),
     }
 
 

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
 
 const props = defineProps({
     initialData: {
@@ -305,7 +306,13 @@ const submitForm = () => {
         return
     }
 
+    const authStore = useAuthStore()
     const payload = { ...form }
+
+    // Adminin bağlı olduğu studyo ID'sini ekle
+    if (authStore.user?.studioId) {
+        payload.studioId = authStore.user.studioId
+    }
 
     if (payload.start_time && payload.start_time.length === 16) {
         const d = new Date(payload.start_time)

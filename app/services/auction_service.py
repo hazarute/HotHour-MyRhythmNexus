@@ -12,9 +12,9 @@ from app.utils.validators import ValidationError, auction_validator
 class AuctionService:
     async def _find_many_auctions_with_reconnect(self):
         try:
-            return await db.auction.find_many(order={"startTime": "asc"})
+            return await db.auction.find_many(order={"startTime": "asc"}, include={"studio": True})
         except TypeError:
-            return await db.auction.find_many()
+            return await db.auction.find_many(include={"studio": True})
         except Exception as exc:
             error_text = str(exc).lower()
             if "connecterror" not in error_text and "all connection attempts failed" not in error_text:
@@ -23,9 +23,9 @@ class AuctionService:
             await connect_db()
 
             try:
-                return await db.auction.find_many(order={"startTime": "asc"})
+                return await db.auction.find_many(order={"startTime": "asc"}, include={"studio": True})
             except TypeError:
-                return await db.auction.find_many()
+                return await db.auction.find_many(include={"studio": True})
 
     def _apply_backend_pricing_policy(self, data: dict) -> dict:
         normalized = dict(data)
@@ -169,25 +169,28 @@ class AuctionService:
         if turbo_drop is None:
             turbo_drop = drop_amount if drop_amount is not None else Decimal("0.00")
 
-        created = await db.auction.create(
-            data={
-                "title": data.get("title"),
-                "description": data.get("description"),
-                "allowedGender": data.get("allowed_gender", "ANY"),
-                "startPrice": data.get("start_price"),
-                "floorPrice": data.get("floor_price"),
-                "currentPrice": data.get("start_price"),
-                "startTime": data.get("start_time"),
-                "endTime": data.get("end_time"),
-                "scheduledAt": data.get("scheduled_at") or data.get("end_time"),
-                "dropIntervalMins": data.get("drop_interval_mins", 60),
-                "dropAmount": drop_amount if drop_amount is not None else Decimal("0.00"),
-                "turboEnabled": data.get("turbo_enabled", False),
-                "turboTriggerMins": data.get("turbo_trigger_mins", 120),
-                "turboDropAmount": turbo_drop,
-                "turboIntervalMins": data.get("turbo_interval_mins", 10),
-            }
-        )
+        create_data = {
+            "title": data.get("title"),
+            "description": data.get("description"),
+            "allowedGender": data.get("allowed_gender", "ANY"),
+            "startPrice": data.get("start_price"),
+            "floorPrice": data.get("floor_price"),
+            "currentPrice": data.get("start_price"),
+            "startTime": data.get("start_time"),
+            "endTime": data.get("end_time"),
+            "scheduledAt": data.get("scheduled_at") or data.get("end_time"),
+            "dropIntervalMins": data.get("drop_interval_mins", 60),
+            "dropAmount": drop_amount if drop_amount is not None else Decimal("0.00"),
+            "turboEnabled": data.get("turbo_enabled", False),
+            "turboTriggerMins": data.get("turbo_trigger_mins", 120),
+            "turboDropAmount": turbo_drop,
+            "turboIntervalMins": data.get("turbo_interval_mins", 10),
+        }
+        
+        if data.get("studioId"):
+            create_data["studioId"] = data.get("studioId")
+            
+        created = await db.auction.create(data=create_data)
         
         # Determine status dynamically
         auction_status = "DRAFT"
@@ -207,7 +210,7 @@ class AuctionService:
         return created
 
     async def get_auction(self, auction_id: int):
-        auction = await db.auction.find_unique(where={"id": auction_id})
+        auction = await db.auction.find_unique(where={"id": auction_id}, include={"studio": True})
         if auction:
             auction = await self._sync_status_with_reservation(auction)
             auction = await self._check_and_update_status(auction)
@@ -276,6 +279,8 @@ class AuctionService:
                 "currentPrice": mapping.get("currentPrice"),
                 "created_at": getattr(item, "createdAt", None),
                 "updated_at": getattr(item, "updatedAt", None),
+                "studioId": getattr(item, "studioId", None),
+                "studio": getattr(item, "studio", None),
             })
         return out
 

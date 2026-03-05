@@ -20,7 +20,7 @@ const handleLogin = async () => {
     const success = await authStore.login(email.value, password.value)
     if (success) {
       if (authStore.isAdmin) {
-        router.push('/admin')
+        router.push({ name: 'admin-dashboard' })
       } else {
         router.push('/')
       }

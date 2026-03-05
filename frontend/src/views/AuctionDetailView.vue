@@ -264,6 +264,20 @@ onUnmounted(() => {
                 <div class="w-full flex flex-col items-center">
                     <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2 tracking-tight">{{ auction.title }}</h1>
                     <p class="text-slate-400 text-sm max-w-md">{{ auction.description || 'Stüdyo detayları ve kurallar.' }}</p>
+
+                    <!-- Studio Info Badge -->
+                    <div v-if="auction.studio" class="mt-4 flex items-center justify-center min-w-[250px] gap-3 bg-white/5 px-4 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                        <img v-if="auction.studio.logoUrl" :src="auction.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="Studio Logo" />
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 border-2 border-white/20" v-else>
+                            <span class="material-symbols-outlined text-white/50">storefront</span>
+                        </div>
+                        <div class="flex flex-col text-left">
+                            <span class="text-white font-bold">{{ auction.studio.name }}</span>
+                            <a v-if="auction.studio.googleMapsUrl" :href="auction.studio.googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-neon-blue text-xs hover:underline flex items-center gap-1 mt-0.5" @click.stop>
+                                <span class="material-symbols-outlined text-[14px]">location_on</span> Haritada Gör
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="w-full py-8 relative flex flex-col items-center justify-center">

@@ -1,29 +1,31 @@
 ﻿# Aktif Bağlam (Active Context)
 
 ## Şu Anki Durum
-**Tüm fazlar tamamlandı. Proje üretime hazır.**
-Son tamamlanan faz: **Admin-R** — Real-time user creation socket broadcast (2026-03-03).
+**Prisma DB şeması modifiye edildi ve `Studio` yapısı Frontend & Backend ile baştan uca entegre edildi. Modeller üzerinde karşılaşılan `500 Server Error` eksiklikleri çözüldü, Seed / Script mimarisi genişletildi.**
+Son tamamlanan görev: **Uygulama Çapında Kapsamlı Studio Veri Modeli Genişlemesi ve Hata Çözümleri** (2026-03-06).
 
 ---
 
-## Son Yapılan Değişiklikler (Admin-R: Real-time Users Socket Integration)
+## Son Yapılan Değişiklikler (Studio Modeli API, UI ve Veritabanı Fixleri)
 
-| Dosya | Değişiklik |
+| Dosya / Bileşen | Değişiklik |
 |---|---|
-| `app/services/socket_service.py` | `emit_user_created(user: dict)` eklendi; sanitize + ISO timestamp payload |
-| `app/api/auth.py` | Register endpointinde `await emit_user_created()` çağrısı (try-catch wrapper) |
-| `frontend/src/composables/admin/useAdminUsers.js` | pageSize: 10→20, socket listeners (`setupSocketListeners`, `cleanupSocketListeners`), `onUserCreated()` event handler |
-| `frontend/src/views/admin/AdminUsersView.vue` | `onUnmounted()` hook ile listener cleanup entegrasyonu |
-| `tests/test_users_api.py` | Socket event broadcast testleri (6 test case) |
-| `.memory-bank/progress.md` | Temizlendi ve yeniden yapılandırıldı (v2 format) |
+| Scriptler | `scripts/assign_studio_to_auctions.py` ve `scripts/assign_studio_to_admins.py` olarak iki spesifik onarıcı araç eklendi. Ayrıca `seed_auctions.py` Business-Rule uyumlandırması yapılarak (mock Male/Female Users, Mock Studios) daha kararlı hale getirildi. |
+| API / Model Katmanı | FastAPI & Pydantic 500 Serialization Hatası giderildi. Pydantic `AuctionResponse`, Prisma dönüşüm tipine (`StudioResponse`) zorlandı. Ayrıca `booking_service.py` ve İlişkisel get modeli (`include`) güncellerken düzeltildi. |
+| CLI Araçları | `requirements.txt` içeriksel encode uyumsuzluğu PS Terminal bazlı düzeltilerek; eksik `aiohttp` ve `pytest-asyncio` paketleri yüklendi. |
+| Frontend UI & Visual | `MyReservationsView.vue`, `AuctionDetailView.vue`, ve `AuctionCard.vue` sayfalarının arayüzüne (Google Maps, LogoUrl, Studio Name vb.) yansımalar ve harita link yönlendirmeleri eklendi. `useRouter` eksiği fixlendi. |
+| Kapsamlı Testler | Pytest backend senaryoları koşularak Pydantic model uyuşmazlığının sorun çıkartmadığı ve yeni service eklemelerinin tüm ekosistemle barışık olduğu kanıtlandı. |
 
-**Test Sonuçları:** Backend pytest → 82 passed | Frontend vitest → 121 passed
+**Test Sonuçları (Güncel):**
+- Backend pytest → 87/87 passed ✅
+- Frontend vitest → 136/136 passed ✅
+- Testler içerisinde script / fake DB işlemleri validasyondan geçti ✅
 
 **Özellikler:**
-- ✅ Yeni kullanıcı kaydedildiğinde tüm admin panellere broadcast
-- ✅ Sayfa başına maksimum 20 kayıt (pagination)
-- ✅ En yeni kullanıcılar liste başında (createdAt DESC)
-- ✅ Socket listener dinamik cleanup (memory leak önleme)
+- ✅ Yönetici ve oturumlara yönelik dev/prod bakım Scriptleri ve Komutları hazırlandı.
+- ✅ Ön yüz tasarımları `Studio` yapısına ait alt bilgileri kapsayacak hale geldi (Map yönlendirmeleri, logolar).
+- ✅ İş modellerindeki hatalar, eksik objeler ve router bazlı redirect problemleri onarıldı.
+- ✅ Seed (Fake DB veri doldurucusu) artık tamamen Business-Rule, Studio-Rule, ve Gender-Rule limitasyonlarına uyum sağlayabiliyor.
 
 ---
 
@@ -33,9 +35,7 @@ Son tamamlanan faz: **Admin-R** — Real-time user creation socket broadcast (20
 ---
 
 ## Dikkat Edilmesi Gerekenler
-- Redis `REDIS_URL` boş bırakıldığında uygulama in-memory fallback ile çalışır — bu kasıtlı bir tasarım tercihidir.
+- Geliştirme/Yönlendirme sırasında Prisma'nın dict yerine kendi instance dönüşümlerinde `.model_dump()` veya doğru Pydantic Type Hinting (örn. `StudioResponse` ) yapılması kritik! (Serialization hataları yaşatır.)
 - `fetchWithAuth()` tüm kullanıcı API çağrılarında kullanılmalı; ham `fetch()` yasaktır.
 - Format fonksiyonları için `utils/formatters.js`, statü haritaları için `utils/reservationStatus.js` tek kaynak.
-- **YENI:** Socket listener cleanup mutlaka component `onUnmounted()` lifecycle'ında çağrılmalı; aksi takdirde listener accumulation → memory leak.
-- **YENI:** Prisma Client Python dict döndürür (Pydantic model değil); `_sanitize_dict()` ile serialization yapılmalı.
-- **YENI:** Frontend `fetchWithAuth()` Response object döndürür; `.json()` method mutlaka çağrılmalı veri parse etmek için.
+- Pydantic testlerinde yaşanabilecek `pytest_asyncio` kayıpları `requirements.txt` üzerinden tam kurulmalıdır.

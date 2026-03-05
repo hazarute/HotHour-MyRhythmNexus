@@ -83,6 +83,8 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
             role=getattr(user, 'role', 'USER'),
             is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
             created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
+            studioId=getattr(user, 'studioId', None),
+            studio=getattr(user, 'studio', None),
         )
         
         # Emit socket event for real-time admin panel update
@@ -194,6 +196,8 @@ async def login(user_in: UserLogin):
         role=getattr(user, 'role', 'USER'),
         is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
         created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
+        studioId=getattr(user, 'studioId', None),
+        studio=getattr(user, 'studio', None),
     )
     
     return {
@@ -222,7 +226,10 @@ async def refresh_token(req: RefreshRequest):
     if not sub:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
 
-    user = await db.user.find_unique(where={"id": int(sub)})
+    user = await db.user.find_unique(
+        where={"id": int(sub)},
+        include={"studio": True}
+    )
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
@@ -240,6 +247,8 @@ async def refresh_token(req: RefreshRequest):
         role=getattr(user, 'role', 'USER'),
         is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
         created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
+        studioId=getattr(user, 'studioId', None),
+        studio=getattr(user, 'studio', None),
     )
 
     return {
@@ -285,6 +294,8 @@ async def read_users_me(current_user=Depends(get_current_user)):
         role=getattr(current_user, 'role', 'USER'),
         is_verified=getattr(current_user, 'is_verified', getattr(current_user, 'isVerified', False)),
         created_at=getattr(current_user, 'created_at', getattr(current_user, 'createdAt', now_tr())),
+        studioId=getattr(current_user, 'studioId', None),
+        studio=getattr(current_user, 'studio', None),
     )
 
 

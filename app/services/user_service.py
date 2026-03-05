@@ -55,10 +55,16 @@ class UserService:
         return user
 
     async def get_user_by_email(self, email: str):
-        return await db.user.find_unique(where={"email": email})
+        return await db.user.find_unique(
+            where={"email": email},
+            include={"studio": True}
+        )
     
     async def get_user_by_phone(self, phone: str):
-        return await db.user.find_unique(where={"phone": phone})
+        return await db.user.find_unique(
+            where={"phone": phone},
+            include={"studio": True}
+        )
 
     async def verify_user(self, email: str):
         return await db.user.update(

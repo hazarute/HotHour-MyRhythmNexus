@@ -291,10 +291,10 @@ class BookingService:
         """Get all reservations for a user with auction details"""
         reservations = await db.reservation.find_many(
             where={"userId": user_id},
-            include={"auction": True},
+            include={"auction": {"include": {"studio": True}}},
             order={"reservedAt": "desc"}
         )
-        
+
         return [
             {
                 "id": res.id,
@@ -309,10 +309,11 @@ class BookingService:
                 "booking_code": res.bookingCode,
                 "status": getattr(res, 'status', 'CONFIRMED'),
                 "reserved_at": res.reservedAt.isoformat() if res.reservedAt else None,
+                "studio": getattr(res.auction, "studio", None) if res.auction else None,
             }
             for res in reservations
         ]
-    
+
     async def get_all_reservations(self) -> list[Dict]:
         """
         Get all reservations with user and auction details.

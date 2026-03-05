@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 from app.core.config import settings
 from app.core.db import connect_db, disconnect_db
 from app.core.socket import sio
@@ -40,6 +42,9 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
 
 def create_application() -> FastAPI:
+    # Ensure uploads directory exists
+    os.makedirs(os.path.join(os.getcwd(), 'uploads', 'studios'), exist_ok=True)
+    
     application = FastAPI(
         title=settings.PROJECT_NAME,
         version=settings.PROJECT_VERSION,
@@ -48,9 +53,13 @@ def create_application() -> FastAPI:
         lifespan=lifespan
     )
 
+    # Mount static files directory
+    application.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -60,6 +69,9 @@ def create_application() -> FastAPI:
     application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     from app.api import users
     application.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+    # Studios router (admin studio management)
+    from app.api import studios
+    application.include_router(studios.router, prefix="/api/v1/studios", tags=["studios"])
     # Auctions router (admin-only create)
     from app.api import auctions, reservations
     application.include_router(auctions.router, prefix="/api/v1/auctions", tags=["auctions"])

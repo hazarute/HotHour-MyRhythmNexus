@@ -177,6 +177,16 @@ class UserPasswordUpdate(BaseModel):
 # RESPONSE MODELS (what API returns)
 # ============================================================================
 
+class StudioResponse(BaseModel):
+    id: int
+    name: str
+    logoUrl: Optional[str] = None
+    googleMapsUrl: Optional[str] = None
+    address: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class UserResponse(BaseModel):
     """
     User response model.
@@ -193,6 +203,9 @@ class UserResponse(BaseModel):
     role: Role
     is_verified: bool  # isVerified (Prisma) → is_verified (Pydantic)
     created_at: datetime  # createdAt (Prisma) → created_at (Pydantic)
+    
+    studioId: Optional[int] = None
+    studio: Optional[StudioResponse] = None
 
     class Config:
         from_attributes = True  # Enable mapping from Prisma ORM objects

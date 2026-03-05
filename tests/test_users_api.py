@@ -44,7 +44,7 @@ async def test_get_all_users_as_admin():
     
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/users/", headers=headers)
+        response = await client.get("/api/v1/users", headers=headers)
         assert response.status_code == 200, f"Error: {response.text}"
         data = response.json()
         assert isinstance(data, list)
@@ -63,7 +63,7 @@ async def test_get_all_users_as_normal_user():
     
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/users/", headers=headers)
+        response = await client.get("/api/v1/users", headers=headers)
         assert response.status_code == 403
 
 @pytest.mark.asyncio

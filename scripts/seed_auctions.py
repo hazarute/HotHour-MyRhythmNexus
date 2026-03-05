@@ -427,13 +427,35 @@ async def seed_auctions():
         }
     ]
 
+
+    print('Mock Stüdyolar hazırlanıyor...')
+    base_studios_data = [
+        {'name': 'Ritim Dans & Pilates Stüdyosu', 'logoUrl': 'https://api.dicebear.com/7.x/initials/svg?seed=RD&backgroundColor=1E1E2E', 'googleMapsUrl': 'https://maps.google.com/?q=Ritim+Dans', 'address': 'Kadıköy, İstanbul'},
+        {'name': 'Neon Fit Academy', 'logoUrl': 'https://api.dicebear.com/7.x/initials/svg?seed=NF&backgroundColor=FF7B00', 'googleMapsUrl': 'https://maps.google.com/?q=Neon+Fit', 'address': 'Beşiktaş, İstanbul'},
+        {'name': 'Zen Space Yoga', 'logoUrl': 'https://api.dicebear.com/7.x/initials/svg?seed=ZS&backgroundColor=8000FF', 'googleMapsUrl': 'https://maps.google.com/?q=Zen+Space', 'address': 'Şişli, İstanbul'}
+    ]
+    
+    mock_studios = []
+    for s_data in base_studios_data:
+        existing = await db.studio.find_first(where={'name': s_data['name']})
+        if not existing:
+            existing = await db.studio.create(data=s_data)
+        mock_studios.append(existing)
+
+    print(f'✅ {len(mock_studios)} mock stüdyo hazır.')
+
     normalized_auctions = [
+
         _with_project_defaults(data, index)
         for index, data in enumerate(auctions_data)
     ]
 
+
     for data in normalized_auctions:
+        random_studio = random.choice(mock_studios)
+        data['studioId'] = random_studio.id
         try:
+
             auction = await db.auction.create(data=data)
             print(
                 f"✅ {getattr(auction, 'title', '-'):40s} | "
@@ -444,6 +466,21 @@ async def seed_auctions():
             )
         except Exception as e:
             print(f"⚠️  Error creating {data['title']}: {e}")
+
+    print("\nMock Kullanıcılar (Müşteriler) hazırlanıyor...")
+    # Dummy bcrypt hash for '123456'
+    dummy_hash = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjIQqiRQYq"
+    
+    mock_users_data = [
+        {"email": "female_mock@test.com", "phone": "5550001122", "fullName": "Ceren Yılmaz", "gender": "FEMALE", "hashedPassword": dummy_hash, "isVerified": True},
+        {"email": "male_mock@test.com", "phone": "5550001133", "fullName": "Burak Yılmaz", "gender": "MALE", "hashedPassword": dummy_hash, "isVerified": True}
+    ]
+    
+    for u_data in mock_users_data:
+        existing_u = await db.user.find_first(where={"email": u_data["email"]})
+        if not existing_u:
+            await db.user.create(data=u_data)
+            print(f"✅ Mock Kullanıcı Oluşturuldu: {u_data['fullName']} ({u_data['gender']})")
 
     users = await db.user.find_many()
     auctions = await db.auction.find_many()

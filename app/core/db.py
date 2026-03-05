@@ -43,8 +43,14 @@ if _use_fake:
                 setattr(self, "isVerified", False)
             if not hasattr(self, "role"):
                 setattr(self, "role", "USER")
+            if not hasattr(self, "updatedAt"):
+                setattr(self, "updatedAt", now_tr())
+            if not hasattr(self, "createdAt"):
+                setattr(self, "createdAt", now_tr())
             if not hasattr(self, "status"):
                 setattr(self, "status", "ACTIVE")
+            if not hasattr(self, "studioId"):
+                setattr(self, "studioId", None)
             if hasattr(self, "fullName") and not hasattr(self, "firstName"):
                 parts = str(self.fullName).split(" ", 1)
                 setattr(self, "firstName", parts[0])
@@ -68,7 +74,7 @@ if _use_fake:
                         return False
             return True
 
-        async def create(self, *, data):
+        async def create(self, *, data, include=None):
             obj = dict(data)
             obj_id = obj.get("id") or self._next_id
             obj["id"] = obj_id
@@ -99,7 +105,7 @@ if _use_fake:
             records = await self.find_many(where=where)
             return len(records)
 
-        async def find_unique(self, *, where):
+        async def find_unique(self, *, where, include=None):
             # support where by id or email
             if "id" in where:
                 _id = where.get("id")
@@ -138,7 +144,7 @@ if _use_fake:
                     deleted += 1
             return {"count": deleted}
 
-        async def update(self, *, where, data):
+        async def update(self, *, where, data, include=None):
             target_id = None
 
             if "id" in where:
@@ -161,7 +167,7 @@ if _use_fake:
             super().__init__()
             self._prisma_ref = prisma_ref
 
-        async def create(self, *, data):
+        async def create(self, *, data, include=None):
             auction_id = data.get("auctionId")
             if auction_id is not None:
                 for existing in self._data.values():
@@ -203,6 +209,7 @@ if _use_fake:
     class FakePrisma:
         def __init__(self):
             self.user = _Model()
+            self.studio = _Model()
             self.auction = _Model()
             self.reservation = _ReservationModel(self)
             self.notification = _Model()

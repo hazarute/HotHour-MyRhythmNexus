@@ -1,9 +1,11 @@
 ﻿<script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useReservations } from '../composables/useReservations'
 import { formatDate, formatTime, formatCurrency } from '../utils/formatters'
 import { getStatusConfig, isCompletedStatus, isCopyAllowedStatus } from '../utils/reservationStatus'
 
+const router = useRouter()
 const {
     reservations,
     loading,
@@ -97,6 +99,20 @@ onMounted(() => {
                         <div class="mb-6">
                             <h3 class="text-2xl md:text-3xl font-black text-white mb-2">{{ res.auction_title || 'Özel Pilates Seansı' }}</h3>
                             <p v-if="res.auction_description" class="text-slate-400 text-sm line-clamp-2 max-w-xl">{{ res.auction_description }}</p>
+                            
+                            <!-- Studio Info Badge -->
+                            <div v-if="res.studio" class="mt-4 flex items-center min-w-[250px] max-w-fit gap-3 bg-white/5 px-4 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                                <img v-if="res.studio.logoUrl" :src="res.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="Studio Logo" />
+                                <div class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 border-2 border-white/20 shrink-0" v-else>
+                                    <span class="material-symbols-outlined text-white/50">storefront</span>
+                                </div>
+                                <div class="flex flex-col text-left">
+                                    <span class="text-white font-bold">{{ res.studio.name }}</span>
+                                    <a v-if="res.studio.googleMapsUrl" :href="res.studio.googleMapsUrl" target="_blank" rel="noopener noreferrer" class="text-neon-blue text-xs hover:underline flex items-center gap-1 mt-0.5" @click.stop>
+                                        <span class="material-symbols-outlined text-[14px]">location_on</span> Haritada Gör
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="flex items-center gap-4 text-xs text-slate-500 mt-auto border-t border-white/5 pt-4">
