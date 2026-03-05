@@ -79,6 +79,14 @@ const logout = () => {
                     <span class="text-sm font-medium">Rezervasyonlar</span>
                 </RouterLink>
 
+                <RouterLink :to="{ name: 'admin-users' }" @click="closeSidebar"
+                   class="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200"
+                   active-class="bg-primary/10 text-primary dark:text-white dark:bg-[#232d3f] border-l-4 border-primary shadow-sm"
+                   :class="[$route.name === 'admin-users' ? 'bg-primary/10 text-primary dark:text-white dark:bg-[#232d3f] border-l-4 border-primary shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#232d3f] hover:text-primary dark:hover:text-white']">
+                    <span class="material-symbols-outlined group-hover:text-primary transition-colors" style="font-size: 24px;">group</span>
+                    <span class="text-sm font-medium">Kullanıcılar</span>
+                </RouterLink>
+
                 <a href="#" class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#232d3f] hover:text-primary dark:hover:text-white transition-all duration-200">
                     <span class="material-symbols-outlined group-hover:text-primary transition-colors" style="font-size: 24px;">settings</span>
                     <span class="text-sm font-medium">Ayarlar</span>

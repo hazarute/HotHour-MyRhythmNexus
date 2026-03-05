@@ -58,6 +58,8 @@ def create_application() -> FastAPI:
     
     # Include Routers
     application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+    from app.api import users
+    application.include_router(users.router, prefix="/api/v1/users", tags=["users"])
     # Auctions router (admin-only create)
     from app.api import auctions, reservations
     application.include_router(auctions.router, prefix="/api/v1/auctions", tags=["auctions"])

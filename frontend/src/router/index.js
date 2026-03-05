@@ -105,6 +105,11 @@ const router = createRouter({
           component: () => import('../views/admin/AdminReservationDetailView.vue')
         },
         {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('../views/admin/AdminUsersView.vue')
+        },
+        {
           path: 'auctions/:id',
           name: 'admin-auction-detail',
           component: () => import('../views/admin/AdminAuctionDetailView.vue')
