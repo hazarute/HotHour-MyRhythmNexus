@@ -49,7 +49,7 @@ export function useAdminUsers() {
         loading.value = true
         error.value = ''
         try {
-            const response = await authStore.fetchWithAuth('/api/v1/users/')
+            const response = await authStore.fetchWithAuth('/api/v1/users')
             if (!response.ok) throw new Error('Kullanıcılar getirilemedi')
 
             
