@@ -20,7 +20,10 @@ export function useAdminUsers() {
         loading.value = true
         error.value = ''
         try {
-            const data = await authStore.fetchWithAuth('/api/v1/users')
+            const response = await authStore.fetchWithAuth('/api/v1/users')
+            if (!response.ok) throw new Error('Kullanıcılar getirilemedi')
+            
+            const data = await response.json()
             users.value = data || []
         } catch (err) {
             console.error('Kullanıcılar yüklenirken hata:', err)
@@ -70,9 +73,14 @@ export function useAdminUsers() {
         if (!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return false
         
         try {
-            await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
+            const resp = await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
                 method: 'DELETE'
             })
+            if (!resp.ok) {
+                const data = await resp.json()
+                throw new Error(data.detail || 'Kullanıcı silinemedi')
+            }
+
             users.value = users.value.filter(u => u.id !== userId)
             
             // Adjust pagination if needed
@@ -89,11 +97,18 @@ export function useAdminUsers() {
     
     const updateUser = async (userId, updateData) => {
         try {
-            const data = await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
+            const response = await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updateData)
             })
+            
+            if (!response.ok) {
+                const errData = await response.json()
+                throw new Error(errData.detail || 'Kullanıcı güncellenemedi')
+            }
+            
+            const data = await response.json()
             
             // Update in local state
             const index = users.value.findIndex(u => u.id === userId)
