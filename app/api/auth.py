@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from pydantic import BaseModel
 from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserPasswordUpdate
 from app.services.user_service import user_service
+from app.services.socket_service import emit_user_created
 from app.core import security
 from app.core.deps import get_current_user
 from app.core.token_revocation import is_refresh_token_revoked, revoke_refresh_token
@@ -83,6 +84,14 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks):
             is_verified=getattr(user, 'is_verified', getattr(user, 'isVerified', False)),
             created_at=getattr(user, 'created_at', getattr(user, 'createdAt', now_tr())),
         )
+        
+        # Emit socket event for real-time admin panel update
+        try:
+            user_dict = dict(user) if hasattr(user, '__iter__') else user.model_dump() if hasattr(user, 'model_dump') else user.dict() if hasattr(user, 'dict') else {}
+            await emit_user_created(user_dict)
+        except Exception as e:
+            # Log but don't fail the registration if socket emit fails
+            print(f"[Auth] Warning: Failed to emit user_created event: {str(e)}")
         
         return {
             "access_token": access_token,

@@ -1,8 +1,10 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useSocketStore } from '@/stores/socket'
 
 export function useAdminUsers() {
     const authStore = useAuthStore()
+    const socketStore = useSocketStore()
     
     const users = ref([])
     const loading = ref(false)
@@ -16,6 +18,33 @@ export function useAdminUsers() {
     const currentPage = ref(1)
     const pageSize = ref(10)
     
+    // Socket event handlers
+    const onUserCreated = (payload) => {
+        console.log('[AdminUsers] user_created event received:', payload)
+        if (payload && payload.user) {
+            // Add new user to the top of the list
+            const newUser = payload.user
+            // Avoid duplicates
+            if (!users.value.find(u => u.id === newUser.id)) {
+                users.value.unshift(newUser)
+            }
+        }
+    }
+    
+    const setupSocketListeners = () => {
+        if (!socketStore.isConnected) {
+            socketStore.connect()
+        }
+        
+        console.log('[AdminUsers] Setting up socket listeners')
+        socketStore.on('user_created', onUserCreated)
+    }
+    
+    const cleanupSocketListeners = () => {
+        console.log('[AdminUsers] Cleaning up socket listeners')
+        socketStore.off('user_created', onUserCreated)
+    }
+    
     const fetchUsers = async () => {
         loading.value = true
         error.value = ''
@@ -25,6 +54,9 @@ export function useAdminUsers() {
             
             const data = await response.json()
             users.value = data || []
+            
+            // Setup socket listeners after first fetch
+            setupSocketListeners()
         } catch (err) {
             console.error('Kullanıcılar yüklenirken hata:', err)
             error.value = 'Kullanıcı listesi alınamadı.'
@@ -139,6 +171,8 @@ export function useAdminUsers() {
         goNextPage,
         goPrevPage,
         deleteUser,
-        updateUser
+        updateUser,
+        setupSocketListeners,
+        cleanupSocketListeners
     }
 }

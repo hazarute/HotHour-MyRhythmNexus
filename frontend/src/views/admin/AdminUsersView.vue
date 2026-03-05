@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useAdminUsers } from '@/composables/admin/useAdminUsers'
 import { formatDate } from '@/utils/admin/formatters'
 import AdminNotificationDropdown from '@/components/admin/AdminNotificationDropdown.vue'
@@ -18,11 +18,16 @@ const {
     goNextPage,
     goPrevPage,
     deleteUser,
-    updateUser
+    updateUser,
+    cleanupSocketListeners
 } = useAdminUsers()
 
 onMounted(() => {
     fetchUsers()
+})
+
+onUnmounted(() => {
+    cleanupSocketListeners()
 })
 
 const editingUser = ref(null)

@@ -305,3 +305,21 @@ async def emit_auction_deleted(auction_id: int) -> None:
         "timestamp": _now_iso(),
     }
     await sio.emit("auction_deleted", payload)
+
+
+async def emit_user_created(user: dict) -> None:
+    """
+    Broadcast to ALL clients when a new user registers.
+    Admin UsersView listens to this event to add new user to the list in real-time.
+
+    Payload:
+        {
+            "user": dict,           # User object with all public fields
+            "timestamp": str        # ISO-8601 UTC
+        }
+    """
+    payload = {
+        "user": _sanitize_dict(user),
+        "timestamp": _now_iso(),
+    }
+    await sio.emit("user_created", payload)
