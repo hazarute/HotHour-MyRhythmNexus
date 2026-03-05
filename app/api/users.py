@@ -12,7 +12,7 @@ class UserUpdate(BaseModel):
     role: str
     gender: str
 
-@router.get("/")
+@router.get("")
 async def get_all_users(current_admin = Depends(get_current_admin_user)):
     try:
         users = await db.user.find_many(
