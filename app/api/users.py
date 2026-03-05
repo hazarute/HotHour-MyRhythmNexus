@@ -21,7 +21,7 @@ async def get_all_users(current_admin = Depends(get_current_admin_user)):
         # Omit hashed password
         result = []
         for u in users:
-            u_dict = u.model_dump()
+            u_dict = u.model_dump() if hasattr(u, "model_dump") else u.dict() if hasattr(u, "dict") else dict(u)
             u_dict.pop("hashedPassword", None)
             result.append(u_dict)
         return result
@@ -44,7 +44,7 @@ async def update_user(user_id: int, user_in: UserUpdate, current_admin = Depends
                 "gender": user_in.gender
             }
         )
-        u_dict = updated_user.model_dump()
+        u_dict = updated_user.model_dump() if hasattr(updated_user, "model_dump") else updated_user.dict() if hasattr(updated_user, "dict") else dict(updated_user)
         u_dict.pop("hashedPassword", None)
         return u_dict
     except Exception as e:
