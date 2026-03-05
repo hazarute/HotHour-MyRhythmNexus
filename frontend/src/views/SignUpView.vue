@@ -132,9 +132,9 @@ const handleSignUp = async () => {
         throw new Error(errData.detail || 'Kayıt başarısız')
       }
 
-    success.value = 'Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...'
+    success.value = 'Kayıt başarılı! E-posta adresinize doğrulama bağlantısı gönderildi. Lütfen e-postanızı kontrol edin ve hesabınızı doğrulayın. (Spam klasörünü de kontrol edin.)'
     error.value = ''
-    setTimeout(() => { router.push('/login') }, 3000)
+    setTimeout(() => { router.push('/login') }, 6000)
   } catch (err) {
     error.value = err.message || 'Kayıt sırasında bir hata oluştu'
   } finally {

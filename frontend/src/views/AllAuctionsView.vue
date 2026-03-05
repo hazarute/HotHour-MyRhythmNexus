@@ -38,7 +38,14 @@ const filteredAuctions = computed(() => {
 
   result = result.filter(isWithinLastMonth)
 
-  if (filterStatus.value !== 'ALL') {
+  if (filterStatus.value === 'ALL') {
+    // "Tümü" seçildiğinde taslak gibi durumları göstermeyip
+    // yalnızca ACTIVE veya SOLD durumundaki oturumları göster.
+    result = result.filter(a => {
+      const status = getAuctionStatus(a)
+      return status === 'ACTIVE' || status === 'SOLD'
+    })
+  } else {
     result = result.filter(a => getAuctionStatus(a) === filterStatus.value)
   }
 
