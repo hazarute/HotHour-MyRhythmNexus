@@ -6,9 +6,51 @@ import { useAuctionSocket } from '../composables/useAuctionSocket'
 import AuctionCard from '../components/AuctionCard.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { isAuctionActive } from '../utils/auction'
+import { useHead } from '@unhead/vue'
 
 const router = useRouter()
 const store = useAuctionStore()
+
+useHead({
+  title: 'HotHour — Son Dakika Pilates Seansları, İndirimli Fiyatlarla',
+  meta: [
+    { name: 'description', content: 'HotHour ile dans ve spor stüdyolarının boş kalan premium seanslarını Hollanda Açık Artırması yöntemiyle kazan. Fiyatlar düşerken sen kazan.' },
+    { property: 'og:title', content: 'HotHour — Son Dakika Pilates Seansları' },
+    { property: 'og:description', content: 'Stüdyoların boş kalan premium seanslarını Hollanda Açık Artırması ile yakala.' },
+    { property: 'og:url', content: 'https://hothour.kayraspace.com/' },
+    { name: 'twitter:title', content: 'HotHour — Son Dakika Pilates Seansları' },
+    { name: 'twitter:description', content: 'Stüdyoların boş kalan premium seanslarını indirimli fiyatlarla yakala.' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'HotHour',
+        url: 'https://hothour.kayraspace.com',
+        description: 'Dans ve spor stüdyolarının boş kalan premium seanslarını Hollanda Açık Artırması ile sunan platform.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://hothour.kayraspace.com/auctions?q={search_term_string}',
+          'query-input': 'required name=search_term_string'
+        }
+      })
+    },
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'HotHour',
+        url: 'https://hothour.kayraspace.com',
+        logo: 'https://hothour.kayraspace.com/apple-touch-icon.png',
+        description: 'Hollanda Açık Artırması ile son dakika stüdyo seansları platformu.'
+      })
+    }
+  ]
+})
 
 // Socket bağlantısı, event handler'lar ve yaşam döngüsü composable'da yönetilir
 useAuctionSocket(store)

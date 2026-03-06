@@ -1,3 +1,16 @@
+<script setup>
+import { useHead } from '@unhead/vue'
+
+useHead({
+  title: 'Kullanım Koşulları — HotHour',
+  meta: [
+    { name: 'description', content: 'HotHour platform kullanım koşulları. Rezervasyon, iptal ve iade politikalarını inceleyin.' },
+    { name: 'robots', content: 'noindex, follow' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/terms-of-use' }],
+})
+</script>
+
 <template>
   <div class="min-h-screen bg-background-dark text-white px-4 sm:px-6 lg:px-8 py-24">
     <div class="max-w-4xl mx-auto">

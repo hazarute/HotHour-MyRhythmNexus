@@ -1,6 +1,18 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useHead } from '@unhead/vue'
+
+useHead({
+  title: 'Nasıl Çalışır? — HotHour',
+  meta: [
+    { name: 'description', content: 'HotHour\'da nasıl indirimli seans yakalarsın? Hollanda Açık Artırması mantığını öğren, adım adım rehberimizi keşfet.' },
+    { property: 'og:title', content: 'Nasıl Çalışır? — HotHour' },
+    { property: 'og:description', content: 'Hollanda Açık Artırması ile indirimli seans yakala. Adım adım rehber.' },
+    { property: 'og:url', content: 'https://hothour.kayraspace.com/how-it-works' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/how-it-works' }],
+})
 
 const router = useRouter()
 const expandedStep = ref(null)

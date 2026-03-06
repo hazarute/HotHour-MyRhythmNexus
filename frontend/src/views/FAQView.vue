@@ -1,6 +1,53 @@
 <script setup>
 import { ref } from 'vue'
 import BrandLogo from '@/components/BrandLogo.vue'
+import { useHead } from '@unhead/vue'
+
+useHead({
+  title: 'Sıkça Sorulan Sorular — HotHour',
+  meta: [
+    { name: 'description', content: 'HotHour hakkında merak ettiğin her şey: nasıl çalışır, ödeme nasıl yapılır, indirim ne kadar olabilir? Tüm sorular burada.' },
+    { property: 'og:title', content: 'Sıkça Sorulan Sorular — HotHour' },
+    { property: 'og:description', content: 'HotHour SSS: Hollanda Açık Artırması, rezervasyon ve ödeme süreci hakkında tüm sorular.' },
+    { property: 'og:url', content: 'https://hothour.kayraspace.com/faq' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/faq' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'Hot Hour Nedir ve Nasıl Çalışır?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Hot Hour, stüdyolardaki boş kalan pilates seanslarını dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunan bir platformdur. Fiyat zaman geçtikçe düşer, butona ilk basan o anki indirimli fiyattan rezerve eder.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'Fiyatlar ne kadar düşebilir?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Her seansın bir taban (minimum) fiyatı vardır. Fiyat, seans saatine yaklaşıldıkça bu taban fiyata kadar kademeli olarak düşer. Son dakikalarda Turbo Mod devreye girer ve düşüş hızlanır.'
+            }
+          },
+          {
+            '@type': 'Question',
+            name: 'Rezerve ettiğim seansın ödemesini nasıl yapacağım?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Şu an için platformda yakaladığınız indirimli fiyat adınıza kilitlenir. Ödemeyi stüdyoya geldiğinizde resepsiyonda yapabilirsiniz.'
+            }
+          }
+        ]
+      })
+    }
+  ]
+})
 
 const openIndex = ref(0)
 

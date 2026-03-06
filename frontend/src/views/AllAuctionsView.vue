@@ -6,6 +6,18 @@ import { useAuctionSocket } from '../composables/useAuctionSocket'
 import AuctionCard from '../components/AuctionCard.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { getAuctionStatus, getAuctionField } from '../utils/auction'
+import { useHead } from '@unhead/vue'
+
+useHead({
+  title: 'Canlı Açık Artırma Seansları — HotHour',
+  meta: [
+    { name: 'description', content: 'Şu an aktif olan tüm Pilates ve stüdyo seanslarını keşfet. Fiyatlar gerçek zamanlı düşüyor — en uygun fiyatı yakala.' },
+    { property: 'og:title', content: 'Canlı Açık Artırma Seansları — HotHour' },
+    { property: 'og:description', content: 'Aktif tüm seansları keşfet, daha seans dolmadan kazan.' },
+    { property: 'og:url', content: 'https://hothour.kayraspace.com/auctions' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/auctions' }],
+})
 
 const router = useRouter()
 const store = useAuctionStore()

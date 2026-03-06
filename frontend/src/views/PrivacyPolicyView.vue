@@ -1,4 +1,14 @@
 <script setup>
+import { useHead } from '@unhead/vue'
+
+useHead({
+  title: 'Gizlilik Politikası — HotHour',
+  meta: [
+    { name: 'description', content: 'HotHour gizlilik politikası. Kişisel verilerinizin nasıl toplandığını ve korunduğunu öğrenin.' },
+    { name: 'robots', content: 'noindex, follow' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/privacy-policy' }],
+})
 // Yasal metin olduğu için statik içerik
 const lastUpdated = "3 Mart 2026"
 </script>

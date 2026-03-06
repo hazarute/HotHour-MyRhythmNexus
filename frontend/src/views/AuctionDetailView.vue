@@ -9,6 +9,7 @@ import BookingConfirmModal from '../components/BookingConfirmModal.vue'
 import BookingSuccessModal from '../components/BookingSuccessModal.vue'
 import { getAuctionField, getAuctionCurrentPrice, getAuctionStartPrice, getAuctionEndTime, getAuctionStatus } from '../utils/auction'
 import { formatPrice, formatDateLong as formatDate } from '../utils/formatters'
+import { useHead } from '@unhead/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +18,78 @@ const socketStore = useSocketStore()
 const authStore = useAuthStore()
 
 const auction = computed(() => auctionStore.currentAuction)
+
+// Dinamik SEO: auction verisi yüklenince otomatik güncellenir
+useHead({
+  title: computed(() => {
+    if (!auction.value) return 'Seans Detayı — HotHour'
+    const studio = getAuctionField(auction.value, 'studio', 'studio')
+    const studioName = studio?.name || 'Stüdyo'
+    const date = getAuctionField(auction.value, 'start_time', 'startTime')
+    const dateStr = date ? new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : ''
+    return `${studioName} — ${dateStr} Pilates Seansı | HotHour`
+  }),
+  meta: computed(() => {
+    if (!auction.value) return []
+    const studio = getAuctionField(auction.value, 'studio', 'studio')
+    const studioName = studio?.name || 'Stüdyo'
+    const price = getAuctionCurrentPrice(auction.value)
+    const formattedPrice = price ? `${price} ₺` : ''
+    const description = `${studioName} seansını ${formattedPrice} ile yakala. Fiyat her an düşüyor!`
+    const canonicalUrl = `https://hothour.kayraspace.com/auction/${route.params.id}`
+    return [
+      { name: 'description', content: description },
+      { property: 'og:title', content: `${studioName} — HotHour Canlı Seans` },
+      { property: 'og:description', content: description },
+      { property: 'og:url', content: canonicalUrl },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:title', content: `${studioName} — HotHour Canlı Seans` },
+      { name: 'twitter:description', content: description },
+    ]
+  }),
+  link: computed(() => [
+    { rel: 'canonical', href: `https://hothour.kayraspace.com/auction/${route.params.id}` }
+  ]),
+  script: computed(() => {
+    if (!auction.value) return []
+    const studio = getAuctionField(auction.value, 'studio', 'studio')
+    const startTime = getAuctionField(auction.value, 'start_time', 'startTime')
+    const endTime = getAuctionEndTime(auction.value)
+    const price = getAuctionCurrentPrice(auction.value)
+    return [
+      {
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Event',
+          name: `${studio?.name || 'Pilates'} Seansı`,
+          description: `HotHour indirimli ${studio?.name || 'Pilates'} seansı. Fiyat ${price} ₺.`,
+          startDate: startTime,
+          endDate: endTime,
+          eventStatus: 'https://schema.org/EventScheduled',
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          location: {
+            '@type': 'Place',
+            name: studio?.name || 'Stüdyo',
+            address: studio?.address || 'İstanbul, Türkiye'
+          },
+          organizer: {
+            '@type': 'Organization',
+            name: studio?.name || 'HotHour Stüdyo',
+            url: 'https://hothour.kayraspace.com'
+          },
+          offers: {
+            '@type': 'Offer',
+            price: price || 0,
+            priceCurrency: 'TRY',
+            availability: 'https://schema.org/InStock',
+            url: `https://hothour.kayraspace.com/auction/${route.params.id}`
+          }
+        })
+      }
+    ]
+  })
+})
 const showSuccessModal = ref(false)
 const showBookingConfirmModal = ref(false)
 const reservation = ref(null)
