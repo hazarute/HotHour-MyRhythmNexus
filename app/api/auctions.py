@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Query, HTTPException, Path
+from fastapi import APIRouter, Depends, status, Query, HTTPException, Path, Request
 from app.models.auction import AuctionCreate, AuctionUpdate, AuctionResponse
 from app.services.auction_service import auction_service
 from app.services import socket_service
@@ -98,13 +98,22 @@ async def delete_auction(
 
 
 @router.get("/", response_model=list[AuctionResponse])
-async def list_auctions(include_computed: bool = Query(False, description="Include computedPrice and priceDetails")):
+async def list_auctions(request: Request, include_computed: bool = Query(False, description="Include computedPrice and priceDetails")):
     # preserve backward-compatible default behavior
     items = await auction_service.list_auctions(include_computed=include_computed) if hasattr(auction_service, "list_auctions") else []
     mapped = []
+    base = str(request.base_url).rstrip('/')
     for a in items:
         # if service returned DB objects (not computed), keep original mapping
         if not isinstance(a, dict):
+            # If auction includes nested studio object, ensure its logoUrl is absolute
+            try:
+                studio_obj = getattr(a, 'studio', None)
+                if studio_obj and getattr(studio_obj, 'logoUrl', None) and str(studio_obj.logoUrl).startswith('/uploads/'):
+                    studio_obj.logoUrl = f"{base}{studio_obj.logoUrl}"
+            except Exception:
+                pass
+
             mapped.append({
                 "id": a.id,
                 "title": a.title,
@@ -133,6 +142,16 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
             # item already contains computed fields from service
             # If currentPrice or computedPrice is in the dict, map it to current_price
             current_p = a.get("computedPrice") or a.get("currentPrice") or a.get("start_price")
+            # item already contains computed fields from service
+            # normalize nested studio logoUrl if present
+            try:
+                studio_obj = a.get('studio')
+                if studio_obj and isinstance(studio_obj, dict) and studio_obj.get('logoUrl') and str(studio_obj.get('logoUrl')).startswith('/uploads/'):
+                    studio_obj['logoUrl'] = f"{base}{studio_obj.get('logoUrl')}"
+                    a['studio'] = studio_obj
+            except Exception:
+                pass
+
             mapped.append({
                 "id": a.get("id"),
                 "title": a.get("title"),
@@ -163,11 +182,19 @@ async def list_auctions(include_computed: bool = Query(False, description="Inclu
 
 
 @router.get("/{auction_id}", response_model=AuctionResponse)
-async def get_auction(auction_id: int = Path(..., gt=0)):
+async def get_auction(request: Request, auction_id: int = Path(..., gt=0)):
     auction = await auction_service.get_auction(auction_id)
     if not auction:
         raise HTTPException(status_code=404, detail="Auction not found")
-        
+    # Ensure nested studio logoUrl is absolute when necessary
+    try:
+        base = str(request.base_url).rstrip('/')
+        studio_obj = getattr(auction, 'studio', None)
+        if studio_obj and getattr(studio_obj, 'logoUrl', None) and str(studio_obj.logoUrl).startswith('/uploads/'):
+            studio_obj.logoUrl = f"{base}{studio_obj.logoUrl}"
+    except Exception:
+        pass
+
     return {
         "id": auction.id,
         "title": auction.title,

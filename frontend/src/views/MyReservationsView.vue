@@ -72,7 +72,7 @@ onMounted(() => {
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-2">Henüz Bir Fırsat Yakalamadın</h2>
                 <p class="text-slate-400 mb-8 max-w-md">Hollanda açık artırması devam ediyor. Fiyatlar düşerken ilk kapan sen ol ve dijital biletini oluştur.</p>
-                <button @click="router.push('/')" class="px-8 py-4 bg-neon-blue hover:bg-blue-500 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(0,191,255,0.3)] hover:shadow-[0_0_30px_rgba(0,191,255,0.5)] hover:scale-105">
+                <button @click="router.push({ name: 'all-auctions' })" class="px-8 py-4 bg-neon-blue hover:bg-blue-500 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(0,191,255,0.3)] hover:shadow-[0_0_30px_rgba(0,191,255,0.5)] hover:scale-105">
                     Canlı Seanslara Git
                 </button>
             </div>

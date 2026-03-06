@@ -2,7 +2,7 @@
 Reservations API Endpoints (Booking endpoints for HotHour auctions)
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi import APIRouter, HTTPException, Depends, status, Query, Request
 from app.models.reservation import ReservationCreate, ReservationResponse
 from app.core.deps import get_current_user
 from app.services.booking_service import (
@@ -289,7 +289,7 @@ async def get_admin_reservation_details(
 
 
 @router.get("/my/all")
-async def get_my_reservations(current_user = Depends(get_current_user)):
+async def get_my_reservations(request: Request, current_user = Depends(get_current_user)):
     """
     Get all reservations for the current user.
     
@@ -297,6 +297,19 @@ async def get_my_reservations(current_user = Depends(get_current_user)):
     - 200: List of reservations
     """
     reservations = await booking_service.get_user_reservations(current_user.id)
+    # Normalize nested studio.logoUrl to absolute when needed
+    try:
+        base = str(request.base_url).rstrip('/')
+        for r in reservations:
+            studio = r.get('studio') if isinstance(r, dict) else None
+            if studio and isinstance(studio, dict):
+                logo = studio.get('logoUrl')
+                if logo and str(logo).startswith('/uploads/'):
+                    studio['logoUrl'] = f"{base}{logo}"
+                    r['studio'] = studio
+    except Exception:
+        pass
+
     return {
         "user_id": current_user.id,
         "reservations": reservations,

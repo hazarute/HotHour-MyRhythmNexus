@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils'
 import { defineComponent, nextTick } from 'vue'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
-// Mock auction store and socket
+// Mock styles and stores
 vi.mock('@/stores/auction', () => ({ useAuctionStore: () => ({ auctions: [], fetchAuctions: vi.fn(), updatePrice: vi.fn(), updateAuctionStatus: vi.fn(), updateAuctionTurboStartedAt: vi.fn() }) }))
+vi.mock('@/stores/auth', () => ({ useAuthStore: vi.fn(() => ({ user: { studioId: 1 } })) }))
 vi.mock('@/services/socket', () => ({ default: { connect: vi.fn(), on: vi.fn(), off: vi.fn(), subscribeAuction: vi.fn(), unsubscribeAuction: vi.fn(), isConnected: false } }))
 
 import SocketService from '@/services/socket'
@@ -19,7 +21,7 @@ const Dummy = defineComponent({
 
 describe('useAdminAuctions (realtime)', () => {
   beforeEach(() => {
-    vi.resetAllMocks()
+    vi.clearAllMocks()
   })
 
   it('connects socket and registers handlers on mount', async () => {

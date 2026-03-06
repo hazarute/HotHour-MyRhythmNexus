@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks, Request
 from pydantic import BaseModel
 from app.models.user import UserCreate, UserResponse, UserLogin, Token, UserPasswordUpdate
 from app.services.user_service import user_service
@@ -213,7 +213,7 @@ class RefreshRequest(BaseModel):
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(req: RefreshRequest):
+async def refresh_token(request: Request, req: RefreshRequest):
     # Reject if this refresh token has been revoked
     if is_refresh_token_revoked(req.refresh_token):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked")
@@ -237,6 +237,14 @@ async def refresh_token(req: RefreshRequest):
     access_token = security.create_access_token(subject=user.id, expires_delta=access_token_expires)
     refresh_token_expires = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     new_refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
+
+    # Normalize nested studio.logoUrl to absolute when necessary
+    try:
+        base = str(request.base_url).rstrip('/')
+        if user and getattr(user, 'studio', None) and getattr(user.studio, 'logoUrl', None) and str(user.studio.logoUrl).startswith('/uploads/'):
+            user.studio.logoUrl = f"{base}{user.studio.logoUrl}"
+    except Exception:
+        pass
 
     user_response = UserResponse(
         id=user.id,
@@ -273,7 +281,7 @@ async def revoke_token(req: RefreshRequest):
     return {"message": "Token revoked"}
 
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(current_user=Depends(get_current_user)):
+async def read_users_me(request: Request, current_user=Depends(get_current_user)):
     """
     Get current user profile.
     
@@ -285,6 +293,14 @@ async def read_users_me(current_user=Depends(get_current_user)):
     Returns:
         UserResponse: Full user profile with all public data
     """
+    # Normalize nested studio.logoUrl to absolute when necessary
+    try:
+        base = str(request.base_url).rstrip('/')
+        if getattr(current_user, 'studio', None) and getattr(current_user.studio, 'logoUrl', None) and str(current_user.studio.logoUrl).startswith('/uploads/'):
+            current_user.studio.logoUrl = f"{base}{current_user.studio.logoUrl}"
+    except Exception:
+        pass
+
     return UserResponse(
         id=current_user.id,
         email=getattr(current_user, 'email', ''),

@@ -44,10 +44,13 @@ describe('useAdminStudio composable', () => {
 
   it('fetchStudio fetches studio data successfully', async () => {
     mockAuthStore.fetchWithAuth.mockResolvedValue({
-      name: 'Test Studio',
-      address: 'Test Address',
-      logoUrl: 'http://logo',
-      googleMapsUrl: 'http://maps'
+      ok: true,
+      json: () => Promise.resolve({
+        name: 'Test Studio',
+        address: 'Test Address',
+        logoUrl: 'http://logo',
+        googleMapsUrl: 'http://maps'
+      })
     })
     const { studio, loading, fetchStudio } = useAdminStudio()
 
@@ -76,10 +79,13 @@ describe('useAdminStudio composable', () => {
 
   it('updateStudio updates studio data successfully', async () => {
     mockAuthStore.fetchWithAuth.mockResolvedValue({
-      name: 'Updated Studio',
-      address: 'Updated Address',
-      logoUrl: 'http://logo2',
-      googleMapsUrl: 'http://maps2'
+      ok: true,
+      json: () => Promise.resolve({
+        name: 'Updated Studio',
+        address: 'Updated Address',
+        logoUrl: 'http://logo2',
+        googleMapsUrl: 'http://maps2'
+      })
     })
     const { studio, successMessage, updateStudio } = useAdminStudio()
 
@@ -108,7 +114,10 @@ describe('useAdminStudio composable', () => {
 
   it('uploadLogo uploads successfully', async () => {
     mockAuthStore.fetchWithAuth.mockResolvedValue({
-      logoUrl: 'http://uploaded-logo'
+      ok: true,
+      json: () => Promise.resolve({
+        logoUrl: 'http://uploaded-logo'
+      })
     })
     const { studio, successMessage, uploadLogo } = useAdminStudio()
 

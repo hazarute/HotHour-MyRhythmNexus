@@ -379,6 +379,8 @@ onUnmounted(() => {
         :discount-percent="discountPercent"
         :target-time="endTimeValue"
         :loading="bookingLoading"
+        :title="auction.title"
+        :description="auction.description"
         @cancel="showBookingConfirmModal = false"
         @confirm="confirmBooking"
     />

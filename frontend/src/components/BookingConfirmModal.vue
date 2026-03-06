@@ -18,6 +18,14 @@ const props = defineProps({
     type: [String, Number, Date],
     default: null
   },
+  title: {
+    type: String,
+    default: ''
+  },
+  description: {
+    type: String,
+    default: ''
+  },
   loading: {
     type: Boolean,
     default: false
@@ -100,6 +108,12 @@ const formatPrice = (val) => {
           <p class="text-slate-400 text-xs uppercase tracking-wider">Kilitlenecek Tutar</p>
           <p class="text-3xl font-black text-white mt-1">{{ formatPrice(price) }}</p>
           <p class="text-xs text-green-400 mt-2">Başlangıç fiyata göre %{{ discountPercent }} avantajdasın.</p>
+        </div>
+
+        <!-- Auction title & description -->
+        <div v-if="title || description" class="rounded-xl border border-white/10 bg-white/5 p-4">
+          <p v-if="title" class="text-white font-bold text-lg truncate">{{ title }}</p>
+          <p v-if="description" class="text-slate-400 text-sm mt-2 line-clamp-3">{{ description }}</p>
         </div>
 
         <div class="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between">

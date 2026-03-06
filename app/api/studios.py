@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from pydantic import BaseModel
 from typing import Optional
 import os
@@ -13,7 +13,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 @router.get("/me", response_model=StudioResponse)
-async def get_my_studio(current_admin = Depends(get_current_admin_user)):
+async def get_my_studio(request: Request, current_admin = Depends(get_current_admin_user)):
     """
     Get the studio details for the currently logged-in admin.
     """
@@ -31,6 +31,15 @@ async def get_my_studio(current_admin = Depends(get_current_admin_user)):
                 detail="Stüdyo veritabanında bulunamadı."
             )
         
+        # Ensure logoUrl is absolute when it is a relative uploads path
+        try:
+            if getattr(studio, 'logoUrl', None) and str(studio.logoUrl).startswith('/uploads/'):
+                base = str(request.base_url).rstrip('/')
+                studio.logoUrl = f"{base}{studio.logoUrl}"
+        except Exception:
+            # If transformation fails, return studio as-is
+            pass
+
         return studio
     except Exception as e:
         logger.error(f"Error fetching studio: {e}")
@@ -40,7 +49,7 @@ async def get_my_studio(current_admin = Depends(get_current_admin_user)):
         )
 
 @router.put("/me", response_model=StudioResponse)
-async def update_my_studio(studio_in: StudioUpdate, current_admin = Depends(get_current_admin_user)):
+async def update_my_studio(request: Request, studio_in: StudioUpdate, current_admin = Depends(get_current_admin_user)):
     """
     Update the studio details for the currently logged-in admin.
     """
@@ -52,6 +61,15 @@ async def update_my_studio(studio_in: StudioUpdate, current_admin = Depends(get_
     
     try:
         updated_studio = await studio_service.update_studio(current_admin.studioId, studio_in)
+
+        # Normalize logoUrl to absolute if it's a relative uploads path
+        try:
+            if getattr(updated_studio, 'logoUrl', None) and str(updated_studio.logoUrl).startswith('/uploads/'):
+                base = str(request.base_url).rstrip('/')
+                updated_studio.logoUrl = f"{base}{updated_studio.logoUrl}"
+        except Exception:
+            pass
+
         return updated_studio
     except Exception as e:
         logger.error(f"Error updating studio: {e}")
@@ -62,6 +80,7 @@ async def update_my_studio(studio_in: StudioUpdate, current_admin = Depends(get_
 
 @router.post("/me/logo", response_model=StudioResponse)
 async def upload_studio_logo(
+    request: Request,
     file: UploadFile = File(...),
     current_admin=Depends(get_current_admin_user)
 ):
@@ -96,13 +115,22 @@ async def upload_studio_logo(
             shutil.copyfileobj(file.file, buffer)
 
         # The public URL will be /uploads/studios/filename
-        # In a real production setup, we might prefix with settings.API_URL
-        public_url = f"/uploads/studios/{unique_filename}"
+        # Return an absolute URL so frontends served from other origins can load it directly
+        public_path = f"/uploads/studios/{unique_filename}"
+        base = str(request.base_url).rstrip('/')
+        public_url = f"{base}{public_path}"
 
-        # Update studio
-        update_data = StudioUpdate(logoUrl=public_url)
+        # Update studio with the relative path in DB but return absolute URL in response
+        update_data = StudioUpdate(logoUrl=public_path)
         updated_studio = await studio_service.update_studio(current_admin.studioId, update_data)
-        
+
+        try:
+            # Attach absolute URL for response
+            if getattr(updated_studio, 'logoUrl', None):
+                updated_studio.logoUrl = public_url
+        except Exception:
+            pass
+
         return updated_studio
     except Exception as e:
         logger.error(f"Error uploading logo: {e}")

@@ -101,7 +101,17 @@ const formatDate = (dateStr) => {
     })
 }
 
-const studioName = computed(() => props.auction.description || 'Açıklama bilgisi yok')
+const studioName = computed(() => {
+    // Prefer the nested studio name, fall back to known variants, then description
+    return (
+        props.auction?.studio?.name ||
+        props.auction?.studioName ||
+        props.auction?.studio_name ||
+        props.auction?.studio?.title ||
+        props.auction?.description ||
+        'Stüdyo bilgisi yok'
+    )
+})
 </script>
 
 <template>
@@ -188,6 +198,8 @@ const studioName = computed(() => props.auction.description || 'Açıklama bilgi
         :price="currentPrice"
         :discount-percent="Math.max(0, Math.round(((startPrice - currentPrice) / (startPrice || 1)) * 100))"
         :target-time="endTime"
+        :title="props.auction.title"
+        :description="props.auction.description"
         :loading="bookingLoading"
         @cancel="showBookingConfirmModal = false"
         @confirm="confirmBooking"

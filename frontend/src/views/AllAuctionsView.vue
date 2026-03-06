@@ -51,9 +51,16 @@ const filteredAuctions = computed(() => {
 
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase()
+    const matchStudio = (a) => {
+      return String(
+        a?.studio?.name || a?.studioName || a?.studio_name || a?.studio?.title || ''
+      ).toLowerCase().includes(query)
+    }
+
     result = result.filter(a =>
       String(a?.title ?? '').toLowerCase().includes(query) ||
-      String(a?.description ?? '').toLowerCase().includes(query)
+      String(a?.description ?? '').toLowerCase().includes(query) ||
+      matchStudio(a)
     )
   }
 
