@@ -24,7 +24,7 @@ useHead({
             name: 'Hot Hour Nedir ve Nasıl Çalışır?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Hot Hour, stüdyolardaki boş kalan pilates seanslarını dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunan bir platformdur. Fiyat zaman geçtikçe düşer, butona ilk basan o anki indirimli fiyattan rezerve eder.'
+              text: 'Hot Hour, stüdyolardaki boş kalan spor ve dans seanslarını dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunan bir platformdur. Fiyat zaman geçtikçe düşer, butona ilk basan o anki indirimli fiyattan rezerve eder.'
             }
           },
           {

@@ -130,7 +130,7 @@ const onBookingSuccess = (reservation) => {
           <input 
             v-model="searchQuery"
             type="text" 
-            placeholder="Pilates türü veya stüdyo ara..."
+            placeholder="Spor türü veya stüdyo ara..."
             class="w-full pl-12 pr-4 py-4 bg-slate-900/60 border border-slate-700 rounded-2xl text-white placeholder-slate-500 backdrop-blur-md focus:bg-slate-900/90 focus:border-neon-blue focus:ring-1 focus:ring-neon-blue focus:outline-none transition-all shadow-lg"
           />
         </div>

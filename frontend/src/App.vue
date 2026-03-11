@@ -175,7 +175,7 @@ const handleLogout = () => {
               <span class="text-xl font-black tracking-tighter text-white">HotHour</span>
             </router-link>
             <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
-              Pilates stüdyoları için tasarlanmış dinamik fiyatlandırma ve son dakika rezervasyon platformu. Fırsatları yakalayın, stüdyoya katılın.
+              Spor ve dans stüdyoları için tasarlanmış dinamik fiyatlandırma ve son dakika rezervasyon platformu. Fırsatları yakalayın, stüdyoya katılın.
             </p>
           </div>
 

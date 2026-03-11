@@ -43,7 +43,7 @@ onMounted(() => {
                         Profilim
                     </div>
                     <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">Dijital Biletlerim</h1>
-                    <p class="text-slate-400 mt-2 max-w-lg">Stüdyoda göstermek üzere kilitlediğin fırsatlar ve geçmiş Pilates seansların.</p>
+                    <p class="text-slate-400 mt-2 max-w-lg">Stüdyoda göstermek üzere kilitlediğin fırsatlar ve geçmiş seansların.</p>
                 </div>
                 <button @click="router.push('/')" class="group flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors">
                     <span class="material-symbols-outlined transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
@@ -97,7 +97,7 @@ onMounted(() => {
                         </div>
 
                         <div class="mb-6">
-                            <h3 class="text-2xl md:text-3xl font-black text-white mb-2">{{ res.auction_title || 'Özel Pilates Seansı' }}</h3>
+                            <h3 class="text-2xl md:text-3xl font-black text-white mb-2">{{ res.auction_title || 'Özel Seans' }}</h3>
                             <p v-if="res.auction_description" class="text-slate-400 text-sm line-clamp-2 max-w-xl">{{ res.auction_description }}</p>
                             
                             <!-- Studio Info Badge -->

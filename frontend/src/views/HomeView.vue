@@ -12,7 +12,7 @@ const router = useRouter()
 const store = useAuctionStore()
 
 useHead({
-  title: 'HotHour — Son Dakika Pilates Seansları, İndirimli Fiyatlarla',
+  title: 'HotHour — Son Dakika Spor, Dans ve Özel Seanslar, İndirimli Fiyatlarla',
   meta: [
     { name: 'description', content: 'HotHour ile dans ve spor stüdyolarının boş kalan premium seanslarını Hollanda Açık Artırması yöntemiyle kazan. Fiyatlar düşerken sen kazan.' },
     { property: 'og:title', content: 'HotHour — Son Dakika Pilates Seansları' },
@@ -93,7 +93,7 @@ const onBookingSuccess = (reservation) => {
             </h1>
             
             <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed font-medium">
-                Premium Pilates seanslarında boş kalan yerleri Hollanda Açık Artırması ile satıyoruz. 
+                Premium Spor ve Dans seanslarında boş kalan yerleri Hollanda Açık Artırması ile satıyoruz. 
                 Fiyat her geçen an düşer, butona ilk basan piyasanın çok altında stüdyoya girer.
             </p>
             
