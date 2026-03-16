@@ -12,15 +12,15 @@ const router = useRouter()
 const store = useAuctionStore()
 
 useHead({
-  title: 'HotHour — Son Dakika Spor, Dans ve Özel Seanslar, İndirimli Fiyatlarla',
-  meta: [
-    { name: 'description', content: 'HotHour ile dans ve spor stüdyolarının boş kalan premium seanslarını Hollanda Açık Artırması yöntemiyle kazan. Fiyatlar düşerken sen kazan.' },
-    { property: 'og:title', content: 'HotHour — Son Dakika Pilates Seansları' },
-    { property: 'og:description', content: 'Stüdyoların boş kalan premium seanslarını Hollanda Açık Artırması ile yakala.' },
-    { property: 'og:url', content: 'https://hothour.kayraspace.com/' },
-    { name: 'twitter:title', content: 'HotHour — Son Dakika Pilates Seansları' },
-    { name: 'twitter:description', content: 'Stüdyoların boş kalan premium seanslarını indirimli fiyatlarla yakala.' },
-  ],
+  title: 'HotHour — Son Dakika Tüm Hizmetler, İndirimli Fiyatlarla',
+    meta: [
+        { name: 'description', content: 'HotHour ile işletmelerin boş kalan premium hizmet ve fırsatlarını Hollanda Açık Artırması yöntemiyle yakala. Fiyatlar düşerken sen kazan.' },
+                { property: 'og:title', content: 'HotHour — Son Dakika Hizmet Fırsatları' },
+        { property: 'og:description', content: 'İşletmelerin boş kalan premium hizmetlerini Hollanda Açık Artırması ile yakala.' },
+        { property: 'og:url', content: 'https://hothour.kayraspace.com/' },
+                { name: 'twitter:title', content: 'HotHour — Son Dakika Hizmet Fırsatları' },
+        { name: 'twitter:description', content: 'İşletmelerin boş kalan premium hizmetlerini indirimli fiyatlarla yakala.' },
+    ],
   link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/' }],
   script: [
     {
@@ -30,7 +30,7 @@ useHead({
         '@type': 'WebSite',
         name: 'HotHour',
         url: 'https://hothour.kayraspace.com',
-        description: 'Dans ve spor stüdyolarının boş kalan premium seanslarını Hollanda Açık Artırması ile sunan platform.',
+        description: 'İşletmelerin boş kalan premium hizmet ve tekliflerlerini Hollanda Açık Artırması ile sunan platform.',
         potentialAction: {
           '@type': 'SearchAction',
           target: 'https://hothour.kayraspace.com/auctions?q={search_term_string}',
@@ -46,7 +46,7 @@ useHead({
         name: 'HotHour',
         url: 'https://hothour.kayraspace.com',
         logo: 'https://hothour.kayraspace.com/apple-touch-icon.png',
-        description: 'Hollanda Açık Artırması ile son dakika stüdyo seansları platformu.'
+        description: 'Hollanda Açık Artırması ile son dakika hizmet fırsatları platformu.'
       })
     }
   ]
@@ -84,7 +84,7 @@ const onBookingSuccess = (reservation) => {
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-neon-blue opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-neon-blue"></span>
                 </span>
-                Canlı Oturum Arenası
+                Canlı Fırsat Arenası
             </div>
             
             <h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[1.1] tracking-tighter mb-6 drop-shadow-2xl">
@@ -93,8 +93,8 @@ const onBookingSuccess = (reservation) => {
             </h1>
             
             <p class="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed font-medium">
-                Premium Spor ve Dans seanslarında boş kalan yerleri Hollanda Açık Artırması ile satıyoruz. 
-                Fiyat her geçen an düşer, butona ilk basan piyasanın çok altında stüdyoya girer.
+                Premium Hizmetleri Hollanda Açık Artırması ile satıyoruz. 
+                Fiyat her geçen an düşer, butona ilk basan piyasanın çok altında hizmeti rezerve eder.
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center z-20">
@@ -115,7 +115,7 @@ const onBookingSuccess = (reservation) => {
                 <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 backdrop-blur-md flex flex-col items-center text-center">
                     <span class="material-symbols-outlined text-neon-blue mb-2 text-3xl">radar</span>
                     <span class="text-3xl font-black text-white font-mono">{{ activeAuctions.length }}</span>
-                    <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Aktif Seans</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Aktif Fırsatlar</span>
                 </div>
                 <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 backdrop-blur-md flex flex-col items-center text-center">
                     <span class="material-symbols-outlined text-green-400 mb-2 text-3xl">trending_down</span>
@@ -144,7 +144,7 @@ const onBookingSuccess = (reservation) => {
                     <span class="material-symbols-outlined text-neon-blue">live_tv</span>
                 </div>
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Yayındaki Oturumlar</h2>
+                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Yayındaki Fırsatlar</h2>
                     <p class="text-slate-400 text-sm mt-1">Şu an fiyatı düşmeye devam eden sıcak fırsatlar.</p>
                 </div>
             </div>
@@ -173,8 +173,8 @@ const onBookingSuccess = (reservation) => {
                 <span class="material-symbols-outlined text-3xl text-slate-500">hourglass_empty</span>
             </div>
             <h3 class="text-xl font-bold text-white mb-2">Şu An Fırsat Yok</h3>
-            <p class="text-slate-400 text-sm max-w-sm">
-                Şu anda aktif veya fiyatı düşen bir oturum bulunmuyor. Stüdyolar yeni seanslar eklediğinde burada görünecek.
+                <p class="text-slate-400 text-sm max-w-sm">
+                Şu anda aktif veya fiyatı düşen bir fırsat bulunmuyor. İşletmeler yeni teklifler eklediğinde burada görünecek.
             </p>
         </div>
 

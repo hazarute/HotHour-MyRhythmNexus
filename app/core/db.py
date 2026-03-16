@@ -52,7 +52,7 @@ if _use_fake:
             if not hasattr(self, "studioId"):
                 setattr(self, "studioId", None)
             if hasattr(self, "fullName") and not hasattr(self, "firstName"):
-                parts = str(self.fullName).split(" ", 1)
+                parts = str(getattr(self, "fullName", "")).split(" ", 1)
                 setattr(self, "firstName", parts[0])
                 setattr(self, "lastName", parts[1] if len(parts) > 1 else "")
 
@@ -119,6 +119,9 @@ if _use_fake:
                 for v in self._data.values():
                     if v.get("bookingCode") == where.get("bookingCode"):
                         return _Record(**v)
+            for v in self._data.values():
+                if self._matches_where(v, where):
+                    return _Record(**v)
             return None
 
         async def delete(self, *, where):
@@ -210,6 +213,9 @@ if _use_fake:
         def __init__(self):
             self.user = _Model()
             self.studio = _Model()
+            self.sector = _Model()
+            self.studiosector = _Model()
+            self.servicecategory = _Model()
             self.auction = _Model()
             self.reservation = _ReservationModel(self)
             self.notification = _Model()

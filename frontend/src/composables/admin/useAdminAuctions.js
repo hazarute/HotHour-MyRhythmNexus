@@ -30,6 +30,11 @@ export function useAdminAuctions() {
     // List and Filtering
     const filteredAuctions = computed(() => {
         let result = [...myStudioAuctions.value]
+
+        if (statusFilter.value !== 'ALL') {
+            result = result.filter((auction) => String(auction?.status || '').toUpperCase() === statusFilter.value)
+        }
+
         if (searchQuery.value) {
             const query = searchQuery.value.toLowerCase()
             result = result.filter(a => 
@@ -77,26 +82,26 @@ export function useAdminAuctions() {
 
     // Actions
     const handleCancelAuction = async (auction) => {
-        const ok = confirm(`"${auction.title}" oturumunu iptal etmek istiyor musun?`)
+        const ok = confirm(`"${auction.title}" fırsatını iptal etmek istiyor musun?`)
         if (!ok) return
 
         try {
             await store.cancelAuction(auction.id)
             await fetchAuctions()
         } catch (error) {
-            alert(error?.message || 'Oturum iptal edilirken bir hata oluştu.')
+            alert(error?.message || 'Fırsat iptal edilirken bir hata oluştu.')
         }
     }
 
     const handleDeleteDraftAuction = async (auction) => {
-        const ok = confirm(`"${auction.title}" taslak oturumu silinsin mi? Bu işlem geri alınamaz.`)
+        const ok = confirm(`"${auction.title}" taslak fırsatı silinsin mi? Bu işlem geri alınamaz.`)
         if (!ok) return
 
         try {
             await store.deleteAuction(auction.id)
             await fetchAuctions()
         } catch (error) {
-            alert(error?.message || 'Taslak oturum silinirken bir hata oluştu.')
+            alert(error?.message || 'Taslak fırsat silinirken bir hata oluştu.')
         }
     }
 

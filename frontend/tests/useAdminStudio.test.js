@@ -28,7 +28,8 @@ describe('useAdminStudio composable', () => {
       name: '',
       address: '',
       logoUrl: '',
-      googleMapsUrl: ''
+      googleMapsUrl: '',
+      sectors: []
     })
     expect(loading.value).toBe(false)
     expect(error.value).toBe('')
@@ -49,7 +50,8 @@ describe('useAdminStudio composable', () => {
         name: 'Test Studio',
         address: 'Test Address',
         logoUrl: 'http://logo',
-        googleMapsUrl: 'http://maps'
+        googleMapsUrl: 'http://maps',
+        sectors: []
       })
     })
     const { studio, loading, fetchStudio } = useAdminStudio()
@@ -63,7 +65,8 @@ describe('useAdminStudio composable', () => {
       name: 'Test Studio',
       address: 'Test Address',
       logoUrl: 'http://logo',
-      googleMapsUrl: 'http://maps'
+      googleMapsUrl: 'http://maps',
+      sectors: []
     })
   })
 
@@ -84,7 +87,8 @@ describe('useAdminStudio composable', () => {
         name: 'Updated Studio',
         address: 'Updated Address',
         logoUrl: 'http://logo2',
-        googleMapsUrl: 'http://maps2'
+        googleMapsUrl: 'http://maps2',
+        sectors: []
       })
     })
     const { studio, successMessage, updateStudio } = useAdminStudio()
@@ -93,7 +97,7 @@ describe('useAdminStudio composable', () => {
     const result = await updateStudio()
 
     expect(result).toBe(true)
-    expect(successMessage.value).toBe('Stüdyo bilgileri başarıyla güncellendi!')
+    expect(successMessage.value).toBe('İşletme bilgileri başarıyla güncellendi!')
     expect(studio.value.name).toBe('Updated Studio')
     expect(mockAuthStore.user.studio.name).toBe('Updated Studio')
 

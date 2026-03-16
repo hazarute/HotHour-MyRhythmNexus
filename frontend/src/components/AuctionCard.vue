@@ -109,7 +109,7 @@ const studioName = computed(() => {
         props.auction?.studio_name ||
         props.auction?.studio?.title ||
         props.auction?.description ||
-        'Stüdyo bilgisi yok'
+        'İşletme bilgisi yok'
     )
 })
 </script>

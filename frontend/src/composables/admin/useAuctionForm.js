@@ -1,5 +1,6 @@
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useAuctionStore } from '@/stores/auction'
 
 export const DISCOUNT_OPTIONS = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 export const GENDER_OPTIONS = [
@@ -9,19 +10,24 @@ export const GENDER_OPTIONS = [
 ]
 
 export function useAuctionForm(props, emit) {
+    const auctionStore = useAuctionStore()
+    const authStore = useAuthStore()
     const TURBO_TRIGGER_DEFAULT = 120
     const TURBO_INTERVAL_DEFAULT = 10
 
     const selectedDiscountRate = ref(null)
     const showDiscountDropdown = ref(false)
     const showGenderDropdown = ref(false)
+    const showServiceCategoryDropdown = ref(false)
     const loading = ref(false)
+    const adminStudio = ref(null)
 
     const minDateTime = ref('')
 
     const form = reactive({
         title: '',
         description: '',
+        serviceCategoryId: null,
         allowed_gender: 'ANY',
         start_time: '',
         end_time: '',
@@ -36,10 +42,77 @@ export function useAuctionForm(props, emit) {
         turbo_drop_amount: null
     })
 
+    const adminStudioSectors = computed(() => Array.isArray(adminStudio.value?.sectors) ? adminStudio.value.sectors : [])
+    const hasLinkedStudio = computed(() => Boolean(authStore.user?.studioId))
+    const adminStudioSectorIds = computed(() => adminStudioSectors.value
+        .map((item) => Number(item?.sectorId ?? item?.sector?.id))
+        .filter((value) => Number.isFinite(value))
+    )
+    const adminStudioSectorNames = computed(() => adminStudioSectors.value
+        .map((item) => item?.sector?.name)
+        .filter(Boolean)
+    )
+    const hasAdminStudioSectors = computed(() => adminStudioSectorIds.value.length > 0)
+    const serviceCategoryOptions = computed(() => {
+        const categories = Array.isArray(auctionStore.serviceCategories) ? auctionStore.serviceCategories : []
+
+        if (!hasLinkedStudio.value) {
+            return categories
+        }
+
+        if (!hasAdminStudioSectors.value) {
+            return []
+        }
+
+        const allowedSectorIds = new Set(adminStudioSectorIds.value)
+        return categories.filter((category) => allowedSectorIds.has(Number(category?.sectorId)))
+    })
+    const serviceCategoryHelpText = computed(() => {
+        if (hasAdminStudioSectors.value) {
+            if (serviceCategoryOptions.value.length > 0) {
+                return 'İşletmenize bağlı sektörlerin hizmetleri listelenir ve seçim zorunludur.'
+            }
+
+            return 'İşletmenize sektör bağlandı ancak bu sektörlere ait aktif hizmet bulunmuyor.'
+        }
+
+        if (hasLinkedStudio.value) {
+            return 'İşletmenize henüz sektör bağlanmadığı için uygun hizmet kategorisi gösterilemiyor.'
+        }
+
+        return 'Yalnızca ön tanımlı aktif hizmet kategorileri seçilebilir.'
+    })
+
     const roundMoney = (value) => Number(Number(value || 0).toFixed(2))
 
     const getAllowedGenderLabel = (value) => {
         return GENDER_OPTIONS.find((item) => item.value === value)?.label || 'Fark Etmez'
+    }
+
+    const getSelectedServiceCategoryLabel = () => {
+        if (hasAdminStudioSectors.value && serviceCategoryOptions.value.length === 0) {
+            return 'Uygun hizmet kategorisi bulunamadı'
+        }
+
+        if (!form.serviceCategoryId) {
+            return hasAdminStudioSectors.value
+                ? 'İşletmenize uygun hizmet seçin'
+                : 'Kategori seçmeden devam et'
+        }
+
+        const selectedCategory = serviceCategoryOptions.value.find(
+            (category) => Number(category.id) === Number(form.serviceCategoryId)
+        )
+
+        if (!selectedCategory) {
+            return hasAdminStudioSectors.value
+                ? 'İşletmenize uygun hizmet seçin'
+                : 'Kategori seçmeden devam et'
+        }
+
+        return selectedCategory.sector
+            ? `${selectedCategory.name} - ${selectedCategory.sector.name}`
+            : selectedCategory.name
     }
 
     const formatDateForInput = (isoString) => {
@@ -102,6 +175,16 @@ export function useAuctionForm(props, emit) {
     // Comprehensive validation before submit
     const validateFormCompleteness = () => {
         const errors = []
+
+        if (hasAdminStudioSectors.value && !form.serviceCategoryId) {
+            errors.push('İşletmenize bağlı sektörler için bir hizmet kategorisi seçmelisiniz.')
+        }
+
+        if (form.serviceCategoryId && !serviceCategoryOptions.value.some(
+            (category) => Number(category.id) === Number(form.serviceCategoryId)
+        )) {
+            errors.push('Seçilen hizmet kategorisi işletmenizin sektörleriyle uyumlu değil.')
+        }
 
         if (!form.start_time) {
             errors.push('Açık Artırma Başlangıcı zorunludur.')
@@ -235,6 +318,7 @@ export function useAuctionForm(props, emit) {
 
         Object.assign(form, {
             ...newData,
+            serviceCategoryId: newData.serviceCategoryId ?? newData.service_category_id ?? form.serviceCategoryId,
             allowed_gender: newData.allowed_gender ?? newData.allowedGender ?? form.allowed_gender,
             start_price: startPrice,
             floor_price: floorPrice,
@@ -249,11 +333,38 @@ export function useAuctionForm(props, emit) {
         applyAutomaticPricing()
     }
 
-    onMounted(() => {
+    const fetchAdminStudio = async () => {
+        if (!authStore.user?.studioId || typeof authStore.fetchWithAuth !== 'function') {
+            adminStudio.value = null
+            return null
+        }
+
+        try {
+            const response = await authStore.fetchWithAuth('/api/v1/studios/me')
+            if (!response.ok) {
+                adminStudio.value = null
+                return null
+            }
+
+            adminStudio.value = await response.json()
+            return adminStudio.value
+        } catch (error) {
+            console.error('Admin studio bilgisi alınamadı:', error)
+            adminStudio.value = null
+            return null
+        }
+    }
+
+    onMounted(async () => {
         // Set minimal date to current time
         const now = new Date()
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
         minDateTime.value = now.toISOString().slice(0, 16)
+
+        await Promise.allSettled([
+            auctionStore.fetchServiceCategories(),
+            fetchAdminStudio()
+        ])
 
         if (props.initialData) {
             populateForm(props.initialData)
@@ -281,6 +392,17 @@ export function useAuctionForm(props, emit) {
         }
     )
 
+    watch(serviceCategoryOptions, (options) => {
+        if (!form.serviceCategoryId) {
+            return
+        }
+
+        const stillAllowed = options.some((category) => Number(category.id) === Number(form.serviceCategoryId))
+        if (!stillAllowed) {
+            form.serviceCategoryId = null
+        }
+    })
+
     const submitForm = () => {
         loading.value = true
         applyAutomaticPricing()
@@ -293,13 +415,14 @@ export function useAuctionForm(props, emit) {
             return
         }
 
-        const authStore = useAuthStore()
         const payload = { ...form }
 
         // Adminin bağlı olduğu studyo ID'sini ekle
         if (authStore.user?.studioId) {
             payload.studioId = authStore.user.studioId
         }
+
+        payload.serviceCategoryId = payload.serviceCategoryId ? Number(payload.serviceCategoryId) : null
 
         if (payload.start_time && payload.start_time.length === 16) {
             const d = new Date(payload.start_time)
@@ -338,6 +461,12 @@ export function useAuctionForm(props, emit) {
         selectedDiscountRate,
         showDiscountDropdown,
         showGenderDropdown,
+        showServiceCategoryDropdown,
+        adminStudioSectorNames,
+        hasAdminStudioSectors,
+        serviceCategoryHelpText,
+        serviceCategoryOptions,
+        getSelectedServiceCategoryLabel,
         getAllowedGenderLabel,
         isTurboEligible,
         isStartTimeValidCheck,

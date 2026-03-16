@@ -88,8 +88,8 @@ onMounted(async () => {
             <span class="material-symbols-outlined text-neon-green text-5xl">check_circle</span>
           </div>
           <div>
-            <h2 class="text-2xl font-black text-white mb-2">Arenaya Giriş İzni Verildi!</h2>
-            <p class="text-slate-300 text-sm mb-4">Hesabınız başarıyla doğrulandı. Artık seanslara teklif verebilirsiniz.</p>
+            <h2 class="text-2xl font-black text-white mb-2">Fırsat Alanına Giriş İzni Verildi!</h2>
+            <p class="text-slate-300 text-sm mb-4">Hesabınız başarıyla doğrulandı. Artık fırsatlara teklif verebilirsiniz.</p>
             <p class="text-[10px] text-neon-blue uppercase tracking-widest font-bold animate-pulse">Giriş sayfasına yönlendiriliyorsunuz...</p>
           </div>
           <div class="pt-4 border-t border-white/5">

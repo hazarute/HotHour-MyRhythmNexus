@@ -20,33 +20,53 @@ export const useAuctionStore = defineStore('auction', () => {
     // State
     const auctions = ref([])
     const currentAuction = ref(null)
+    const sectors = ref([])
+    const serviceCategories = ref([])
     const loading = ref(false)
     const error = ref(null)
     const pendingBookingAuctionId = ref(null)
 
+    const buildApiUrl = (path) => {
+        const primaryBase = getPrimaryApiBase()
+        const sameOriginBase = getSameOriginBase()
+
+        if (primaryBase) return `${primaryBase}${path}`
+        if (sameOriginBase) return `${sameOriginBase}${path}`
+        throw new Error('VITE_API_URL tanımlı değil')
+    }
+
+    const buildAuctionQuery = (filters = {}) => {
+        const params = new URLSearchParams()
+        params.set('include_computed', 'true')
+
+        if (filters.sector) {
+            params.set('sector', filters.sector)
+        }
+
+        if (filters.serviceCategory) {
+            params.set('service_category', filters.serviceCategory)
+        }
+
+        if (filters.allowedGender) {
+            params.set('allowed_gender', filters.allowedGender)
+        }
+
+        return params.toString()
+    }
+
     // Actions
-    async function fetchAuctions() {
+    async function fetchAuctions(filters = {}) {
         loading.value = true
         error.value = null
         try {
             const authStore = useAuthStore()
             let response
-            const primaryBase = getPrimaryApiBase()
-            const sameOriginBase = getSameOriginBase()
+            const path = `/api/v1/auctions/?${buildAuctionQuery(filters)}`
 
             if (authStore && typeof authStore.fetchWithAuth === 'function') {
-                response = await authStore.fetchWithAuth('/api/v1/auctions/?include_computed=true')
+                response = await authStore.fetchWithAuth(path)
             } else {
-                if (!primaryBase) {
-                    throw new Error('VITE_API_URL tanımlı değil')
-                }
-
-                try {
-                    response = await fetch(`${primaryBase}/api/v1/auctions/?include_computed=true`)
-                } catch (networkError) {
-                    if (!sameOriginBase) throw networkError
-                    response = await fetch(`${sameOriginBase}/api/v1/auctions/?include_computed=true`)
-                }
+                response = await fetch(buildApiUrl(path))
             }
 
             if (!response.ok) {
@@ -58,6 +78,48 @@ export const useAuctionStore = defineStore('auction', () => {
             console.error("Failed to fetch auctions:", err)
         } finally {
             loading.value = false
+        }
+    }
+
+    async function fetchSectors() {
+        error.value = null
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/sectors'))
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch sectors')
+            }
+
+            sectors.value = await response.json()
+            return sectors.value
+        } catch (err) {
+            error.value = err?.message || 'Sektörler alınamadı'
+            console.error('Failed to fetch sectors:', err)
+            return []
+        }
+    }
+
+    async function fetchServiceCategories(filters = {}) {
+        error.value = null
+        try {
+            const params = new URLSearchParams()
+            if (filters.sector) {
+                params.set('sector_slug', filters.sector)
+            }
+
+            const suffix = params.toString() ? `?${params.toString()}` : ''
+            const response = await fetch(buildApiUrl(`/api/v1/service-categories${suffix}`))
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch service categories')
+            }
+
+            serviceCategories.value = await response.json()
+            return serviceCategories.value
+        } catch (err) {
+            error.value = err?.message || 'Hizmet kategorileri alınamadı'
+            console.error('Failed to fetch service categories:', err)
+            return []
         }
     }
 
@@ -317,10 +379,14 @@ export const useAuctionStore = defineStore('auction', () => {
     return {
         auctions,
         currentAuction,
+        sectors,
+        serviceCategories,
         loading,
         error,
         pendingBookingAuctionId,
         fetchAuctions,
+        fetchSectors,
+        fetchServiceCategories,
         fetchAuctionById,
         createAuction,
         updateAuction,

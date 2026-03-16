@@ -24,17 +24,17 @@ useHead({
         <section class="hh-glass-card rounded-2xl border border-white/10 p-5 sm:p-6">
           <h2 class="text-lg font-bold text-white">1) Hizmetin Kapsamı</h2>
           <p class="mt-2 text-sm text-slate-300 leading-7">
-            HotHour, stüdyoların uygunluk verdiği seanslar için dinamik fiyat düşüş modeliyle rezervasyon imkânı sunar.
-            Platform, seansın çevrim içi rezerve edilmesini sağlar; nihai hizmet stüdyo tarafından yerinde sunulur.
+            HotHour, işletmelerin uygunluk verdiği fırsatlar için dinamik fiyat düşüş modeliyle rezervasyon imkânı sunar.
+            Platform, fırsatın çevrim içi rezerve edilmesini sağlar; nihai hizmet işletme tarafından yerinde sunulur.
           </p>
         </section>
 
         <section class="hh-glass-card rounded-2xl border border-white/10 p-5 sm:p-6">
           <h2 class="text-lg font-bold text-white">2) Fiyatlandırma ve Rezervasyon</h2>
           <ul class="mt-2 text-sm text-slate-300 leading-7 list-disc pl-5 space-y-1">
-            <li>Seans fiyatları, açık artırma süresi boyunca sistem tarafından düşürülebilir.</li>
+            <li>Fırsat fiyatları, açık artırma süresi boyunca sistem tarafından düşürülebilir.</li>
             <li>“Hemen Kap” işlemi sırasında görünen fiyat, başarılı rezervasyon anında kilitlenir.</li>
-            <li>Aynı seans için ilk başarılı rezervasyon geçerlidir; sonradan gelen denemeler reddedilebilir.</li>
+            <li>Aynı fırsat için ilk başarılı rezervasyon geçerlidir; sonradan gelen denemeler reddedilebilir.</li>
             <li>Sistem kaynaklı gecikmelerde güncel durum, uygulamadaki son doğrulanmış kayıt üzerinden değerlendirilir.</li>
           </ul>
         </section>
@@ -43,8 +43,8 @@ useHead({
           <h2 class="text-lg font-bold text-white">3) Ödeme ve Katılım</h2>
           <ul class="mt-2 text-sm text-slate-300 leading-7 list-disc pl-5 space-y-1">
             <li>HotHour modeli “Rezervasyon Yap & Yerinde Öde” prensibiyle çalışır.</li>
-            <li>Platform üzerinden yapılan rezervasyon, stüdyoda ödeme yükümlülüğünü ortadan kaldırmaz.</li>
-            <li>Kullanıcı, rezervasyon kodunu stüdyoya ibraz etmekle sorumludur.</li>
+            <li>Platform üzerinden yapılan rezervasyon, işletmede ödeme yükümlülüğünü ortadan kaldırmaz.</li>
+            <li>Kullanıcı, rezervasyon kodunu işletmeye ibraz etmekle sorumludur.</li>
           </ul>
         </section>
 
@@ -60,7 +60,7 @@ useHead({
         <section class="hh-glass-card rounded-2xl border border-white/10 p-5 sm:p-6">
           <h2 class="text-lg font-bold text-white">5) İptal, Değişiklik ve Erişim</h2>
           <ul class="mt-2 text-sm text-slate-300 leading-7 list-disc pl-5 space-y-1">
-            <li>Seans durumu stüdyo veya sistem tarafından güncellenebilir (ör. iptal, süre dolumu, satış kapanışı).</li>
+            <li>Fırsat durumu işletme veya sistem tarafından güncellenebilir (ör. iptal, süre dolumu, satış kapanışı).</li>
             <li>Teknik bakım, güvenlik veya operasyonel nedenlerle hizmette geçici kesinti yaşanabilir.</li>
             <li>Gerekli hallerde belirli hesaplara erişim kısıtı uygulanabilir.</li>
           </ul>
@@ -70,7 +70,7 @@ useHead({
           <h2 class="text-lg font-bold text-white">6) Sorumluluk Sınırları</h2>
           <p class="mt-2 text-sm text-slate-300 leading-7">
             HotHour, platformun makul sürekliliği için gerekli teknik önlemleri alır. Ancak internet erişimi,
-            üçüncü taraf servisler, cihaz uyumluluğu veya stüdyo kaynaklı sebeplerden doğan aksaklıklardan sınırsız
+            üçüncü taraf servisler, cihaz uyumluluğu veya işletme kaynaklı sebeplerden doğan aksaklıklardan sınırsız
             sorumluluk üstlenmez. Kullanıcı, hizmeti mevcut haliyle kullandığını kabul eder.
           </p>
         </section>

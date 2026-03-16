@@ -1,16 +1,31 @@
 # Proje Özeti (Project Brief)
 
 **Proje Adı:** HotHour (MyRhythmNexus)
-**Mevcut Durum:** ✅ Tamamlandı / Stabil Sürüm - Bakım Modunda (Maintenance Mode)
+**Güncel Faz:** `v1.5 aktif` 
+**Çalışma Modu:** köklü değişiklikler sonrası lokal manuel test + stabilizasyon + revize döngüsü. Canlıya almak için erken.
 
 ## Temel Konsept
-Platform, dans ve spor stüdyoları gibi işletmelerin boş kontenjanlarını "Düşen Fiyatlı Açık Artırma" (Dutch Auction) mantığıyla satmasını sağlayan dinamik bir biletleme ve rezervasyon sistemidir. Fiyatlar zamanla düşer (HotHour/Turbo indirimleri) ve kullanıcılar FOMO (Fırsatı Kaçırma Korkusu) ile hızlıca satın alma yapar.
+HotHour, boş kalan hizmet kapasitesini Dutch Auction modeliyle değerlendiren çok kiracılı rezervasyon platformudur.
 
-## Başlıca Modüller
-- **Kullanıcı Modülü:** Kayıt, giriş, cüzdan (bakiye) yönetimi, gerçek zamanlı fiyat takibi, rezervasyon yapma.
-- **Admin/Stüdyo Modülü:** Çoklu kiracı (Multi-tenant) mantığıyla çalışır. Her admin kendi stüdyosuna atanır; sadece kendi stüdyosunun açık artırmalarını, logolarını, istatistiklerini ve rezervasyonlarını yönetir.
-- **Dinamik Fiyatlandırma Motoru:** APScheduler arka plan görevleriyle düzenli periyotlarda (veya Turbo tetikleyicilerle) fiyat güncellemeleri.
-- **Gerçek Zamanlı Çekirdek (WebSocket):** Fiyat düşüşleri ve rezervasyon durumlarını (Satıldı/Dolu vb.) anlık olarak (Socket.io) tüm kullanıcılara iletir.
+İlk ürün odağı spor/dans/pilates idi. `v1.5` ile ürün çok sektörlü hizmet pazarına genişliyor.
 
-## Proje Hedefi (AI İçin Not)
-Projenin özellik geliştirme (feature development) aşaması tamamlanmıştır. Bundan sonra yapılacak işlemler **yalnızca hata ayıklama (bug-fixing), sistem monitörleme ve bakım** odaklı olacaktır.
+## v1.5 Ana Hedef
+`Studio` tenant modeli korunarak iki seviyeli sınıflandırma getirildi:
+- işletme seviyesi sektörler: `Sector` + `StudioSector`
+- fırsat seviyesi hizmet kimliği: `ServiceCategory` + `Auction.serviceCategoryId`
+
+## Temel Kurallar
+- `Studio` tablo ve teknik isim olarak korunur.
+- Ürün dilinde `studio` -> `işletme`, `auction` -> `fırsat`.
+- Master veri yönetimi panelden değil, SSH/CLI scriptleriyle yapılır.
+- Normal admin sektör veya hizmet kategorisi oluşturamaz.
+- Admin yalnızca kendi tenant verisini yönetir.
+
+## Şu Anki Öncelik
+- `v1.5` mimarisini stabil hale getirmek
+- manuel lokal testlerden gelen geri bildirimlerle revize etmek
+- mevcut akışlarda regresyon bırakmamak
+
+## İkincil Gündemler
+- SEO backlog'ta tutulur
+- canlıya alma kararı stabilizasyon tamamlanmadan verilmez

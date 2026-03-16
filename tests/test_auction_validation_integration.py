@@ -23,7 +23,14 @@ async def db_connect():
         await db.db.disconnect()
 
 
-async def create_admin_user(email: str, phone: str, full_name: str, password: str, gender: str = "FEMALE"):
+async def create_admin_user(
+    email: str,
+    phone: str,
+    full_name: str,
+    password: str,
+    gender: str = "FEMALE",
+    studio_id: int | None = None,
+):
     """Create admin user directly in DB for testing"""
     hashed = security.get_password_hash(password)
     return await db.db.user.create(
@@ -35,6 +42,7 @@ async def create_admin_user(email: str, phone: str, full_name: str, password: st
             "role": "ADMIN",
             "gender": gender,
             "isVerified": True,
+            "studioId": studio_id,
         }
     )
 
@@ -255,4 +263,203 @@ async def test_status_only_cancel_skips_full_turbo_duration_validation():
         assert cancel_res.json()["status"] == "CANCELLED"
 
     await delete_auction_in_db(auction_id)
+    await delete_user_in_db(email)
+
+
+@pytest.mark.asyncio
+async def test_cancel_status_only_update_allows_legacy_uncategorized_studio_auction():
+    email = f"admin+{uuid.uuid4().hex[:8]}@example.com"
+    phone = f"+100{uuid.uuid4().hex[:7]}"
+    password = "AdminPass123!"
+
+    sector = await db.db.sector.create(
+        data={
+            "name": f"Guzellik {uuid.uuid4().hex[:4]}",
+            "slug": f"guzellik-{uuid.uuid4().hex[:6]}",
+            "isActive": True,
+        }
+    )
+    studio = await db.db.studio.create(
+        data={
+            "name": f"Studio {uuid.uuid4().hex[:6]}",
+            "address": "123 Test Street",
+        }
+    )
+    await db.db.studiosector.create(
+        data={
+            "studioId": studio.id,
+            "sectorId": sector.id,
+            "assignedAt": datetime.now(timezone.utc),
+        }
+    )
+    await create_admin_user(
+        email,
+        phone,
+        "Admin User",
+        password,
+        studio_id=studio.id,
+    )
+
+    now = datetime.now(timezone.utc)
+    start_time = now - timedelta(minutes=45)
+    end_time = now + timedelta(minutes=45)
+    created_auction = await db.db.auction.create(
+        data={
+            "title": "Legacy Uncategorized Auction",
+            "description": "Status-only cancel should bypass category requirement",
+            "allowedGender": "ANY",
+            "startPrice": Decimal("300.00"),
+            "floorPrice": Decimal("120.00"),
+            "currentPrice": Decimal("260.00"),
+            "startTime": start_time,
+            "endTime": end_time,
+            "scheduledAt": end_time,
+            "dropIntervalMins": 15,
+            "dropAmount": Decimal("15.00"),
+            "turboEnabled": False,
+            "status": "ACTIVE",
+            "studioId": studio.id,
+        }
+    )
+    auction_id = int(getattr(created_auction, "id"))
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_res = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login_res.status_code == 200
+        token = login_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        cancel_res = await client.put(
+            f"/api/v1/auctions/{auction_id}",
+            json={"status": "CANCELLED"},
+            headers=headers,
+        )
+
+        assert cancel_res.status_code == 200, cancel_res.text
+        assert cancel_res.json()["status"] == "CANCELLED"
+
+    await delete_auction_in_db(auction_id)
+    await delete_user_in_db(email)
+
+
+@pytest.mark.asyncio
+async def test_admin_can_update_existing_auction_after_studio_sector_changes_when_category_is_unchanged():
+    email = f"admin+{uuid.uuid4().hex[:8]}@example.com"
+    phone = f"+100{uuid.uuid4().hex[:7]}"
+    password = "AdminPass123!"
+
+    beauty = await db.db.sector.create(
+        data={
+            "name": f"Guzellik {uuid.uuid4().hex[:4]}",
+            "slug": f"guzellik-{uuid.uuid4().hex[:6]}",
+            "isActive": True,
+        }
+    )
+    fitness = await db.db.sector.create(
+        data={
+            "name": f"Fitness {uuid.uuid4().hex[:4]}",
+            "slug": f"fitness-{uuid.uuid4().hex[:6]}",
+            "isActive": True,
+        }
+    )
+
+    beauty_category = await db.db.servicecategory.create(
+        data={
+            "name": f"Cilt Bakimi {uuid.uuid4().hex[:4]}",
+            "slug": f"cilt-bakimi-{uuid.uuid4().hex[:6]}",
+            "isActive": True,
+            "sectorId": beauty.id,
+        }
+    )
+    await db.db.servicecategory.create(
+        data={
+            "name": f"Pilates {uuid.uuid4().hex[:4]}",
+            "slug": f"pilates-{uuid.uuid4().hex[:6]}",
+            "isActive": True,
+            "sectorId": fitness.id,
+        }
+    )
+
+    studio = await db.db.studio.create(
+        data={
+            "name": f"Studio {uuid.uuid4().hex[:6]}",
+            "address": "123 Test Street",
+        }
+    )
+    await db.db.studiosector.create(
+        data={
+            "studioId": studio.id,
+            "sectorId": beauty.id,
+            "assignedAt": datetime.now(timezone.utc),
+        }
+    )
+    await create_admin_user(
+        email,
+        phone,
+        "Admin User",
+        password,
+        studio_id=studio.id,
+    )
+
+    now = datetime.now(timezone.utc)
+    start_time = now + timedelta(hours=2)
+    end_time = now + timedelta(hours=5)
+    created_auction = await db.db.auction.create(
+        data={
+            "title": "Historical Category Auction",
+            "description": "Should remain manageable after sector change",
+            "allowedGender": "ANY",
+            "startPrice": Decimal("300.00"),
+            "floorPrice": Decimal("150.00"),
+            "currentPrice": Decimal("300.00"),
+            "startTime": start_time,
+            "endTime": end_time,
+            "scheduledAt": end_time,
+            "dropIntervalMins": 30,
+            "dropAmount": Decimal("15.00"),
+            "turboEnabled": False,
+            "turboTriggerMins": 120,
+            "turboDropAmount": Decimal("0.00"),
+            "turboIntervalMins": 10,
+            "status": "DRAFT",
+            "studioId": studio.id,
+            "serviceCategoryId": beauty_category.id,
+        }
+    )
+
+    await db.db.studiosector.delete_many(where={"studioId": studio.id})
+    await db.db.studiosector.create(
+        data={
+            "studioId": studio.id,
+            "sectorId": fitness.id,
+            "assignedAt": datetime.now(timezone.utc),
+        }
+    )
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        login_res = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        assert login_res.status_code == 200, login_res.text
+        token = login_res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        update_res = await client.put(
+            f"/api/v1/auctions/{created_auction.id}",
+            json={
+                "title": "Historical Category Auction Updated",
+                "start_price": "280.00",
+                "floor_price": "140.00",
+                "drop_amount": "14.00",
+                "drop_interval_mins": 30,
+            },
+            headers=headers,
+        )
+
+        assert update_res.status_code == 200, update_res.text
+        payload = update_res.json()
+        assert payload["title"] == "Historical Category Auction Updated"
+        assert payload["serviceCategoryId"] == beauty_category.id
+
+    await delete_auction_in_db(created_auction.id)
     await delete_user_in_db(email)

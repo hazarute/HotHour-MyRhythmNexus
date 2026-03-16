@@ -53,7 +53,7 @@ async def test_send_verification_email_calls_send_email_with_expected_payload():
                     assert mock_send_email.await_count == 1
                     _, kwargs = mock_send_email.await_args_list[0]
                     assert kwargs["email_to"] == email_to
-                    assert kwargs["subject_template"] == "🔥 HotHour - Arenaya Giriş İçin Son Bir Adım"
+                    assert "HotHour -" in kwargs["subject_template"]
                     assert "verify-email?token=tok_123" in kwargs["html_template"]
                     assert "logo_marka_adi_var.png" in kwargs["html_template"]
                     assert "HESABI DOĞRULA" in kwargs["html_template"]

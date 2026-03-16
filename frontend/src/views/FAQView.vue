@@ -24,7 +24,7 @@ useHead({
             name: 'Hot Hour Nedir ve Nasıl Çalışır?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Hot Hour, stüdyolardaki boş kalan spor ve dans seanslarını dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunan bir platformdur. Fiyat zaman geçtikçe düşer, butona ilk basan o anki indirimli fiyattan rezerve eder.'
+              text: 'Hot Hour, işletmelerdeki hizmetleri dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunan bir platformdur. Fiyat zaman geçtikçe düşer, butona ilk basan o anki indirimli fiyattan rezerve eder.'
             }
           },
           {
@@ -32,15 +32,15 @@ useHead({
             name: 'Fiyatlar ne kadar düşebilir?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Her seansın bir taban (minimum) fiyatı vardır. Fiyat, seans saatine yaklaşıldıkça bu taban fiyata kadar kademeli olarak düşer. Son dakikalarda Turbo Mod devreye girer ve düşüş hızlanır.'
+              text: 'Her hizmetin bir taban (minimum) fiyatı vardır. Fiyat, hizmet saatine yaklaşıldıkça bu taban fiyata kadar kademeli olarak düşer. Son dakikalarda Turbo Mod devreye girer ve düşüş hızlanır.'
             }
           },
           {
             '@type': 'Question',
-            name: 'Rezerve ettiğim seansın ödemesini nasıl yapacağım?',
+            name: 'Rezerve ettiğim hizmetin ödemesini nasıl yapacağım?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'Şu an için platformda yakaladığınız indirimli fiyat adınıza kilitlenir. Ödemeyi stüdyoya geldiğinizde resepsiyonda yapabilirsiniz.'
+              text: 'Şu an için platformda yakaladığınız indirimli fiyat adınıza kilitlenir. Ödemeyi hizmeti aldığınızda gerçekleştirebilirsiniz.'
             }
           }
         ]
@@ -54,23 +54,23 @@ const openIndex = ref(0)
 const faqs = [
   {
     question: "Hot Hour Nedir ve Nasıl Çalışır?",
-    answer: "Hot Hour, stüdyomuzdaki boş kalan pilates seanslarını dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunduğumuz bir platformdur. Seansın başlamasına saatler kala fiyat en üst seviyeden başlar ve zaman geçtikçe düşer. Fiyat sizin için uygun olduğunda 'Hemen Kap' butonuna basarak seansı o anki indirimli fiyattan rezerve edersiniz."
+    answer: "Hot Hour, işletmelerdeki boş kalan hizmetleri dinamik fiyatlandırma (Hollanda Açık Artırması) ile sunduğumuz bir platformdur. Hizmetin başlamasına saatler kala fiyat en üst seviyeden başlar ve zaman geçtikçe düşer. Fiyat sizin için uygun olduğunda 'Hemen Kap' butonuna basarak hizmeti o anki indirimli fiyattan rezerve edersiniz."
   },
   {
     question: "Fiyatlar ne kadar düşebilir?",
-    answer: "Her seansın bir taban (minimum) fiyatı vardır. Fiyat, seans saatine yaklaşıldıkça bu taban fiyata kadar kademeli olarak düşer. Son dakikalara girildiğinde 'Turbo Mod' devreye girer ve düşüş hızlanır."
+    answer: "Her hizmetin bir taban (minimum) fiyatı vardır. Fiyat, hizmet saatine yaklaşıldıkça bu taban fiyata kadar kademeli olarak düşer. Son dakikalara girildiğinde 'Turbo Mod' devreye girer ve düşüş hızlanır."
   },
   {
-    question: "Rezerve ettiğim seansın ödemesini nasıl yapacağım?",
-    answer: "Şu an için sistemimizde 'Rezerve Et, Stüdyoda Öde' modeli geçerlidir. Platform üzerinden yakaladığınız indirimli fiyat adınıza kilitlenir. Ödemeyi stüdyoya geldiğinizde resepsiyonda yapabilirsiniz."
+    question: "Rezerve ettiğim hizmetin ödemesini nasıl yapacağım?",
+    answer: "Şu an için sistemimizde 'Rezerve Et, İşletmede Öde' modeli geçerlidir. Platform üzerinden yakaladığınız indirimli fiyat adınıza kilitlenir. Ödemeyi hizmeti aldığınızda gerçekleştirebilirsiniz."
   },
   {
-    question: "Aldığım bir seansı iptal edebilir miyim?",
-    answer: "Evet, ancak fırsat seansları son dakika sunulduğu için iptallerin seans başlangıcından en geç 2 saat önce yapılması gerekmektedir. İptal işlemlerini 'Biletlerim' sayfası üzerinden gerçekleştirebilirsiniz."
+    question: "Aldığım bir hizmeti iptal edebilir miyim?",
+    answer: "Evet, ancak fırsat hizmetleri son dakika sunulduğu için iptallerin hizmet başlangıcından en geç 2 saat önce yapılması gerekmektedir. İptal işlemlerini 'Biletlerim' sayfası üzerinden gerçekleştirebilirsiniz."
   },
   {
-    question: "Hot Hour seanslarına sadece üyeler mi katılabilir?",
-    answer: "Hayır! Hot Hour platformuna kayıt olan herkes bu fırsatlardan yararlanabilir. İster aktif bir MyRhythmNexus üyesi olun, ister stüdyomuzu ilk defa denemek isteyen biri; indirimleri yakalamak herkesin hakkıdır."
+    question: "Hot Hour hizmetlerine sadece üyeler mi katılabilir?",
+    answer: "Hayır! Hot Hour platformuna kayıt olan herkes bu fırsatlardan yararlanabilir. İster rezerve ettirdiğiniz işletmenin aktif bir üyesi olun, ister işletmeyi ilk defa denemek isteyen biri; indirimleri yakalamak herkesin hakkıdır."
   }
 ]
 

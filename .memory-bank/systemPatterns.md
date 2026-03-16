@@ -1,24 +1,43 @@
 # Sistem Mimari Desenleri (System Patterns)
 
 ## Genel Mimari
-- **Backend:** FastAPI (Python) - RESTful API & WebSockets.
-- **Frontend:** Vue 3 (Composition API) Vite ile derlenen, Pinia mağazası ve Vue Router içeren Tek Sayfa Uygulaması (SPA).
-- **Veritabanı:** PostgreSQL (Prisma ORM ile bağlanır).
-- **Önbellek & Pub/Sub:** Redis (Socket.io mesajlaşması ve performans için).
+- Backend: FastAPI + Prisma + Socket.IO + APScheduler
+- Frontend: Vue 3 + Pinia + Vite
+- Veri: PostgreSQL + Redis
 
-## Katmanlar (Backend)
-- `app/api/`: Sadece endpoint'leri barındırır, yetkilendirme (`Depends`) işlemleri yapılır.
-- `app/services/`: Tüm iş mantığı (Business Logic) burada çalışır. API katmanından soyutlanmıştır. CRUD, bildirimler, Socket yollamaları buradadır.
-- `app/models/`: Pydantic V2 ile Request/Response doğrulamaları. Prisma tipleri ile olan uyumsuzluklar için (örn. `from_attributes=True`) önemlidir.
-- `app/core/`: Scheduler (Zamanlanmış görevler), Security, Redis entegrasyonu, DB bağlantıları.
+## Temel Katmanlar
+- `app/api`: endpoint ve auth sınırı
+- `app/services`: iş mantığı
+- `app/models`: request/response şemaları
+- `app/core`: config, db, security, scheduler, realtime altyapı
+- `frontend/src/views`: sayfalar
+- `frontend/src/composables`: UI iş mantığı
+- `frontend/src/stores`: global state
 
-## Katmanlar (Frontend)
-- `src/views/`: Ana sayfalar (Admin, Müşteri).
-- `src/composables/`: Sayfalara ait iş/UI mantığını sarmalar. (Örn: `useAdminAuctions.js`). Vue Composition API kuralları geçerlidir.
-- `src/stores/`: Pinia global durum yönetimi (Auth, UI, Realtime veriler).
-- `src/services/` & `src/utils/`: Socket istemci bağlantısı ve tarih/para formatlama araçları.
+## v1.5 Çekirdek Deseni
+- tenant çekirdeği: `Studio`
+- işletme sınıflandırması: `Sector` + `StudioSector`
+- fırsat sınıflandırması: `ServiceCategory` + `Auction.serviceCategoryId`
 
-## Kritik Akışlar (AI İçin Not)
-- **Asenkron Veri (Fetch/JSON):** Frontend'deki Pinia `authStore.fetchWithAuth` geriye saf `Response` objesi döner. Composable içinde DAİMA `await response.json()` ile işlenmelidir, aksi takdirde veriler undefined olur.
-- **Fiyat Motoru:** `apscheduler` döngüsünde `update_auction_prices` çalışır. Herhangi bir "fiyat düşmüyor" şikayetinde `core/scheduler.py` ve `services/price_service.py` modülleri incelenmelidir.
-- **Prisma & Pydantic Uyumsuzluğu:** Prisma'nın döneceği `Include` (ilişkili veriler - ör: Auction -> Studio) işlemlerini Pydantic response modellerinde (Örn. `StudioResponse=None`) titizlikle nullable tanımlanmalıdır.
+## Kurumsal Yönetim Deseni
+- `ADMIN` tenant yöneticisidir
+- taxonomy master data owner tarafından script ile yönetilir
+- panelde serbest taxonomy yazımı yoktur
+- işletme sektörleri panelden düzenlenmez
+
+## Veri Sunum Deseni
+- işletme seviyesi sektör ile fırsat seviyesi hizmet kategorisi ayrı tutulur
+- include stratejileri endpoint ihtiyacına göre seçilir
+- liste ve detay ekranlarında yalnızca gerekli nested ilişkiler döndürülür
+
+## Filtreleme Deseni
+- kalıcı kaynak backend filtreleridir
+- ana eksenler: `status`, `sector`, `service_category`, metin arama
+- frontend query param senkronizasyonu korunur
+
+## Terminoloji Deseni
+- teknik isimler korunur: `Studio`, `Auction`, `studioId`
+- ürün metinlerinde: `işletme`, `fırsat`, `hizmet`
+
+## Güncel Mimari Öncelik
+Yeni büyük refactor eklemekten çok, yapılan köklü değişikliklerin birbirini bozmadan çalışmasını korumak.

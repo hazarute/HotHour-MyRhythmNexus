@@ -116,7 +116,7 @@ const handleLogin = async () => {
         
         <div class="mt-6 text-center">
              <router-link to="/" class="text-xs text-slate-500 hover:text-slate-300 transition-colors inline-flex items-center gap-1">
-                 <span class="material-symbols-outlined text-xs">arrow_back</span> Arenaya Dön
+               <span class="material-symbols-outlined text-xs">arrow_back</span> Fırsat Alanına Dön
              </router-link>
         </div>
 

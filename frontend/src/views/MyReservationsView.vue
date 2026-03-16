@@ -37,17 +37,17 @@ onMounted(() => {
         <header class="relative px-6 py-12 overflow-hidden border-b border-white/5">
             <div class="absolute inset-0 bg-gradient-to-br from-neon-blue/5 to-transparent pointer-events-none"></div>
             <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
-                <div>
+                    <div>
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-neon-blue mb-4">
                         <span class="w-2 h-2 rounded-full bg-neon-blue animate-pulse"></span>
                         Profilim
                     </div>
-                    <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">Dijital Biletlerim</h1>
-                    <p class="text-slate-400 mt-2 max-w-lg">Stüdyoda göstermek üzere kilitlediğin fırsatlar ve geçmiş seansların.</p>
+                    <h1 class="text-4xl md:text-5xl font-black text-white tracking-tight">Dijital Fırsatlarım</h1>
+                    <p class="text-slate-400 mt-2 max-w-lg">İşletmede göstermek üzere kilitlediğin fırsatlar ve geçmiş rezervasyonların.</p>
                 </div>
                 <button @click="router.push('/')" class="group flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors">
                     <span class="material-symbols-outlined transform group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                    Arenaya Dön
+                    Fırsat Alanına Dön
                 </button>
             </div>
         </header>
@@ -66,14 +66,14 @@ onMounted(() => {
                 </button>
             </div>
 
-            <div v-else-if="reservations.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
+                <div v-else-if="reservations.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
                 <div class="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-800">
                     <span class="material-symbols-outlined text-5xl text-slate-700">local_activity</span>
                 </div>
                 <h2 class="text-2xl font-bold text-white mb-2">Henüz Bir Fırsat Yakalamadın</h2>
                 <p class="text-slate-400 mb-8 max-w-md">Hollanda açık artırması devam ediyor. Fiyatlar düşerken ilk kapan sen ol ve dijital biletini oluştur.</p>
                 <button @click="router.push({ name: 'all-auctions' })" class="px-8 py-4 bg-neon-blue hover:bg-blue-500 text-black font-black rounded-xl transition-all shadow-[0_0_20px_rgba(0,191,255,0.3)] hover:shadow-[0_0_30px_rgba(0,191,255,0.5)] hover:scale-105">
-                    Canlı Seanslara Git
+                    Canlı Fırsatlara Git
                 </button>
             </div>
 
@@ -90,19 +90,19 @@ onMounted(() => {
                                 {{ getStatusConfig(res.status).label }}
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Seans Zamanı</p>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Rezervasyon Zamanı</p>
                                 <p class="text-lg font-bold text-white">{{ formatDate(res.scheduled_at || res.auction_start_time) }}</p>
                                 <p class="text-neon-blue font-mono">{{ formatTime(res.scheduled_at || res.auction_start_time) }}</p>
                             </div>
                         </div>
 
                         <div class="mb-6">
-                            <h3 class="text-2xl md:text-3xl font-black text-white mb-2">{{ res.auction_title || 'Özel Seans' }}</h3>
+                            <h3 class="text-2xl md:text-3xl font-black text-white mb-2">{{ res.auction_title || 'Özel Hizmet' }}</h3>
                             <p v-if="res.auction_description" class="text-slate-400 text-sm line-clamp-2 max-w-xl">{{ res.auction_description }}</p>
                             
-                            <!-- Studio Info Badge -->
+                            <!-- İşletme Bilgi Rozeti -->
                             <div v-if="res.studio" class="mt-4 flex items-center min-w-[250px] max-w-fit gap-3 bg-white/5 px-4 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                                <img v-if="res.studio.logoUrl" :src="res.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="Studio Logo" />
+                                <img v-if="res.studio.logoUrl" :src="res.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="İşletme Logosu" />
                                 <div class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 border-2 border-white/20 shrink-0" v-else>
                                     <span class="material-symbols-outlined text-white/50">storefront</span>
                                 </div>
@@ -141,7 +141,7 @@ onMounted(() => {
                                     <div class="text-left">
                                         <p class="text-sm font-black text-red-200 uppercase tracking-wide">Dikkat: Bu işlem geri alınamaz</p>
                                         <p class="text-xs text-red-100/90 mt-1 leading-relaxed">
-                                            Bu rezervasyonu iptal ettiğiniz anda giriş kodunuz kalıcı olarak geçersiz olur ve aynı seansı bu fiyattan tekrar talep edemezsiniz.
+                                            Bu rezervasyonu iptal ettiğiniz anda giriş kodunuz kalıcı olarak geçersiz olur ve aynı hizmeti bu fiyattan tekrar talep edemezsiniz.
                                         </p>
                                     </div>
                                 </div>
@@ -213,7 +213,7 @@ onMounted(() => {
                             </p>
                             
                             <p class="text-[11px] text-slate-400 leading-tight">
-                                <span v-if="res.status === 'PENDING_ON_SITE'">Ödemenizi yapmak ve seansa katılmak için bu kodu stüdyo resepsiyonuna gösterin.</span>
+                                <span v-if="res.status === 'PENDING_ON_SITE'">Ödemenizi yapmak ve hizmetten faydalanmak için bu kodu işletme resepsiyonuna gösterin.</span>
                                 <span v-else>Bu biletin geçerliliği sona ermiştir.</span>
                             </p>
 

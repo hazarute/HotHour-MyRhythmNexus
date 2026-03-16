@@ -21,29 +21,29 @@ const auction = computed(() => auctionStore.currentAuction)
 
 // Dinamik SEO: auction verisi yüklenince otomatik güncellenir
 useHead({
-  title: computed(() => {
-    if (!auction.value) return 'Seans Detayı — HotHour'
+    title: computed(() => {
+        if (!auction.value) return 'Fırsat Detayı — HotHour'
     const studio = getAuctionField(auction.value, 'studio', 'studio')
-    const studioName = studio?.name || 'Stüdyo'
+    const studioName = studio?.name || 'İşletme'
     const date = getAuctionField(auction.value, 'start_time', 'startTime')
     const dateStr = date ? new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : ''
-    return `${studioName} — ${dateStr} Pilates Seansı | HotHour`
+        return `${studioName} — ${dateStr} Hizmet Fırsatı | HotHour`
   }),
   meta: computed(() => {
     if (!auction.value) return []
-    const studio = getAuctionField(auction.value, 'studio', 'studio')
-    const studioName = studio?.name || 'Stüdyo'
+        const studio = getAuctionField(auction.value, 'studio', 'studio')
+        const studioName = studio?.name || 'İşletme'
     const price = getAuctionCurrentPrice(auction.value)
     const formattedPrice = price ? `${price} ₺` : ''
-    const description = `${studioName} seansını ${formattedPrice} ile yakala. Fiyat her an düşüyor!`
+        const description = `${studioName} fırsatını ${formattedPrice} ile yakala. Fiyat her an düşüyor!`
     const canonicalUrl = `https://hothour.kayraspace.com/auction/${route.params.id}`
     return [
       { name: 'description', content: description },
-      { property: 'og:title', content: `${studioName} — HotHour Canlı Seans` },
+            { property: 'og:title', content: `${studioName} — HotHour Canlı Fırsat` },
       { property: 'og:description', content: description },
       { property: 'og:url', content: canonicalUrl },
       { property: 'og:type', content: 'website' },
-      { name: 'twitter:title', content: `${studioName} — HotHour Canlı Seans` },
+            { name: 'twitter:title', content: `${studioName} — HotHour Canlı Fırsat` },
       { name: 'twitter:description', content: description },
     ]
   }),
@@ -60,22 +60,22 @@ useHead({
       {
         type: 'application/ld+json',
         innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Event',
-          name: `${studio?.name || 'Pilates'} Seansı`,
-          description: `HotHour indirimli ${studio?.name || 'Pilates'} seansı. Fiyat ${price} ₺.`,
+                    '@context': 'https://schema.org',
+                    '@type': 'Event',
+                    name: `${studio?.name || 'Hizmet'} Fırsatı`,
+                    description: `HotHour indirimli ${studio?.name || 'Hizmet'} fırsatı. Fiyat ${price} ₺.`,
           startDate: startTime,
           endDate: endTime,
           eventStatus: 'https://schema.org/EventScheduled',
           eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
           location: {
             '@type': 'Place',
-            name: studio?.name || 'Stüdyo',
-            address: studio?.address || 'İstanbul, Türkiye'
+                        name: studio?.name || 'İşletme',
+                        address: studio?.address || 'İstanbul, Türkiye'
           },
           organizer: {
             '@type': 'Organization',
-            name: studio?.name || 'HotHour Stüdyo',
+                        name: studio?.name || 'HotHour',
             url: 'https://hothour.kayraspace.com'
           },
           offers: {
@@ -336,11 +336,11 @@ onUnmounted(() => {
 
                 <div class="w-full flex flex-col items-center">
                     <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2 tracking-tight">{{ auction.title }}</h1>
-                    <p class="text-slate-400 text-sm max-w-md">{{ auction.description || 'Stüdyo detayları ve kurallar.' }}</p>
+                    <p class="text-slate-400 text-sm max-w-md">{{ auction.description || 'Hizmet detayları ve kurallar.' }}</p>
 
-                    <!-- Studio Info Badge -->
+                    <!-- İşletme Bilgi Rozeti -->
                     <div v-if="auction.studio" class="mt-4 flex items-center justify-center min-w-[250px] gap-3 bg-white/5 px-4 py-3 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                        <img v-if="auction.studio.logoUrl" :src="auction.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="Studio Logo" />
+                        <img v-if="auction.studio.logoUrl" :src="auction.studio.logoUrl" class="w-12 h-12 rounded-full object-cover bg-black/50 border-2 border-white/20" alt="İşletme Logosu" />
                         <div class="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 border-2 border-white/20" v-else>
                             <span class="material-symbols-outlined text-white/50">storefront</span>
                         </div>
@@ -389,7 +389,7 @@ onUnmounted(() => {
                 <div class="w-full grid grid-cols-2 gap-3 mb-6">
                     <div class="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/5">
                         <span class="material-symbols-outlined text-slate-400 mb-1">calendar_month</span>
-                        <span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Seans Zamanı</span>
+                        <span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Hizmet Başlangıç Zamanı</span>
                         <span class="text-sm font-bold text-slate-200 mt-1">{{ formatDate(auction.scheduled_at) }}</span>
                     </div>
                     
@@ -468,7 +468,7 @@ onUnmounted(() => {
   
   <div v-else class="min-h-screen flex flex-col items-center justify-center text-white">
         <span class="material-symbols-outlined text-6xl text-slate-600 mb-4">search_off</span>
-        <h2 class="text-2xl font-bold text-slate-400 mb-6">Oturum bulunamadı veya süresi dolmuş</h2>
+        <h2 class="text-2xl font-bold text-slate-400 mb-6">Fırsat bulunamadı veya süresi dolmuş</h2>
         <button @click="router.push('/')" class="px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold uppercase tracking-wider text-sm">
             Arenaya Dön
         </button>

@@ -63,7 +63,7 @@ onUnmounted(() => {
 
             <button @click.prevent="router.push({ name: 'admin-auction-create' })" class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
                 <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
-                <span class="font-medium">Oturum Oluştur</span>
+                <span class="font-medium">Fırsat Oluştur</span>
             </button>
         </div>
     </header>
@@ -132,7 +132,7 @@ onUnmounted(() => {
                         <input
                             v-model="searchQuery"
                             class="w-full pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-[#1a2230] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary placeholder-slate-400 dark:placeholder-slate-600 text-sm"
-                            placeholder="Rezervasyon Kodu, Misafir Adı veya Stüdyo ara..."
+                            placeholder="Rezervasyon Kodu, Misafir Adı veya İşletme ara..."
                             type="text"
                         />
                     </div>
@@ -187,7 +187,7 @@ onUnmounted(() => {
                             </div>
                             <div class="flex flex-col min-w-0">
                                 <span class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ res.user_name || 'Misafir' }}</span>
-                                <span class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ res.auction_title || 'Bilinmeyen Oturum' }}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ res.auction_title || 'Bilinmeyen Fırsat' }}</span>
                                 <span class="text-xs text-slate-400 mt-1">Hizmet: {{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</span>
                             </div>
                          </div>
@@ -215,7 +215,7 @@ onUnmounted(() => {
                             <tr class="bg-slate-50 dark:bg-background-dark/50 border-b border-slate-200 dark:border-slate-800">
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rezervasyon Kodu</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Misafir Adı</th>
-                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Oturum Adı</th>
+                                <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fırsat Adı</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hizmet Zamanı</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Giriş Durumu</th>
                                 <th class="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">İşlem</th>
@@ -250,8 +250,8 @@ onUnmounted(() => {
                                     </div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
-                                    <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.auction_title || 'Bilinmeyen Oturum' }}</div>
-                                    <div class="text-xs text-slate-400">Stüdyo A</div>
+                                    <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.auction_title || 'Bilinmeyen Fırsat' }}</div>
+                                    <div class="text-xs text-slate-400">İşletme A</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</div>

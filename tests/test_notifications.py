@@ -8,7 +8,7 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.core import db, security
-from app.services.booking_service import booking_service
+from app.services.OLD_booking_service import booking_service
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)

@@ -1,4 +1,5 @@
 <script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAuctionForm, DISCOUNT_OPTIONS, GENDER_OPTIONS } from '@/composables/admin/useAuctionForm'
 
 const props = defineProps({
@@ -14,6 +15,10 @@ const props = defineProps({
 
 const emit = defineEmits(['create-auction', 'update-auction', 'cancel'])
 
+const serviceCategoryDropdownRef = ref(null)
+const genderDropdownRef = ref(null)
+const discountDropdownRef = ref(null)
+
 const {
     form,
     loading,
@@ -21,6 +26,12 @@ const {
     selectedDiscountRate,
     showDiscountDropdown,
     showGenderDropdown,
+    showServiceCategoryDropdown,
+    adminStudioSectorNames,
+    hasAdminStudioSectors,
+    serviceCategoryHelpText,
+    serviceCategoryOptions,
+    getSelectedServiceCategoryLabel,
     getAllowedGenderLabel,
     isTurboEligible,
     isStartTimeValidCheck,
@@ -28,14 +39,38 @@ const {
     isScheduledAtValidCheck,
     submitForm
 } = useAuctionForm(props, emit)
+
+const closeDropdownsOnOutsideClick = (event) => {
+    const target = event.target
+
+    if (!serviceCategoryDropdownRef.value?.contains(target)) {
+        showServiceCategoryDropdown.value = false
+    }
+
+    if (!genderDropdownRef.value?.contains(target)) {
+        showGenderDropdown.value = false
+    }
+
+    if (!discountDropdownRef.value?.contains(target)) {
+        showDiscountDropdown.value = false
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('click', closeDropdownsOnOutsideClick)
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', closeDropdownsOnOutsideClick)
+})
 </script>
 
 <template>
     <div class="space-y-5">
         <div>
-            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Oturum Oluştur</p>
-            <h3 class="text-2xl font-bold text-white">Yeni Oturum Kurulumu</h3>
-            <p class="text-slate-400 text-sm mt-1">Bu oturum için zaman çizelgesi, fiyatlandırma ve turbo davranışını yapılandırın.</p>
+            <p class="text-neon-blue text-xs uppercase tracking-widest mb-2">Fırsat Oluştur</p>
+            <h3 class="text-2xl font-bold text-white">Yeni Fırsat</h3>
+            <p class="text-slate-400 text-sm mt-1">Bu fırsat için zaman çizelgesi, fiyatlandırma ve turbo davranışını yapılandırın.</p>
         </div>
 
         <form @submit.prevent="submitForm" class="space-y-5">
@@ -49,7 +84,7 @@ const {
                             type="text"
                             required
                             class="w-full bg-dark-bg/60 border border-slate-600 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-neon-blue"
-                            placeholder="Örn: Sabah Pilatesi @ 10:00"
+                            placeholder="Örn: Sabah fırsatı @ 10:00"
                         />
                     </div>
                     <div class="space-y-2">
@@ -64,8 +99,59 @@ const {
                 </div>
 
                 <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300">Hizmet Kategorisi</label>
+                    <div v-if="adminStudioSectorNames.length" class="flex flex-wrap gap-2">
+                        <span
+                            v-for="sectorName in adminStudioSectorNames"
+                            :key="sectorName"
+                            class="inline-flex items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-[11px] font-medium text-cyan-100"
+                        >
+                            {{ sectorName }}
+                        </span>
+                    </div>
+                    <div ref="serviceCategoryDropdownRef" class="relative">
+                        <button
+                            type="button"
+                            :disabled="!serviceCategoryOptions.length"
+                            @click="serviceCategoryOptions.length && (showServiceCategoryDropdown = !showServiceCategoryDropdown)"
+                            :class="[
+                                'w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors',
+                                serviceCategoryOptions.length
+                                    ? 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-background-dark'
+                                    : 'border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
+                            ]"
+                        >
+                            <span class="truncate text-left">{{ getSelectedServiceCategoryLabel() }}</span>
+                            <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span>
+                        </button>
+                        <div v-if="showServiceCategoryDropdown && serviceCategoryOptions.length" class="absolute top-full right-0 mt-2 w-full bg-white dark:bg-[#1a2230] rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 z-50 py-1 max-h-64 overflow-y-auto">
+                            <button
+                                v-if="!hasAdminStudioSectors"
+                                type="button"
+                                @click="form.serviceCategoryId = null; showServiceCategoryDropdown = false"
+                                class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f] transition-colors"
+                            >
+                                <span class="block font-medium">Kategori seçmeden devam et</span>
+                                <span class="block text-xs text-slate-500 dark:text-slate-400 mt-1">Varsayılan akışla ilerler.</span>
+                            </button>
+                            <button
+                                v-for="category in serviceCategoryOptions"
+                                :key="category.id"
+                                type="button"
+                                @click="form.serviceCategoryId = category.id; showServiceCategoryDropdown = false"
+                                class="w-full text-left px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#232d3f] transition-colors"
+                            >
+                                <span class="block font-medium">{{ category.name }}</span>
+                                <span v-if="category.sector" class="block text-xs text-slate-500 dark:text-slate-400 mt-1">{{ category.sector.name }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400">{{ serviceCategoryHelpText }}</p>
+                </div>
+
+                <div class="space-y-2">
                     <label class="block text-sm font-medium text-slate-300">Katılımcı Cinsiyet Koşulu</label>
-                    <div class="relative">
+                    <div ref="genderDropdownRef" class="relative">
                         <button
                             type="button"
                             @click="showGenderDropdown = !showGenderDropdown"
@@ -86,7 +172,7 @@ const {
                             </button>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-400">Bu koşul, oturumu kimlerin “Hemen Kap” yapabileceğini belirler.</p>
+                    <p class="text-xs text-slate-400">Bu koşul, fırsatı kimlerin “Hemen Kap” yapabileceğini belirler.</p>
                 </div>
             </div>
 
@@ -147,7 +233,7 @@ const {
 
                 <div class="space-y-2">
                     <label class="block text-sm font-medium" :class="isEndTimeValidCheck() ? 'text-slate-300' : 'text-slate-500'">
-                        Hizmet Zamanı (Oturum Saati)
+                        Hizmet Zamanı (Fırsat Saati)
                         <span v-if="isScheduledAtValidCheck()" class="text-green-400 ml-1">✓</span>
                         <span v-else-if="!isEndTimeValidCheck()" class="text-slate-400 ml-1">🔒</span>
                     </label>
@@ -192,7 +278,7 @@ const {
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-300">İndirim Yüzdesi</label>
-                        <div class="relative">
+                        <div ref="discountDropdownRef" class="relative">
                             <button
                                 type="button"
                                 @click="showDiscountDropdown = !showDiscountDropdown"
@@ -311,7 +397,7 @@ const {
                         <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Oluşturuluyor...
                     </span>
-                    <span v-else>Oturumu Başlat</span>
+                    <span v-else>Fırsatı Oluştur</span>
                 </button>
             </div>
         </form>

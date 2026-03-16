@@ -1,5 +1,5 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.services.auction_service import auction_service
+from app.services.OLD_auction_service import auction_service
 from app.core.socket import sio
 from app.core.db import db
 

@@ -69,6 +69,9 @@ def create_application() -> FastAPI:
     application.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     from app.api import users
     application.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+    from app.api import sectors, service_categories
+    application.include_router(sectors.router, prefix="/api/v1/sectors", tags=["sectors"])
+    application.include_router(service_categories.router, prefix="/api/v1/service-categories", tags=["service-categories"])
     # Studios router (admin studio management)
     from app.api import studios
     application.include_router(studios.router, prefix="/api/v1/studios", tags=["studios"])

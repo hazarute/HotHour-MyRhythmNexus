@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useAdminUsers } from '@/composables/admin/useAdminUsers'
+import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/admin/formatters'
 import AdminNotificationDropdown from '@/components/admin/AdminNotificationDropdown.vue'
 
@@ -17,10 +18,67 @@ const {
     fetchUsers,
     goNextPage,
     goPrevPage,
-    deleteUser,
     updateUser,
+    resendVerificationEmail,
+    resetPassword,
     cleanupSocketListeners
 } = useAdminUsers()
+
+const authStore = useAuthStore()
+
+const infoMessage = ref('')
+const infoType = ref('success')
+const pendingResetUserId = ref(null)
+
+const showInfo = (message, type = 'success') => {
+    infoMessage.value = message
+    infoType.value = type
+}
+
+const clearInfo = () => {
+    infoMessage.value = ''
+}
+
+const isCurrentAdmin = (user) => authStore.user?.id === user.id
+
+const isReadOnlyAdminRow = (user) => user.role === 'ADMIN' && !isCurrentAdmin(user)
+
+const canEditUser = (user) => !isReadOnlyAdminRow(user)
+
+const canResetPassword = (user) => !isReadOnlyAdminRow(user)
+
+const canResendVerification = (user) => !(user.is_verified || user.isVerified) && !isReadOnlyAdminRow(user)
+
+const handleResendVerification = async (user) => {
+    const result = await resendVerificationEmail(user.id)
+    if (result?.success) {
+        showInfo(result.message, 'success')
+    } else {
+        showInfo(result?.message || 'Doğrulama e-postası gönderilemedi.', 'error')
+    }
+}
+
+const startResetPassword = (user) => {
+    if (!canResetPassword(user)) {
+        showInfo('Diğer admin kullanıcılar salt okunurdur.', 'error')
+        return
+    }
+    pendingResetUserId.value = user.id
+}
+
+const cancelResetPassword = () => {
+    pendingResetUserId.value = null
+}
+
+const confirmResetPassword = async (user) => {
+    const result = await resetPassword(user.id)
+    if (result?.success) {
+        showInfo(result.message, 'success')
+    } else {
+        showInfo(result?.message || 'Şifre sıfırlanamadı.', 'error')
+    }
+    pendingResetUserId.value = null
+}
 
 onMounted(() => {
     fetchUsers()
@@ -33,6 +91,10 @@ onUnmounted(() => {
 const editingUser = ref(null)
 
 const startEdit = (user) => {
+    if (!canEditUser(user)) {
+        showInfo('Diğer admin kullanıcıların bilgileri düzenlenemez.', 'error')
+        return
+    }
     editingUser.value = { ...user, fullName: user.fullName || user.full_name } // clone and normalize name
 }
 
@@ -44,9 +106,7 @@ const saveEdit = async () => {
     if (!editingUser.value) return
     const success = await updateUser(editingUser.value.id, {
         full_name: editingUser.value.fullName || editingUser.value.full_name,
-        email: editingUser.value.email,
         phone: editingUser.value.phone,
-        role: editingUser.value.role,
         gender: editingUser.value.gender
     })
     if (success) {
@@ -76,6 +136,17 @@ const saveEdit = async () => {
                 <span>{{ error }}</span>
             </div>
             <button @click="fetchUsers" class="text-sm font-semibold hover:underline">Tekrar Dene</button>
+        </div>
+
+        <!-- Info Message -->
+        <div v-if="infoMessage" :class="['p-4 rounded-xl border flex items-start justify-between gap-4', infoType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-200' : 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:text-rose-200']">
+            <div class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-2xl" :class="infoType === 'success' ? 'text-emerald-500' : 'text-rose-500'">
+                    {{ infoType === 'success' ? 'check_circle' : 'error' }}
+                </span>
+                <div class="text-sm leading-relaxed">{{ infoMessage }}</div>
+            </div>
+            <button @click="clearInfo" class="text-sm font-semibold hover:underline">Kapat</button>
         </div>
 
         <!-- Table Section -->
@@ -133,33 +204,49 @@ const saveEdit = async () => {
                             
                             <!-- Editing Row -->
                             <template v-if="editingUser && editingUser.id === user.id">
-                                <td class="px-6 py-4">
-                                    <input v-model="editingUser.fullName" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white mb-2" placeholder="Ad Soyad" />
-                                    <select v-model="editingUser.gender" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white">
+                                <td class="px-6 py-4 bg-slate-50 dark:bg-[#161e2b]">
+                                    <input v-model="editingUser.fullName" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-background-dark dark:text-white" placeholder="Ad Soyad" />
+                                    <select v-model="editingUser.gender" class="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-background-dark dark:text-white">
                                         <option value="FEMALE">Kadın</option>
                                         <option value="MALE">Erkek</option>
                                     </select>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <input v-model="editingUser.email" type="email" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white mb-2" placeholder="E-posta" />
-                                    <input v-model="editingUser.phone" type="tel" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white" placeholder="Telefon" />
+                                <td class="px-6 py-4 bg-slate-50 dark:bg-[#161e2b]">
+                                    <div class="flex flex-col gap-2">
+                                        <input :value="editingUser.email" type="email" disabled class="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 opacity-90 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-400" placeholder="E-posta" />
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">E-posta adresi güvenlik nedeniyle salt okunur tutulur.</p>
+                                        <button
+                                            v-if="canResendVerification(editingUser)"
+                                            @click="handleResendVerification(editingUser)"
+                                            type="button"
+                                            class="mt-1 inline-flex items-center gap-2 rounded-lg border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition-all hover:-translate-y-0.5 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                                        >
+                                            <span class="material-symbols-outlined text-[14px]">outgoing_mail</span>
+                                            Onay bağlantısını gönder
+                                        </button>
+                                        <input v-model="editingUser.phone" type="tel" class="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-background-dark dark:text-white" placeholder="Telefon" />
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <select v-model="editingUser.role" class="w-full px-2 py-1 bg-slate-100 dark:bg-background-dark border border-slate-300 dark:border-slate-700 rounded text-slate-900 dark:text-white">
-                                        <option value="USER">Kullanıcı</option>
-                                        <option value="ADMIN">Yönetici</option>
-                                    </select>
+                                <td class="px-6 py-4 bg-slate-50 dark:bg-[#161e2b]">
+                                    <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                        <span v-if="editingUser.role === 'ADMIN'" class="material-symbols-outlined text-[14px]">shield_person</span>
+                                        <span v-else class="material-symbols-outlined text-[14px]">person</span>
+                                        {{ editingUser.role === 'ADMIN' ? 'Yönetici' : 'Kullanıcı' }}
+                                    </div>
+                                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Bu alandan rol değiştirilemez.</p>
                                 </td>
-                                <td class="px-6 py-4 text-slate-500">
+                                <td class="px-6 py-4 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#161e2b]">
                                     {{ formatDate(user.created_at || user.createdAt) }}
                                 </td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <button @click="saveEdit" class="p-1.5 bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 rounded-lg transition-colors" title="Kaydet">
-                                            <span class="material-symbols-outlined" style="font-size: 20px;">check</span>
+                                <td class="px-6 py-4 bg-slate-50 dark:bg-[#161e2b]">
+                                    <div class="flex flex-col items-end gap-2">
+                                        <button @click="saveEdit" class="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 hover:bg-emerald-600" title="Kaydet">
+                                            <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
+                                            Kaydet
                                         </button>
-                                        <button @click="cancelEdit" class="p-1.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors" title="İptal">
-                                            <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+                                        <button @click="cancelEdit" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" title="İptal">
+                                            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                                            Vazgeç
                                         </button>
                                     </div>
                                 </td>
@@ -175,6 +262,7 @@ const saveEdit = async () => {
                                         <div>
                                             <p class="font-medium text-slate-900 dark:text-white">{{ user.fullName || user.full_name }}</p>
                                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ user.gender === 'FEMALE' ? 'Kadın' : 'Erkek' }}</p>
+                                            <p v-if="isReadOnlyAdminRow(user)" class="mt-1 text-[11px] font-semibold text-amber-600 dark:text-amber-300">Salt okunur admin hesabı</p>
                                         </div>
                                     </div>
                                 </td>
@@ -182,8 +270,18 @@ const saveEdit = async () => {
                                     <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                                             <span class="material-symbols-outlined text-[16px] text-slate-400">mail</span>
-                                            {{ user.email }}
+                                            <span>{{ user.email }}</span>
                                             <span v-if="user.is_verified || user.isVerified" class="material-symbols-outlined text-[14px] text-green-500" title="Doğrulanmış">verified</span>
+                                            <button
+                                                v-else-if="canResendVerification(user)"
+                                                @click="handleResendVerification(user)"
+                                                type="button"
+                                                class="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/70 bg-amber-50 px-2.5 py-1.5 text-[11px] font-semibold text-amber-700 transition-all hover:-translate-y-0.5 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                                                title="Doğrulama e-postasını tekrar gönder"
+                                            >
+                                                <span class="material-symbols-outlined text-[14px]">outgoing_mail</span>
+                                                Onay bağlantısını gönder
+                                            </button>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                                             <span class="material-symbols-outlined text-[16px]">call</span>
@@ -203,13 +301,48 @@ const saveEdit = async () => {
                                     {{ formatDate(user.created_at || user.createdAt) }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button @click="startEdit(user)" class="p-2 text-slate-400 hover:text-primary dark:hover:text-neon-blue bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary dark:hover:border-neon-blue transition-all" title="Düzenle">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
-                                        </button>
-                                        <button @click="deleteUser(user.id)" class="p-2 text-slate-400 hover:text-red-500 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-lg hover:border-red-500 transition-all" title="Sil">
-                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                        </button>
+                                    <div class="relative flex items-center justify-end gap-2 transition-opacity" :class="canEditUser(user) ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'">
+                                        <template v-if="canEditUser(user)">
+                                            <button @click="startEdit(user); clearInfo()" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-background-dark dark:text-slate-300 dark:hover:border-neon-blue dark:hover:text-neon-blue" title="Düzenle">
+                                                <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                                                Düzenle
+                                            </button>
+                                            <div class="relative flex items-center gap-2">
+                                                <template v-if="pendingResetUserId === user.id">
+                                                    <div class="mt-2 w-full max-w-xs rounded-2xl border border-amber-300/70 bg-white p-4 text-left shadow-lg shadow-black/5 dark:border-amber-500/30 dark:bg-[#182132]">
+                                                        <div class="flex items-start gap-3">
+                                                            <div class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                                                <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+                                                            </div>
+                                                            <div class="min-w-0 flex-1">
+                                                                <p class="text-sm font-semibold text-slate-900 dark:text-white">Şifre sıfırlama onayı</p>
+                                                                <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Bu kullanıcının şifresi <span class="font-semibold">sifredegistir</span> olarak güncellenecek.</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+                                                            <button @click="cancelResetPassword" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">İptal</button>
+                                                            <button @click="confirmResetPassword(user)" class="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3.5 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-600">
+                                                                <span class="material-symbols-outlined text-[18px]">check</span>
+                                                                Şifreyi sıfırla
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <button @click="cancelResetPassword" class="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 transition-all hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20">
+                                                        <span class="material-symbols-outlined text-[18px]">close</span>
+                                                        Vazgeç
+                                                    </button>
+                                                </template>
+                                                <template v-else>
+                                                    <button @click="startResetPassword(user); clearInfo()" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:-translate-y-0.5 hover:border-amber-400 hover:text-amber-600 dark:border-slate-700 dark:bg-background-dark dark:text-slate-300 dark:hover:border-amber-400 dark:hover:text-amber-300" title="Şifreyi sifredegistir olarak sıfırla">
+                                                        <span class="material-symbols-outlined" style="font-size: 18px;">lock_reset</span>
+                                                        Şifre Sıfırla
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <span v-else class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                                            Salt okunur
+                                        </span>
                                     </div>
                                 </td>
                             </template>

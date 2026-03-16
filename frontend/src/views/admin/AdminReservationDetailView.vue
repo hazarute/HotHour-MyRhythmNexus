@@ -68,7 +68,7 @@ onMounted(() => {
             </button>
             <div class="flex flex-col gap-1">
                 <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    Rezervasyon Detayı
+                    Fırsat Rezervasyon Detayı
                     <span v-if="reservation" class="font-mono text-lg opacity-60">#{{ reservation.booking_code }}</span>
                 </h2>
             </div>
@@ -174,12 +174,12 @@ onMounted(() => {
                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span class="material-symbols-outlined text-purple-500">event</span>
-                        Oturum Bilgileri
+                        Fırsat Bilgileri
                     </h3>
                 </div>
                 <div class="p-6 flex flex-col gap-4">
                      <div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Oturum Başlığı</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1">Fırsat Başlığı</div>
                         <div class="font-medium text-lg text-slate-900 dark:text-white mb-1">{{ reservation.auction.title }}</div>
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold border"
                             :class="reservation.auction.status === 'ACTIVE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-600 border-slate-200'">

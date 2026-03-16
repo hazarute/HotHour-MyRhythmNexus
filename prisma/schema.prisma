@@ -89,8 +89,55 @@ model Studio {
 
   users         User[]
   auctions      Auction[]
+  sectors       StudioSector[]
 
   @@map("studios")
+}
+
+model Sector {
+  id                Int               @id @default(autoincrement())
+  name              String
+  slug              String            @unique
+  description       String?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  studios           StudioSector[]
+  serviceCategories ServiceCategory[]
+
+  @@index([isActive])
+  @@map("sectors")
+}
+
+model StudioSector {
+  studioId    Int
+  sectorId    Int
+  assignedAt  DateTime  @default(now())
+
+  studio      Studio    @relation(fields: [studioId], references: [id])
+  sector      Sector    @relation(fields: [sectorId], references: [id])
+
+  @@id([studioId, sectorId])
+  @@index([sectorId])
+  @@map("studio_sectors")
+}
+
+model ServiceCategory {
+  id            Int        @id @default(autoincrement())
+  name          String
+  slug          String     @unique
+  description   String?
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  sectorId      Int?
+  sector        Sector?    @relation(fields: [sectorId], references: [id])
+  auctions      Auction[]
+
+  @@index([sectorId, isActive])
+  @@map("service_categories")
 }
 
 model Auction {
@@ -128,12 +175,15 @@ model Auction {
   // Relations
   studioId      Int?
   studio        Studio?       @relation(fields: [studioId], references: [id])
+  serviceCategoryId Int?
+  serviceCategory   ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
   reservation   Reservation?
   notifications Notification[]
 
   @@index([status])
   @@index([endTime])
   @@index([studioId])
+  @@index([serviceCategoryId])
   @@map("auctions")
 }
 

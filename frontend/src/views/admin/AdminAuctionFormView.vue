@@ -34,14 +34,14 @@ const handleFormSubmit = async (formData) => {
     try {
         if (isEditMode.value) {
             await store.updateAuction(formData)
-            alert('Oturum başarıyla güncellendi.')
+            alert('Fırsat başarıyla güncellendi.')
         } else {
             await store.createAuction(formData)
-            alert('Oturum başarıyla oluşturuldu.')
+            alert('Fırsat başarıyla oluşturuldu.')
         }
         router.push({ name: 'admin-dashboard' })
     } catch (err) {
-        alert((isEditMode.value ? 'Güncelleme' : 'Oturum oluşturma') + ' hatası: ' + err.message)
+        alert((isEditMode.value ? 'Güncelleme' : 'Fırsat oluşturma') + ' hatası: ' + err.message)
     }
 }
 </script>
@@ -56,10 +56,10 @@ const handleFormSubmit = async (formData) => {
                 </button>
                 <div class="flex flex-col gap-1">
                     <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
-                        {{ isEditMode ? 'Oturumu Düzenle' : 'Yeni Oturum Oluştur' }}
+                        {{ isEditMode ? 'Fırsatı Düzenle' : 'Yeni Fırsat Oluştur' }}
                     </h2>
                     <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm">
-                        {{ isEditMode ? `#${route.params.id} numaralı oturumu düzenliyorsunuz.` : 'Yeni bir dinamik fiyatlandırma oturumu tanımlayın.' }}
+                        {{ isEditMode ? `#${route.params.id} numaralı fırsatı düzenliyorsunuz.` : 'Yeni bir dinamik fiyatlandırma fırsatı tanımlayın.' }}
                     </p>
                 </div>
             </div>

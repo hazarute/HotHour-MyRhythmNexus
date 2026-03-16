@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query, HTTPException, Path, Request
 from app.models.auction import AuctionCreate, AuctionUpdate, AuctionResponse
-from app.services.auction_service import auction_service
+from app.models.enums import AllowedGender
+from app.services.auction_service import auction_service, AuctionAccessDeniedError
 from app.services import socket_service
 from app.core.deps import get_current_admin_user
 from app.utils.validators import ValidationError
@@ -15,7 +16,7 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
         if getattr(admin, "studioId", None):
             auction_data["studioId"] = admin.studioId
             
-        auction = await auction_service.create_auction(auction_data)
+        auction = await auction_service.create_auction(auction_data, studio_id=getattr(admin, "studioId", None))
         return {
             "id": auction.id,
             "title": auction.title,
@@ -34,6 +35,8 @@ async def create_auction(auction_in: AuctionCreate, admin=Depends(get_current_ad
             "updated_at": getattr(auction, "updatedAt", None),
             "studioId": getattr(auction, "studioId", None),
             "studio": getattr(auction, "studio", None),
+            "serviceCategoryId": getattr(auction, "serviceCategoryId", None),
+            "serviceCategory": getattr(auction, "serviceCategory", None),
         }
     except ValidationError as e:
         raise HTTPException(
@@ -49,36 +52,46 @@ async def update_auction(
     admin=Depends(get_current_admin_user)
 ):
     try:
-        updated = await auction_service.update_auction(auction_id, auction_in.model_dump())
+        updated = await auction_service.update_auction(
+            auction_id,
+            auction_in.model_dump(exclude_unset=True),
+            studio_id=getattr(admin, "studioId", None),
+        )
         if not updated:
             raise HTTPException(status_code=404, detail="Auction not found")
             
         return {
             "id": updated.id,
-            "title": updated.title,
-            "description": updated.description,
+            "title": getattr(updated, "title", None),
+            "description": getattr(updated, "description", None),
             "allowed_gender": getattr(updated, "allowedGender", "ANY"),
-            "start_time": updated.startTime,
-            "end_time": updated.endTime,
+            "start_time": getattr(updated, "startTime", None),
+            "end_time": getattr(updated, "endTime", None),
             "scheduled_at": getattr(updated, "scheduledAt", None),
-            "start_price": updated.startPrice,
-            "floor_price": updated.floorPrice,
-            "drop_interval_mins": updated.dropIntervalMins,
-            "drop_amount": updated.dropAmount,
-            "turbo_enabled": updated.turboEnabled,
-            "turbo_trigger_mins": updated.turboTriggerMins,
-            "turbo_drop_amount": updated.turboDropAmount,
-            "turbo_interval_mins": updated.turboIntervalMins,
-            "status": updated.status,
-            "current_price": updated.currentPrice,
+            "start_price": getattr(updated, "startPrice", None),
+            "floor_price": getattr(updated, "floorPrice", None),
+            "drop_interval_mins": getattr(updated, "dropIntervalMins", None),
+            "drop_amount": getattr(updated, "dropAmount", None),
+            "turbo_enabled": getattr(updated, "turboEnabled", False),
+            "turbo_trigger_mins": getattr(updated, "turboTriggerMins", None),
+            "turbo_drop_amount": getattr(updated, "turboDropAmount", None),
+            "turbo_interval_mins": getattr(updated, "turboIntervalMins", None),
+            "status": getattr(updated, "status", None),
+            "current_price": getattr(updated, "currentPrice", None),
             "turbo_started_at": getattr(updated, "turboStartedAt", None),
             "created_at": getattr(updated, "createdAt", None),
             "updated_at": getattr(updated, "updatedAt", None),
             "studioId": getattr(updated, "studioId", None),
             "studio": getattr(updated, "studio", None),
+            "serviceCategoryId": getattr(updated, "serviceCategoryId", None),
+            "serviceCategory": getattr(updated, "serviceCategory", None),
         }
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except AuctionAccessDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -89,18 +102,31 @@ async def delete_auction(
     admin=Depends(get_current_admin_user)
 ):
     try:
-        deleted = await auction_service.delete_auction(auction_id)
+        deleted = await auction_service.delete_auction(auction_id, studio_id=getattr(admin, "studioId", None))
         if not deleted:
             raise HTTPException(status_code=404, detail="Auction not found")
         return
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except AuctionAccessDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 @router.get("/", response_model=list[AuctionResponse])
-async def list_auctions(request: Request, include_computed: bool = Query(False, description="Include computedPrice and priceDetails")):
+async def list_auctions(
+    request: Request,
+    include_computed: bool = Query(False, description="Include computedPrice and priceDetails"),
+    sector: str | None = Query(None, description="İşletme sektör slug filtresi"),
+    service_category: str | None = Query(None, description="Hizmet kategorisi slug filtresi"),
+    allowed_gender: AllowedGender | None = Query(None, description="Katılımcı kuralı filtresi"),
+):
     # preserve backward-compatible default behavior
-    items = await auction_service.list_auctions(include_computed=include_computed) if hasattr(auction_service, "list_auctions") else []
+    items = await auction_service.list_auctions(
+        include_computed=include_computed,
+        sector_slug=sector,
+        service_category_slug=service_category,
+        allowed_gender=allowed_gender.value if allowed_gender is not None else None,
+    ) if hasattr(auction_service, "list_auctions") else []
     mapped = []
     base = str(request.base_url).rstrip('/')
     for a in items:
@@ -137,6 +163,8 @@ async def list_auctions(request: Request, include_computed: bool = Query(False, 
                 "updated_at": getattr(a, "updatedAt", None),
                 "studioId": getattr(a, "studioId", None),
                 "studio": getattr(a, "studio", None),
+                "serviceCategoryId": getattr(a, "serviceCategoryId", None),
+                "serviceCategory": getattr(a, "serviceCategory", None),
             })
         else:
             # item already contains computed fields from service
@@ -176,7 +204,9 @@ async def list_auctions(request: Request, include_computed: bool = Query(False, 
                 "created_at": a.get("created_at"),
                 "updated_at": a.get("updated_at"),
                 "studioId": a.get("studioId"),
-                "studio": a.get("studio")
+                "studio": a.get("studio"),
+                "serviceCategoryId": a.get("serviceCategoryId"),
+                "serviceCategory": a.get("serviceCategory"),
             })
     return mapped
 
@@ -218,6 +248,8 @@ async def get_auction(request: Request, auction_id: int = Path(..., gt=0)):
         "updated_at": getattr(auction, "updatedAt", None),
         "studioId": getattr(auction, "studioId", None),
         "studio": getattr(auction, "studio", None),
+        "serviceCategoryId": getattr(auction, "serviceCategoryId", None),
+        "serviceCategory": getattr(auction, "serviceCategory", None),
     }
 
 

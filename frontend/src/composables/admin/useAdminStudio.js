@@ -8,7 +8,8 @@ export function useAdminStudio() {
         name: '',
         address: '',
         logoUrl: '',
-        googleMapsUrl: ''
+        googleMapsUrl: '',
+        sectors: []
     })
     
     const loading = ref(false)
@@ -37,7 +38,8 @@ export function useAdminStudio() {
                 name: data.name || '',
                 address: data.address || '',
                 logoUrl: data.logoUrl || '',
-                googleMapsUrl: data.googleMapsUrl || ''
+                googleMapsUrl: data.googleMapsUrl || '',
+                sectors: Array.isArray(data.sectors) ? data.sectors : []
             }
         } catch (err) {
             console.error('[AdminStudio] fetch error:', err)
@@ -58,7 +60,12 @@ export function useAdminStudio() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(studio.value)
+                body: JSON.stringify({
+                    name: studio.value.name,
+                    address: studio.value.address,
+                    logoUrl: studio.value.logoUrl,
+                    googleMapsUrl: studio.value.googleMapsUrl
+                })
             })
 
             if (!response.ok) {
@@ -72,15 +79,16 @@ export function useAdminStudio() {
                 name: data.name || '',
                 address: data.address || '',
                 logoUrl: data.logoUrl || '',
-                googleMapsUrl: data.googleMapsUrl || ''
+                googleMapsUrl: data.googleMapsUrl || '',
+                sectors: Array.isArray(data.sectors) ? data.sectors : studio.value.sectors
             }
             
             // Optionally, we could update the authStore user's embedded studio here
             if (authStore.user.studio) {
-                authStore.user.studio = { ...authStore.user.studio, ...data }
+                authStore.user.studio = { ...authStore.user.studio, ...data, sectors: studio.value.sectors }
             }
 
-            successMessage.value = 'Stüdyo bilgileri başarıyla güncellendi!'
+            successMessage.value = 'İşletme bilgileri başarıyla güncellendi!'
             
             // Hide success message after 3 seconds
             setTimeout(() => {

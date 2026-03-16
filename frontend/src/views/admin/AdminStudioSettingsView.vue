@@ -56,6 +56,14 @@ const isValidLogo = computed(() => {
         return false
     }
 })
+
+const studioSectorNames = computed(() => {
+    if (!Array.isArray(studio.value.sectors)) return []
+
+    return studio.value.sectors
+        .map((item) => item?.sector?.name || item?.name)
+        .filter(Boolean)
+})
 </script>
 
 <template>
@@ -63,9 +71,9 @@ const isValidLogo = computed(() => {
         <!-- Top Header -->
         <header class="hidden md:flex bg-white dark:bg-background-dark border-b border-slate-200 dark:border-slate-800 px-8 py-5 items-center justify-between sticky top-0 z-20">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800 dark:text-white mb-1">Stüdyo Ayarları</h1>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white mb-1">İşletme Ayarları</h1>
                 <p class="text-sm border-0 bg-transparent text-slate-500 dark:text-slate-400">
-                    Stüdyonuza ait görünüm ve iletişim bilgilerini güncelleyin.
+                    İşletmenize ait görünüm ve iletişim bilgilerini güncelleyin.
                 </p>
             </div>
             <div class="flex items-center gap-4">
@@ -105,7 +113,7 @@ const isValidLogo = computed(() => {
                             <div class="md:col-span-8 space-y-5">
                                 <!-- Name -->
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Stüdyo Adı</label>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">İşletme Adı</label>
                                     <input 
                                         v-model="studio.name" 
                                         type="text" 
@@ -121,14 +129,14 @@ const isValidLogo = computed(() => {
                                     <textarea 
                                         v-model="studio.address" 
                                         rows="3"
-                                        placeholder="Stüdyonuzun açık adresini girin..."
+                                        placeholder="İşletmenizin açık adresini girin..."
                                         class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-white transition-colors resize-none"
                                     ></textarea>
                                 </div>
 
                                 <!-- Logo URL -->
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Stüdyo Logosu</label>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">İşletme Logosu</label>
                                     <div class="relative">
                                         <input 
                                             type="file" 
@@ -138,7 +146,7 @@ const isValidLogo = computed(() => {
                                             class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-white transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer disabled:opacity-50"
                                         />
                                     </div>
-                                    <p class="mt-1.5 border-0 bg-transparent text-xs text-slate-500">Stüdyo logonuzu bilgisayarınızdan seçip yükleyin. (Seçtiğiniz an yüklenecektir)</p>
+                                    <p class="mt-1.5 border-0 bg-transparent text-xs text-slate-500">İşletme logonuzu bilgisayarınızdan seçip yükleyin. (Seçtiğiniz an yüklenecektir)</p>
                                     
                                     <div v-if="studio.logoUrl" class="mt-3">
                                         <label class="block text-xs font-medium text-slate-500 mb-1">Mevcut Logo Yolu:</label>
@@ -160,7 +168,24 @@ const isValidLogo = computed(() => {
                                         placeholder="Örn: https://goo.gl/maps/..."
                                         class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 dark:text-white transition-colors"
                                     />
-                                    <p class="mt-1.5 border-0 bg-transparent text-xs text-slate-500">Kullanıcıların stüdyonuza kolayca ulaşabilmesi için harita linki.</p>
+                                    <p class="mt-1.5 border-0 bg-transparent text-xs text-slate-500">Kullanıcıların işletmenize kolayca ulaşabilmesi için harita linki.</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">İşletme Sektörleri</label>
+                                    <div v-if="studioSectorNames.length" class="flex flex-wrap gap-2">
+                                        <span
+                                            v-for="sectorName in studioSectorNames"
+                                            :key="sectorName"
+                                            class="px-3 py-2 rounded-full border text-sm font-medium bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                                        >
+                                            {{ sectorName }}
+                                        </span>
+                                    </div>
+                                    <p v-else class="mt-1.5 border-0 bg-transparent text-xs text-slate-500">Bu işletmeye henüz sektör atanmamış.</p>
+                                    <div class="mt-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-xs leading-5 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300">
+                                        İşletme sektörleri admin panelden değiştirilemez. Yeni sektör ekleme veya çıkarma talepleri proje yöneticisi tarafından SSH üzerinden uygulanır.
+                                    </div>
                                 </div>
                             </div>
 

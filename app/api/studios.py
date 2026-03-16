@@ -5,7 +5,7 @@ import os
 import shutil
 from uuid import uuid4
 from app.core.deps import get_current_admin_user
-from app.models.studio import StudioResponse, StudioUpdate
+from app.models.studio import StudioResponse, StudioUpdate, StudioSectorAssignment
 from app.services.studio_service import studio_service
 import logging
 
@@ -24,7 +24,7 @@ async def get_my_studio(request: Request, current_admin = Depends(get_current_ad
         )
     
     try:
-        studio = await studio_service.get_studio_by_id(current_admin.studioId)
+        studio = await studio_service.get_studio_with_sectors(current_admin.studioId)
         if not studio:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -61,6 +61,7 @@ async def update_my_studio(request: Request, studio_in: StudioUpdate, current_ad
     
     try:
         updated_studio = await studio_service.update_studio(current_admin.studioId, studio_in)
+        updated_studio = await studio_service.get_studio_with_sectors(current_admin.studioId)
 
         # Normalize logoUrl to absolute if it's a relative uploads path
         try:
@@ -78,6 +79,18 @@ async def update_my_studio(request: Request, studio_in: StudioUpdate, current_ad
             detail=f"Stüdyo güncellenemedi: {str(e)}"
         )
 
+
+@router.put("/me/sectors", response_model=StudioResponse)
+async def update_my_studio_sectors(
+    request: Request,
+    assignment: StudioSectorAssignment,
+    current_admin=Depends(get_current_admin_user)
+):
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="İşletme sektörleri panelden değiştirilemez. Lütfen proje yöneticisi ile iletişime geçin."
+    )
+
 @router.post("/me/logo", response_model=StudioResponse)
 async def upload_studio_logo(
     request: Request,
@@ -94,7 +107,7 @@ async def upload_studio_logo(
         )
 
     # Validate file type
-    if not file.content_type.startswith("image/"):
+    if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Lütfen geçerli bir görsel dosyası yükleyin (png, jpeg, vb)."
@@ -106,7 +119,8 @@ async def upload_studio_logo(
         os.makedirs(upload_dir, exist_ok=True)
 
         # Generate a unique filename
-        ext = file.filename.split('.')[-1]
+        filename = file.filename or "upload.bin"
+        ext = filename.split('.')[-1]
         unique_filename = f"{current_admin.studioId}_{uuid4().hex[:8]}.{ext}"
         file_path = os.path.join(upload_dir, unique_filename)
 
@@ -126,8 +140,8 @@ async def upload_studio_logo(
 
         try:
             # Attach absolute URL for response
-            if getattr(updated_studio, 'logoUrl', None):
-                updated_studio.logoUrl = public_url
+            if updated_studio and getattr(updated_studio, 'logoUrl', None):
+                updated_studio.__dict__["logoUrl"] = public_url
         except Exception:
             pass
 

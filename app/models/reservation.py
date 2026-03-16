@@ -2,14 +2,8 @@ from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from enum import Enum
 
-
-class PaymentStatus(str, Enum):
-    PENDING_ON_SITE = "PENDING_ON_SITE"
-    COMPLETED = "COMPLETED"
-    NO_SHOW = "NO_SHOW"
-    CANCELLED = "CANCELLED"
+from app.models.enums import PaymentStatus
 
 
 class ReservationBase(BaseModel):

@@ -57,7 +57,7 @@ const logout = () => {
                 </div>
                 <div class="flex flex-col justify-center">
                     <h1 class="text-slate-900 dark:text-white text-xl font-bold leading-none tracking-tight group-hover:text-primary transition-colors">HotHour</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider mt-1">Stüdyo Kontrol</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider mt-1">İşletme Kontrol</p>
                 </div>
             </RouterLink>
 
@@ -92,7 +92,7 @@ const logout = () => {
                    active-class="bg-primary/10 text-primary dark:text-white dark:bg-[#232d3f] border-l-4 border-primary shadow-sm"
                    :class="[$route.name === 'admin-studio-settings' ? 'bg-primary/10 text-primary dark:text-white dark:bg-[#232d3f] border-l-4 border-primary shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#232d3f] hover:text-primary dark:hover:text-white']">
                     <span class="material-symbols-outlined group-hover:text-primary transition-colors" style="font-size: 24px;">settings</span>
-                    <span class="text-sm font-medium">Studio Ayarlar</span>
+                    <span class="text-sm font-medium">İşletme Ayarları</span>
                 </RouterLink>
             </nav>
         </div>

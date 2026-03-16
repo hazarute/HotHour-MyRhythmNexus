@@ -11,25 +11,13 @@ Field mappings:
 
 from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
-from enum import Enum
 from datetime import datetime
 import re
 
-
-# ============================================================================
-# ENUMS (aligned with prisma/schema.prisma)
-# ============================================================================
-
-class Gender(str, Enum):
-    """User gender enum from Prisma schema"""
-    FEMALE = "FEMALE"
-    MALE = "MALE"
+from app.models.enums import Gender, Role
 
 
-class Role(str, Enum):
-    """User role enum from Prisma schema"""
-    USER = "USER"
-    ADMIN = "ADMIN"
+# NOTE: Enums shared across models live in `app.models.enums`
 
 
 # ============================================================================

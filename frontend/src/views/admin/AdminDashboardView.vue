@@ -1,5 +1,4 @@
 <script setup>
-import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CountDownTimer from '@/components/CountDownTimer.vue'
 
@@ -32,7 +31,15 @@ const {
     handleDeleteDraftAuction
 } = useAdminAuctions()
 
-// Initial fetch is handled inside `useAdminAuctions()` to avoid duplicate requests
+const getServiceCategoryLabel = (auction) => {
+    const category = auction?.serviceCategory || auction?.service_category
+    const categoryName = category?.name
+    const sectorName = category?.sector?.name
+
+    if (categoryName && sectorName) return `${categoryName} / ${sectorName}`
+    if (categoryName) return categoryName
+    return 'Kategori atanmadı'
+}
 </script>
 
 <template>
@@ -40,15 +47,15 @@ const {
     <!-- Header Area -->
     <header class="sticky top-0 z-40 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 md:px-8 md:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Tüm Oturumlar</h2>
-            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma oturumlarını yönet</p>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Tüm Fırsatlar</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">Bugünkü dinamik fiyatlandırma fırsatlarını yönet</p>
         </div>
         <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto justify-end relative">
             <AdminNotificationDropdown />
 
-            <button @click="router.push({ name: 'admin-auction-create' })" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
+                <button @click="router.push({ name: 'admin-auction-create' })" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg shadow-primary/25 transition-all active:scale-95 text-sm">
                 <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
-                <span class="font-medium">Oturum Oluştur</span>
+                <span class="font-medium">Fırsat Oluştur</span>
             </button>
         </div>
     </header>
@@ -84,7 +91,7 @@ const {
                     </div>
                     <div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Toplam Satılan</p>
-                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctionsCount }} Oturum</h3>
+                        <h3 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight">{{ soldAuctionsCount }} Fırsat</h3>
                     </div>
                 </div>
             </div>
@@ -135,7 +142,7 @@ const {
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 dark:text-slate-400">
                         <span class="material-symbols-outlined" style="font-size: 20px;">search</span>
                     </span>
-                    <input v-model="searchQuery" class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-slate-400 dark:placeholder-slate-600 text-sm" placeholder="Oturum ara..." type="text">
+                    <input v-model="searchQuery" class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-slate-400 dark:placeholder-slate-600 text-sm" placeholder="Fırsat ara..." type="text">
                 </div>
                 <div class="flex items-center gap-2 relative">
                     <button @click="showFilterDropdown = !showFilterDropdown" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-background-dark text-sm font-medium transition-colors">
@@ -168,7 +175,7 @@ const {
                 <!-- Mobile List View -->
                 <div class="md:hidden flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
                             <div v-if="paginatedAuctions.length === 0" class="p-6 text-center text-slate-500 dark:text-slate-400 text-sm">
-                        Kriterlere uygun oturum bulunamadı.
+                        Kriterlere uygun fırsat bulunamadı.
                      </div>
                             <div v-for="auction in paginatedAuctions" :key="'mobile-'+auction.id" class="p-4 flex flex-col gap-3">
                         <div class="flex justify-between items-start">
@@ -191,9 +198,12 @@ const {
                                 <span v-else class="text-xs font-mono text-slate-600 dark:text-slate-400">-</span>
                             </div>
                         </div>
-                        <div>
+                        <div class="flex flex-wrap gap-2">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-neon-blue/10 text-neon-blue border border-neon-blue/30">
                                 Katılımcı Koşulu: {{ getAllowedGenderLabel(auction) }}
+                            </span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                                {{ getServiceCategoryLabel(auction) }}
                             </span>
                         </div>
                      </div>
@@ -204,7 +214,7 @@ const {
                     <thead>
                         <tr class="bg-slate-50 dark:bg-background-dark/50 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>
-                            <th class="px-6 py-4 font-semibold">Oturum Adı</th>
+                            <th class="px-6 py-4 font-semibold">Fırsat Adı</th>
                             <th class="px-6 py-4 font-semibold w-40">Katılımcı Koşulu</th>
                             <th class="px-6 py-4 font-semibold w-36">Başlangıç</th>
                             <th class="px-6 py-4 font-semibold w-36">Bitiş</th>
@@ -217,7 +227,7 @@ const {
                         
                         <tr v-if="paginatedAuctions.length === 0">
                             <td colspan="8" class="px-6 py-8 text-center text-slate-500 dark:text-slate-400">
-                                Kriterlere uygun oturum bulunamadı.
+                                    Kriterlere uygun fırsat bulunamadı.
                             </td>
                         </tr>
 
@@ -231,6 +241,11 @@ const {
                                 <div class="flex flex-col">
                                     <span class="text-slate-900 dark:text-white font-medium">{{ auction.title }}</span>
                                     <p class="text-slate-500 dark:text-slate-400 text-xs line-clamp-1 max-w-[300px]">{{ auction.description }}</p>
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                                            {{ getServiceCategoryLabel(auction) }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">

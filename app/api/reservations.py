@@ -14,7 +14,9 @@ from app.services.booking_service import (
     AdminCannotBookError,
     GenderNotEligibleError,
     BookingError,
+    ReservationAccessDeniedError,
 )
+from app.services.notification_service import notification_service
 
 router = APIRouter(prefix="/api/v1/reservations", tags=["reservations"])
 
@@ -167,7 +169,7 @@ async def get_all_reservations(current_user = Depends(get_current_user)):
             detail="Admin privileges required"
         )
 
-    reservations = await booking_service.get_all_reservations()
+    reservations = await booking_service.get_all_reservations(studio_id=getattr(current_user, "studioId", None))
     return reservations
 
 
@@ -185,7 +187,7 @@ async def get_admin_cancellation_notifications(
             detail="Admin privileges required"
         )
 
-    return await booking_service.get_admin_cancellation_notifications(
+    return await notification_service.get_admin_cancellation_notifications(
         admin_user_id=current_user.id,
         limit=limit,
     )
@@ -205,7 +207,7 @@ async def mark_admin_notification_as_read(
             detail="Admin privileges required"
         )
 
-    success = await booking_service.mark_notification_as_read(
+    success = await notification_service.mark_notification_as_read(
         notification_id=notification_id,
         admin_user_id=current_user.id,
     )
@@ -232,7 +234,7 @@ async def delete_admin_notification(
             detail="Admin privileges required"
         )
 
-    success = await booking_service.delete_admin_notification(
+    success = await notification_service.delete_admin_notification(
         notification_id=notification_id,
         admin_user_id=current_user.id,
     )
@@ -258,7 +260,7 @@ async def delete_admin_read_notifications(
             detail="Admin privileges required"
         )
 
-    deleted_count = await booking_service.delete_admin_read_notifications(
+    deleted_count = await notification_service.delete_admin_read_notifications(
         admin_user_id=current_user.id,
     )
     return {"deleted_count": deleted_count}
@@ -278,7 +280,10 @@ async def get_admin_reservation_details(
             detail="Admin privileges required"
         )
     
-    reservation = await booking_service.get_reservation_with_details(reservation_id)
+    reservation = await booking_service.get_reservation_with_details(
+        reservation_id,
+        studio_id=getattr(current_user, "studioId", None),
+    )
     if not reservation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -361,7 +366,17 @@ async def admin_check_in_reservation(
             detail="Admin privileges required"
         )
     
-    success = await booking_service.check_in_reservation(reservation_id)
+    try:
+        success = await booking_service.check_in_reservation(
+            reservation_id,
+            studio_id=getattr(current_user, "studioId", None),
+        )
+    except ReservationAccessDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -384,7 +399,18 @@ async def admin_cancel_reservation(
             detail="Admin privileges required"
         )
 
-    success = await booking_service.cancel_reservation(reservation_id, cancel_source="ADMIN")
+    try:
+        success = await booking_service.cancel_reservation(
+            reservation_id,
+            cancel_source="ADMIN",
+            studio_id=getattr(current_user, "studioId", None),
+        )
+    except ReservationAccessDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+
     if not success:
          raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

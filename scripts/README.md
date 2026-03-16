@@ -9,6 +9,38 @@
 5. **railway_debug.ps1** - Railway backend/frontend log ve SSH debug yardımcısı
 6. **railway_fetch_diagnose.py** - Failed to fetch/CORS/API URL teşhis scripti
 7. **clear_db.py** - Veritabanını temizleme (tümünü veya sadece oturum/rezervasyonları)
+8. **reset_and_seed.py** - Veritabanını tek komutta temizleyip taxonomy + mock veri + lokal admin kurma
+9. **taxonomy/create_sector.py** - Yeni sektör oluşturma
+10. **taxonomy/list_sectors.py** - Sektörleri listeleme
+11. **taxonomy/deactivate_sector.py** - Sektör pasifleştirme
+12. **taxonomy/create_service_category.py** - Yeni hizmet kategorisi oluşturma
+13. **taxonomy/list_service_categories.py** - Hizmet kategorilerini listeleme
+14. **taxonomy/deactivate_service_category.py** - Hizmet kategorisi pasifleştirme
+15. **taxonomy/seed_taxonomy.py** - Varsayılan sektör ve hizmet kategorisi setini yükleme
+16. **taxonomy/backfill_taxonomy.py** - Mevcut işletme/fırsat kayıtlarını dry-run destekli eşleme
+17. **create_studio.py** - Studio oluşturma
+
+---
+
+## 🔁 reset_and_seed.py
+
+Lokal geliştirici akışı için veritabanını temizler, taxonomy verisini yükler, sektör-hizmet ilişkileri tutarlı mock fırsat verisini üretir ve istenirse test adminini yeniden oluşturur.
+
+### Kullanım
+
+```bash
+python scripts/reset_and_seed.py
+python scripts/reset_and_seed.py --skip-admin
+python scripts/reset_and_seed.py --admin-studio-name "Neon Fit Academy"
+```
+
+### Varsayılanlar
+
+- admin email: `local.admin@example.com`
+- admin şifre: `TestPass123!`
+- admin studio: `Neon Fit Academy`
+
+Not: Varsayılan seed artık heuristic backfill kullanmaz. İşletmeler sektörleriyle, fırsatlar da doğrudan doğru hizmet kategorileriyle oluşturulur.
 
 ---
 
@@ -156,6 +188,138 @@ Başarılı oluşturulma durumunda:
 | "Hata: TELEFON zaten kayıtlı" | Farklı bir telefon numarası kullanın veya telefon parametresini boş bırakın |
 | "Hata: DATABASE_URL env'de yok" | `.env` dosyasını kontrol edin |
 | "ModuleNotFoundError" | `pip install -r requirements.txt` çalıştırın |
+
+---
+
+## 🏬 create_studio.py
+
+Studio (işletme) kaydı oluşturmak için kullanılan yardımcı script.
+
+### Kullanım
+
+```bash
+python scripts/create_studio.py "Studio Adı" ["Adres"] ["Logo URL"] ["Google Maps URL"] --sector <id|slug> --sector <id|slug>
+```
+
+### Açıklama
+
+- `name` (zorunlu): İşletme adı.
+- `address` (opsiyonel): Adres bilgisi.
+- `logo_url` (opsiyonel): Logo dosyası/URL'si.
+- `google_maps_url` (opsiyonel): Google Maps bağlantısı.
+- `--sector` (opsiyonel, tekrar edilebilir): Sektör ID veya slug. Birden fazla `--sector` ile birden fazla sektör bağlanabilir.
+
+Script, verilen sektörleri `scripts.taxonomy._common.resolve_sector` ile çözer; bulunamayan veya `isActive=false` olan sektörler hata verir.
+Başarılı oluşturma durumunda yeni kaydın `ID`, `İsim`, `Adres` ve bağlı sektörler konsola yazdırılır.
+
+### Örnekler
+
+Minimal:
+```bash
+python scripts/create_studio.py "Neon Fit Academy"
+```
+
+Logo ve adres ile:
+```bash
+python scripts/create_studio.py "Neon Fit Academy" "Ataşehir, İstanbul" "https://cdn.example.com/logo.png" "https://maps.google.com/?q=..."
+```
+
+Birden fazla sektör bağlama:
+```bash
+python scripts/create_studio.py "Neon Fit Academy" --sector wellness --sector 3
+```
+
+PowerShell (Windows):
+```powershell
+python .\scripts\create_studio.py "Neon Fit Academy" "Adres" "https://cdn.example.com/logo.png" "https://maps.google.com/?q=..."
+```
+
+### Gereksinimler
+
+- Proje environment kurulmuş ve `.env` içinde `DATABASE_URL` tanımlı.
+- `requirements.txt` içindeki bağımlılıklar yüklü.
+- Taxonomy (sektör) verisi önceden oluşturulmuş olmalı.
+
+### Hata Durumları
+
+- `Sektör bulunamadı`: Verilen sektör ID/slug bulunamadı.
+- `Pasif sektör kullanılamaz`: Sektör `isActive=false` olduğu için kullanılamaz.
+- Veritabanı bağlantı hatalarında script exception fırlatır ve hata mesajı gösterilir.
+
+
+---
+
+## 🧭 Taxonomy Master Data Scriptleri
+
+Bu scriptler yalnızca proje sahibi / SSH erişimi olan operatör için tasarlanmıştır. Admin panelinden sektör veya hizmet kategorisi oluşturma yoktur; master veri yönetimi burada yapılır.
+
+### taxonomy/create_sector.py
+
+```bash
+python scripts/taxonomy/create_sector.py "Wellness"
+python scripts/taxonomy/create_sector.py "Pilates ve Yoga" --slug pilates-yoga --description "Mat ve reformer odakli hizmetler"
+```
+
+### taxonomy/list_sectors.py
+
+```bash
+python scripts/taxonomy/list_sectors.py
+python scripts/taxonomy/list_sectors.py --all
+```
+
+### taxonomy/deactivate_sector.py
+
+```bash
+python scripts/taxonomy/deactivate_sector.py 3
+python scripts/taxonomy/deactivate_sector.py wellness
+```
+
+### taxonomy/create_service_category.py
+
+```bash
+python scripts/taxonomy/create_service_category.py "Aletli Pilates" --sector wellness
+python scripts/taxonomy/create_service_category.py "Acik Grup Dersi" --sector 2 --slug acik-grup
+```
+
+### taxonomy/list_service_categories.py
+
+```bash
+python scripts/taxonomy/list_service_categories.py
+python scripts/taxonomy/list_service_categories.py --all
+python scripts/taxonomy/list_service_categories.py --sector wellness
+```
+
+### taxonomy/deactivate_service_category.py
+
+```bash
+python scripts/taxonomy/deactivate_service_category.py 5
+python scripts/taxonomy/deactivate_service_category.py aletli-pilates
+```
+
+### Notlar
+
+- `--sector` parametresi hem ID hem slug kabul eder.
+- Scriptler kayıt silmez; `isActive = false` ile pasifleştirir.
+- Slug verilmezse isimden otomatik üretilir.
+
+### taxonomy/seed_taxonomy.py
+
+```bash
+python scripts/taxonomy/seed_taxonomy.py
+python scripts/taxonomy/seed_taxonomy.py --update-existing
+```
+
+Varsayılan çok sektörlü taxonomy setini idempotent şekilde kurar. Mevcut slug'lar korunur; `--update-existing` verilirse açıklama/ad gibi metadata da güncellenir.
+
+### taxonomy/backfill_taxonomy.py
+
+```bash
+python scripts/taxonomy/backfill_taxonomy.py
+python scripts/taxonomy/backfill_taxonomy.py --apply
+python scripts/taxonomy/backfill_taxonomy.py --apply --force-categories
+```
+
+Mevcut işletme isimleri ve fırsat başlık/açıklamalarındaki anahtar kelimelere göre öneri üretir. Varsayılan mod dry-run'dır; önce planı görür, sonra `--apply` ile uygularsınız.
 
 ---
 

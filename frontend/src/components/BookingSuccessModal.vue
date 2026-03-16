@@ -75,9 +75,9 @@ onUnmounted(() => {
           <div class="w-16 h-16 bg-neon-green/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-neon-green/30 shadow-[0_0_20px_rgba(54,211,153,0.25)]">
             <span class="material-symbols-outlined text-4xl text-neon-green">emoji_events</span>
           </div>
-          <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-1">Seans Kilitlendi</h2>
+          <h2 class="text-3xl font-black text-white uppercase tracking-wider mb-1">Fırsat Kilitlendi</h2>
           <p class="text-neon-green text-sm font-semibold">Harika iş! Fırsatı rakiplerinden önce kaptın.</p>
-          <p class="text-slate-400 text-xs mt-2">Piyasa değerinin çok altında bir fiyata seansı garantiledin.</p>
+          <p class="text-slate-400 text-xs mt-2">Piyasa değerinin çok altında bir fiyata fırsatı garantiledin.</p>
         </div>
 
         <div class="relative z-10 pt-4 pb-4">
@@ -105,7 +105,7 @@ onUnmounted(() => {
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-4 leading-relaxed">
-            Stüdyoya gittiğinizde bu kodu resepsiyona göstererek ödemenizi tamamlayın.
+            İşletmeye gittiğinizde bu kodu resepsiyona göstererek ödemenizi tamamlayın.
           </p>
         </div>
 

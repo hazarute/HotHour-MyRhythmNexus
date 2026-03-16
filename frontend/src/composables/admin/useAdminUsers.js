@@ -5,6 +5,7 @@ import { useSocketStore } from '@/stores/socket'
 export function useAdminUsers() {
     const authStore = useAuthStore()
     const socketStore = useSocketStore()
+    const DEFAULT_RESET_PASSWORD = 'sifredegistir'
     
     const users = ref([])
     const loading = ref(false)
@@ -102,32 +103,6 @@ export function useAdminUsers() {
         if (currentPage.value > 1) currentPage.value--
     }
     
-    const deleteUser = async (userId) => {
-        if (!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return false
-        
-        try {
-            const resp = await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
-                method: 'DELETE'
-            })
-            if (!resp.ok) {
-                const data = await resp.json()
-                throw new Error(data.detail || 'Kullanıcı silinemedi')
-            }
-
-            users.value = users.value.filter(u => u.id !== userId)
-            
-            // Adjust pagination if needed
-            if (paginatedUsers.value.length === 0 && currentPage.value > 1) {
-                currentPage.value--
-            }
-            return true
-        } catch (err) {
-            console.error('Kullanıcı silinemedi:', err)
-            alert(err.message || 'Kullanıcı silinirken bir hata oluştu.')
-            return false
-        }
-    }
-    
     const updateUser = async (userId, updateData) => {
         try {
             const response = await authStore.fetchWithAuth(`/api/v1/users/${userId}`, {
@@ -156,6 +131,44 @@ export function useAdminUsers() {
         }
     }
 
+    const resendVerificationEmail = async (userId) => {
+        try {
+            const response = await authStore.fetchWithAuth(`/api/v1/users/${userId}/resend-verification`, {
+                method: 'POST'
+            })
+
+            if (!response.ok) {
+                const errData = await response.json()
+                throw new Error(errData.detail || 'Doğrulama e-postası gönderilemedi')
+            }
+
+            const data = await response.json()
+            return { success: true, message: data.detail || 'Doğrulama e-postası tekrar gönderildi.' }
+        } catch (err) {
+            console.error('Doğrulama e-postası gönderilemedi:', err)
+            return { success: false, message: err.message || 'Doğrulama e-postası gönderilirken bir hata oluştu.' }
+        }
+    }
+
+    const resetPassword = async (userId) => {
+        try {
+            const response = await authStore.fetchWithAuth(`/api/v1/users/${userId}/reset-password`, {
+                method: 'POST'
+            })
+
+            if (!response.ok) {
+                const errData = await response.json()
+                throw new Error(errData.detail || 'Şifre sıfırlanamadı')
+            }
+
+            const data = await response.json()
+            return { success: true, message: data.detail || `Şifre ${DEFAULT_RESET_PASSWORD} olarak sıfırlandı.` }
+        } catch (err) {
+            console.error('Şifre sıfırlanamadı:', err)
+            return { success: false, message: err.message || 'Şifre sıfırlanırken bir hata oluştu.' }
+        }
+    }
+
     return {
         users,
         loading,
@@ -171,8 +184,9 @@ export function useAdminUsers() {
         fetchUsers,
         goNextPage,
         goPrevPage,
-        deleteUser,
         updateUser,
+        resendVerificationEmail,
+        resetPassword,
         setupSocketListeners,
         cleanupSocketListeners
     }

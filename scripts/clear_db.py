@@ -9,6 +9,18 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.db import db
 
 
+FULL_CLEAR_MODEL_ORDER = [
+    ("reservation", "rezervasyon"),
+    ("notification", "bildirim"),
+    ("auction", "açık artırma"),
+    ("user", "kullanıcı"),
+    ("studiosector", "işletme-sektör eşleşmesi"),
+    ("servicecategory", "hizmet kategorisi"),
+    ("sector", "sektör"),
+    ("studio", "işletme"),
+]
+
+
 def _deleted_count(result) -> int:
     if isinstance(result, int):
         return result
@@ -31,6 +43,10 @@ async def clear_database():
     print("   - Bildirimler")
     print("   - Açık Artırmalar")
     print("   - Kullanıcılar (Adminler dahil)")
+    print("   - İşletme-Sektör eşleşmeleri")
+    print("   - Hizmet kategorileri")
+    print("   - Sektörler")
+    print("   - İşletmeler")
     
     confirm = input("\nDevam etmek istiyor musunuz? (evet/hayir): ").strip().lower()
     
@@ -42,19 +58,10 @@ async def clear_database():
     try:
         print("\nTemizlik başlıyor...")
 
-        # 1. Önce bağımlı tabloları sil (Foreign Key kısıtlamaları yüzünden)
-        deleted_reservations = await _delete_all("reservation")
-        print(f"✅ {deleted_reservations} rezervasyon silindi.")
-
-        deleted_notifications = await _delete_all("notification")
-        print(f"✅ {deleted_notifications} bildirim silindi.")
-
-        # 2. Ana tabloları sil
-        deleted_auctions = await _delete_all("auction")
-        print(f"✅ {deleted_auctions} açık artırma silindi.")
-
-        deleted_users = await _delete_all("user")
-        print(f"✅ {deleted_users} kullanıcı silindi.")
+        # Foreign key bağımlılıklarını bozmayacak sırada tüm çekirdek + taxonomy tablolarını temizle.
+        for model_name, label in FULL_CLEAR_MODEL_ORDER:
+            deleted_count = await _delete_all(model_name)
+            print(f"✅ {deleted_count} {label} silindi.")
 
         print("\n✨ Veritabanı başarıyla temizlendi.")
     finally:

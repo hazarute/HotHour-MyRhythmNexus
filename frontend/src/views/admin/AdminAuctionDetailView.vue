@@ -25,6 +25,24 @@ const activeTab = ref('overview') // overview, reservations, bidders
 
 const hasWinningReservation = computed(() => !!winningReservation.value)
 const canEditAuction = computed(() => String(auction.value?.status || '').toUpperCase() === 'DRAFT')
+const serviceCategoryLabel = computed(() => {
+    const category = auction.value?.serviceCategory || auction.value?.service_category
+    const categoryName = category?.name
+    const sectorName = category?.sector?.name
+
+    if (categoryName && sectorName) return `${categoryName} / ${sectorName}`
+    if (categoryName) return categoryName
+    return 'Kategori atanmadı'
+})
+
+const studioSectorNames = computed(() => {
+    const sectors = auction.value?.studio?.sectors
+    if (!Array.isArray(sectors)) return []
+
+    return sectors
+        .map((item) => item?.sector?.name || item?.name)
+        .filter(Boolean)
+})
 
 onMounted(async () => {
     const id = route.params.id
@@ -70,7 +88,7 @@ const fetchWinningReservation = async (auctionId) => {
                     <span class="material-symbols-outlined">arrow_back</span>
                 </button>
                 <div class="flex flex-col gap-1">
-                    <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Oturum Detayı</h2>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Fırsat Detayı</h2>
                     <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm">#{{ auction?.id }} - {{ auction?.title }}</p>
                 </div>
             </div>
@@ -93,12 +111,12 @@ const fetchWinningReservation = async (auctionId) => {
             </div>
 
             <div v-else-if="!auction" class="p-6 text-center text-slate-500 dark:text-slate-400">
-                Oturum bulunamadı veya silinmiş.
+                Fırsat bulunamadı veya silinmiş.
             </div>
 
             <div v-else class="flex flex-col gap-6">
                 <!-- Info Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Durum</span>
                         <div class="mt-2">
@@ -128,6 +146,10 @@ const fetchWinningReservation = async (auctionId) => {
                                 {{ getAllowedGenderLabel(auction) }}
                             </span>
                         </div>
+                    </div>
+                    <div class="bg-white dark:bg-[#1a2230] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">Hizmet Kategorisi</span>
+                        <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{{ serviceCategoryLabel }}</div>
                     </div>
                 </div>
 
@@ -161,7 +183,7 @@ const fetchWinningReservation = async (auctionId) => {
                                     <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.endTime || auction?.end_time) }}</span>
                                 </li>
                                 <li class="flex justify-between">
-                                    <span>Hizmet Zamanı:</span>
+                                    <span>Fırsat Saati:</span>
                                     <span class="font-medium text-slate-900 dark:text-white">{{ formatDate(auction?.scheduledAt || auction?.scheduled_at) }}</span>
                                 </li>
                                 <li class="flex justify-between">
@@ -170,6 +192,24 @@ const fetchWinningReservation = async (auctionId) => {
                                 </li>
                              </ul>
                         </div>
+                         <div>
+                             <h4 class="text-sm font-medium text-slate-900 dark:text-white mb-2">Sınıflandırma</h4>
+                             <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                                <li class="flex justify-between gap-4">
+                                    <span>Hizmet Kategorisi:</span>
+                                    <span class="font-medium text-right text-slate-900 dark:text-white">{{ serviceCategoryLabel }}</span>
+                                </li>
+                                <li class="flex justify-between gap-4 items-start">
+                                    <span>İşletme Sektörleri:</span>
+                                    <span class="font-medium text-right text-slate-900 dark:text-white">
+                                        {{ studioSectorNames.length ? studioSectorNames.join(', ') : 'Atanmadı' }}
+                                    </span>
+                                </li>
+                             </ul>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                          <div>
                              <h4 class="text-sm font-medium text-slate-900 dark:text-white mb-2">Fiyatlandırma Kuralları</h4>
                              <ul class="text-sm text-slate-600 dark:text-slate-400 space-y-2">
@@ -195,6 +235,7 @@ const fetchWinningReservation = async (auctionId) => {
                                 </li>
                              </ul>
                         </div>
+                        <div></div>
                     </div>
 
                     <div class="mt-6 border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/70 dark:bg-[#111811]/50">
@@ -272,7 +313,7 @@ const fetchWinningReservation = async (auctionId) => {
 
                     <div v-else class="text-center py-12">
                         <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-2">event_busy</span>
-                        <p class="text-slate-500 dark:text-slate-400">Bu oturum için henüz aktif kazanan rezervasyon bulunamadı.</p>
+                        <p class="text-slate-500 dark:text-slate-400">Bu fırsat için henüz aktif kazanan rezervasyon bulunamadı.</p>
                     </div>
                 </div>
 

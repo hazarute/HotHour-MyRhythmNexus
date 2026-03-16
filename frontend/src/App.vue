@@ -55,12 +55,12 @@ const handleLogout = () => {
               Ana Sayfa
             </router-link>
             <router-link to="/auctions" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors" active-class="text-neon-blue drop-shadow-[0_0_8px_rgba(0,191,255,0.5)]">
-              Canlı Arena
+              Canlı Fırsatlar
             </router-link>
             
             <template v-if="authStore.isAuthenticated">
                 <router-link to="/my-reservations" class="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors" active-class="text-neon-blue drop-shadow-[0_0_8px_rgba(0,191,255,0.5)]">
-                  Biletlerim
+                  Fırsatlarım
                 </router-link>
             </template>
             <template v-else>
@@ -70,7 +70,7 @@ const handleLogout = () => {
             </template>
             
             <router-link v-if="authStore.isAdmin" to="/admin" class="text-[11px] font-bold uppercase tracking-widest text-neon-magenta hover:text-white transition-colors flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> Studio Panel
+              <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> İşletme Panel
             </router-link>
           </nav>
         </div>
@@ -81,7 +81,7 @@ const handleLogout = () => {
             <span class="absolute left-4 text-slate-500 material-symbols-outlined text-lg group-focus-within:text-neon-blue transition-colors">search</span>
             <input 
               class="bg-black/40 border border-white/10 rounded-full py-2.5 pl-11 pr-4 text-sm text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue w-48 lg:w-64 transition-all placeholder:text-slate-600" 
-              placeholder="Oturum ara..." 
+              placeholder="Fırsat ara..." 
               type="text"
             >
           </div>
@@ -118,12 +118,12 @@ const handleLogout = () => {
             </router-link>
             
             <router-link to="/auctions" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
-                <span class="material-symbols-outlined">local_fire_department</span> Canlı Arena
-            </router-link>
+            <span class="material-symbols-outlined">local_fire_department</span> Canlı Fırsatlar
+          </router-link>
             
             <template v-if="authStore.isAuthenticated">
                 <router-link to="/my-reservations" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
-                    <span class="material-symbols-outlined">local_activity</span> Biletlerim
+                    <span class="material-symbols-outlined">local_activity</span> Fırsatlarım
                 </router-link>
                 
                 <router-link to="/profile" class="text-sm font-bold uppercase tracking-widest text-slate-300 p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10 text-neon-blue">
@@ -131,7 +131,7 @@ const handleLogout = () => {
                 </router-link>
                 
                 <router-link v-if="authStore.isAdmin" to="/admin" class="text-sm font-bold uppercase tracking-widest text-neon-magenta p-4 rounded-xl hover:bg-white/5 hover:text-white border border-transparent flex items-center gap-3" active-class="bg-white/5 border-white/10">
-                    <span class="material-symbols-outlined">admin_panel_settings</span> Studio Panel
+                    <span class="material-symbols-outlined">admin_panel_settings</span> İşletme Panel
                 </router-link>
                 
                 <div class="h-px bg-white/10 my-2"></div>
@@ -175,7 +175,7 @@ const handleLogout = () => {
               <span class="text-xl font-black tracking-tighter text-white">HotHour</span>
             </router-link>
             <p class="text-xs text-slate-400 max-w-xs leading-relaxed">
-              Spor ve dans stüdyoları için tasarlanmış dinamik fiyatlandırma ve son dakika rezervasyon platformu. Fırsatları yakalayın, stüdyoya katılın.
+              Hizmet sektörü için tasarlanmış dinamik fiyatlandırma ve son dakika rezervasyon platformu. Fırsatları yakalayın, hizmetlere katılın.
             </p>
           </div>
 

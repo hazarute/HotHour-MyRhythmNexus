@@ -24,7 +24,7 @@ async def create_studio_in_db():
     )
     return studio
 
-async def create_user_in_db(role: str = "USER", studio_id: str = None):
+async def create_user_in_db(role: str = "USER", studio_id: int | None = None):
     email = f"test_{uuid.uuid4().hex[:8]}@example.com"
     phone_suffix = "".join([s for s in uuid.uuid4().hex if s.isdigit()][:9])
     if len(phone_suffix) < 9:
@@ -131,3 +131,24 @@ async def test_update_my_studio_as_admin_without_studio():
         response = await client.put("/api/v1/studios/me", json=update_data, headers=headers)
         assert response.status_code == 403
         assert "yok" in response.text.lower() or "olmad"  in response.text.lower()
+
+
+@pytest.mark.asyncio
+async def test_update_my_studio_sectors_as_admin_is_forbidden():
+    studio = await create_studio_in_db()
+    admin_user = await create_user_in_db(role="ADMIN", studio_id=studio.id)
+    headers = await get_token_headers(admin_user)
+
+    sector_a = await db.db.sector.create(data={"name": "Güzellik", "slug": f"guzellik-{uuid.uuid4().hex[:6]}", "isActive": True})
+    sector_b = await db.db.sector.create(data={"name": "Wellness", "slug": f"wellness-{uuid.uuid4().hex[:6]}", "isActive": True})
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.put(
+            "/api/v1/studios/me/sectors",
+            json={"sectorIds": [sector_a.id, sector_b.id]},
+            headers=headers,
+        )
+
+    assert response.status_code == 403, response.text
+    assert "panelden değiştirilemez" in response.text.lower()

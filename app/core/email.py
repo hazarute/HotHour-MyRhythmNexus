@@ -163,7 +163,7 @@ async def send_verification_email(email_to: str, token: str) -> None:
 
     project_name = settings.PROJECT_NAME
     display_project_name = project_name.replace(" Core", "").replace("Core ", "").replace("Core", "").strip()
-    subject = f"🔥 {display_project_name} - Arenaya Giriş İçin Son Bir Adım"
+    subject = f"🔥 {display_project_name} - Fırsat Alanına Giriş İçin Son Bir Adım"
     
     # Email link - Frontend verify sayfasına yönlendir (URL .env'den okunur)
     verification_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
@@ -308,7 +308,7 @@ async def send_verification_email(email_to: str, token: str) -> None:
             <div class="container">
                 <div class="header">
                     {logo_html}
-                    <h1>Arenaya Hoş Geldin</h1>
+                    <h1>Fırsat Alanına Hoş Geldin</h1>
                     <p>Son Bir Adım Kaldı</p>
                 </div>
 
@@ -316,7 +316,7 @@ async def send_verification_email(email_to: str, token: str) -> None:
                     <div class="greeting">Merhaba, 👋</div>
                     
                     <div class="message">
-                        <strong>{display_project_name}</strong> dünyasına adım attığın için teşekkürler. Canlı Pilates oturumlarında fiyatlar düşerken fırsatları yakalamaya başlamak ve yerini ayırtmak için e-posta adresini doğrulaman gerekiyor.
+                        <strong>{display_project_name}</strong> dünyasına adım attığın için teşekkürler. Canlı fırsatlarda fiyatlar düşerken fırsatları yakalamaya başlamak ve yerini ayırtmak için e-posta adresini doğrulaman gerekiyor.
                     </div>
 
                     <div class="button-container">
@@ -342,9 +342,9 @@ async def send_verification_email(email_to: str, token: str) -> None:
 
                 <div class="footer">
                     <p>© 2026 {project_name}. Tüm hakları saklıdır.</p>
-                    <p>Pilates Stüdyoları için Dinamik Fiyatlandırma Platformu</p>
+                    <p>Hizmet sağlayıcıları için Dinamik Fiyatlandırma Platformu</p>
                     <div class="footer-links" style="margin-top: 15px;">
-                        <a href="{settings.FRONTEND_URL}">Canlı Arenaya Dön</a>
+                        <a href="{settings.FRONTEND_URL}">Canlı Fırsat Alanına Dön</a>
                     </div>
                 </div>
             </div>

@@ -5,8 +5,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![License](https://img.shields.io/badge/License-Noncommercial-orange.svg?style=flat-square)](./LICENSE)
 
-> **"Boş Seans Yok, Maksimum Verim."**
-> Pilates stüdyoları ve randevu bazlı işletmeler için dinamik Hollanda açık artırması (Dutch Auction) + fırsat yönetimi platformu.
+> **"Boş Kapasite Yok, Maksimum Verim."**
+> İşletmelerin boş kalan hizmet fırsatlarını dinamik Hollanda açık artırması (Dutch Auction) modeliyle değerlendiren rezervasyon ve fiyatlandırma platformu.
 
 ---
 
@@ -62,22 +62,27 @@ npm run dev
 
 ## 🎯 Proje Özeti
 
-**Problem:** Pilates stüdyoları, özellikle hafta içi gündüz saatlerinde boş kalan seansları (dead inventory) satmakta zorlanıyor.
+**Problem:** Randevu ve kapasite bazlı çalışan işletmeler, özellikle gün içindeki boş kalan hizmet slotlarını (dead inventory) değerlendirmekte zorlanıyor.
 
-**Çözüm:** HotHour seansları tavan fiyattan başlatır, taban fiyata doğru gerçek zamanlı düşürür ve kullanıcıda FOMO etkisi oluşturarak dönüşüm artırmayı hedefler.
+**Çözüm:** HotHour fırsatları tavan fiyattan başlatır, taban fiyata doğru gerçek zamanlı düşürür ve kullanıcıda FOMO etkisi oluşturarak dönüşüm artırmayı hedefler.
+
+**v1.5 Yönü:** Platform artık tek bir dikeyle sınırlı değil; güzellik, wellness, bakım, fizyoterapi ve benzeri hizmet işletmelerini de kapsayacak çok sektörlü bir yapıya evriliyor.
 
 **Değer Teklifi:**
 - Gerçek zamanlı fiyat düşüşü + Socket.IO senkronizasyonu
 - Race-condition korumalı “ilk alan kazanır” rezervasyon akışı
-- Online ödeme zorunluluğu olmadan “rezervasyon yap, stüdyoda öde” modeli
+- Online ödeme zorunluluğu olmadan “rezervasyon yap, işletmede öde” modeli
 - Admin paneli ile operasyonel kontrol (turbo tetikleme, yayın, bildirimler)
+- İşletme seviyesi sektör ve fırsat seviyesi hizmet sınıflandırması için genişlemeye uygun mimari temel
+
+**Terminoloji Notu:** Kod tabanında teknik legacy isimler olarak `Studio`, `studioId` ve `Auction` korunabilir; ancak kullanıcıya görünen ürün dilinde `işletme`, `fırsat` ve `hizmet` terimleri tercih edilir.
 
 ## 🏗 Mimari ve Akış
 
 ```mermaid
 graph TD
     User((Kullanıcı))
-    Admin((Stüdyo Yöneticisi))
+    Admin((İşletme Yöneticisi))
 
     subgraph "HotHour Core"
         FE[Frontend SPA<br/>(Vue 3 + Pinia + Tailwind)]
@@ -100,11 +105,13 @@ graph TD
 ## ✨ Temel Özellikler
 
 - 📉 **Dinamik Hollanda Açık Artırması:** Fiyat, tanımlı aralıklarda otomatik düşer.
-- 🔥 **Turbo Mode:** Seans başlangıcına yaklaşınca daha agresif düşüş kuralı devreye girer.
+- 🔥 **Turbo Mode:** Fırsat başlangıcına yaklaşınca daha agresif düşüş kuralı devreye girer.
 - ⚡ **Hemen Kap:** Rezervasyon anında fiyat kilitlenir (`locked_price`) ve yarış koşulu korunur.
 - 🔐 **Auth-R Akışı:** Access token (2 gün) + refresh token (7 gün) + token revoke.
 - 🧠 **Redis Opsiyonel Revocation:** Redis varsa merkezi blacklist, yoksa in-memory fallback.
 - 📧 **E-posta Doğrulama:** Kayıt sonrası doğrulama linki ile aktivasyon.
+- 🏷️ **Çok Sektörlü Genişleme Hazırlığı:** İşletme düzeyinde sektör, fırsat düzeyinde hizmet kategorisi modeline uyumlu yapı.
+- 🧩 **Tenant İzolasyonu:** Admin kullanıcılar yalnızca kendi işletmelerine bağlı veri ve rezervasyonları yönetir.
 
 ## 🛠 Teknoloji Yığını
 
@@ -197,6 +204,27 @@ docker compose up -d db
 
 Auth akışında frontend tarafında token yönetimi `fetchWithAuth()` üzerinden yapılır; 401 durumunda otomatik refresh denenir.
 
+## 🧠 Domain Modeli
+
+HotHour teknik olarak çok kiracılı bir yapı kullanır:
+
+- `Studio`: Teknik legacy isimdir; platformdaki işletme/şube tenant'ını temsil eder.
+- `Auction`: Teknik legacy isimdir; kullanıcıya sunulan fırsatı temsil eder.
+- `Reservation`: Kullanıcının belirli bir fırsat için oluşturduğu rezervasyondur.
+
+`v1.5` ile hedeflenen genişleme:
+
+- İşletme seviyesinde çoklu sektör desteği
+- Fırsat seviyesinde hizmet kategorisi desteği
+- Public keşif ekranlarında sektör ve hizmet bazlı filtreleme
+- Admin tarafında yalnızca ön tanımlı sektör/hizmet kayıtlarını seçme akışı
+
+Master veri yönetimi yaklaşımı:
+
+- Sektör ve hizmet kategorileri normal admin panelinden serbest metin olarak oluşturulmaz.
+- Bu kayıtlar operasyonel script'ler ile merkezi olarak yönetilir.
+- Normal admin yalnızca tanımlı kayıtları kendi işletmesine veya fırsatlarına bağlar.
+
 ## 📡 API Örnekleri
 
 ### Auth
@@ -218,6 +246,13 @@ Auth akışında frontend tarafında token yönetimi `fetchWithAuth()` üzerinde
 - `DELETE /api/v1/reservations/{reservation_id}`
 - `GET /api/v1/reservations/admin/all` (admin)
 
+### v1.5 Hedef API Genişlemeleri
+- `GET /api/v1/sectors`
+- `GET /api/v1/service-categories`
+- `PUT /api/v1/studios/me/sectors`
+- `GET /api/v1/auctions?sector=...`
+- `GET /api/v1/auctions?service_category=...`
+
 ## ✅ Test
 
 Backend:
@@ -236,8 +271,11 @@ npm run test:unit -- --run
 ## 🗺 Yol Haritası
 
 Mevcut odak alanları:
-- CI pipeline iyileştirmeleri
-- Deployment (staging -> production)
+- Çok sektörlü veri modeli (`Sector`, `StudioSector`, `ServiceCategory`) tasarımı
+- Backend filtreleme ve response genişletmeleri
+- Admin tarafında ön tanımlı sektör/hizmet seçimi akışları
+- Public keşif ekranında sektör ve hizmet filtreleri
+- SSH/CLI tabanlı master veri yönetim script'leri
 - Redis'in çok worker senaryolarında aktif kullanımı
 - Opsiyonel E2E test katmanı
 - Ödeme entegrasyonu (`PAYMENTS_ENABLED=true` gelecekte)

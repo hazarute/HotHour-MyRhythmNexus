@@ -6,9 +6,9 @@ import { useHead } from '@unhead/vue'
 useHead({
   title: 'Nasıl Çalışır? — HotHour',
   meta: [
-    { name: 'description', content: 'HotHour\'da nasıl indirimli seans yakalarsın? Hollanda Açık Artırması mantığını öğren, adım adım rehberimizi keşfet.' },
+    { name: 'description', content: 'HotHour\'da nasıl indirimli fırsat yakalarsın? Hollanda Açık Artırması mantığını öğren, adım adım rehberimizi keşfet.' },
     { property: 'og:title', content: 'Nasıl Çalışır? — HotHour' },
-    { property: 'og:description', content: 'Hollanda Açık Artırması ile indirimli seans yakala. Adım adım rehber.' },
+    { property: 'og:description', content: 'Hollanda Açık Artırması ile indirimli fırsat yakala. Adım adım rehber.' },
     { property: 'og:url', content: 'https://hothour.kayraspace.com/how-it-works' },
   ],
   link: [{ rel: 'canonical', href: 'https://hothour.kayraspace.com/how-it-works' }],
@@ -20,54 +20,54 @@ const expandedStep = ref(null)
 const steps = [
   {
     id: 1,
-    title: 'Boş Seansları Keşfet',
+    title: 'Boş Fırsatları Keşfet',
     icon: 'search',
-    description: 'Stüdyoların hafta içi premium seanslarındaki boşlukları yakala.',
-    details: 'Reformer, Cadillac veya kişiye özel Pilates antrenmanları... Filtrele, sana en uygun stüdyoyu ve saati seç. Unutma, bu seanslar normalde çok daha yüksek fiyatlı!'
+    description: 'İşletmelerin hafta içi premium hizmetlerindeki boşlukları yakala.',
+    details: 'Reformer, Cadillac veya kişiye özel hizmetler... Filtrele, sana en uygun işletmeyi ve saati seç. Unutma, bu hizmetler normalde çok daha yüksek fiyatlı!'
   },
   {
     id: 2,
     title: 'Fiyatın Düşüşünü İzle',
     icon: 'trending_down',
     description: 'Hollanda Açık Artırması mantığıyla zaman geçtikçe fiyat düşer.',
-    details: 'Seans saati yaklaştıkça fiyat tavan fiyattan taban fiyata doğru erimeye başlar. Seansa 2 saat kala 🔥 Turbo Mod devreye girer ve fiyatlar çılgın gibi düşer! Beklemek risklidir, başkası senden önce kapabilir.'
+    details: 'Fırsat saati yaklaştıkça fiyat tavan fiyattan taban fiyata doğru erimeye başlar. Fırsata 2 saat kala 🔥 Turbo Mod devreye girer ve fiyatlar hızla düşer! Beklemek risklidir, başkası senden önce kapabilir.'
   },
   {
     id: 3,
     title: 'Hemen Kap (Kilitle)',
     icon: 'touch_app',
     description: 'Fiyat bütçene uygun olduğunda "Hemen Kap" butonuna bas.',
-    details: 'Sistem saniyenin binde biri hızında çalışır. Butona ilk basan kişi o anki güncel fiyatı dondurur (kilitler) ve seansı kapatır. Tebrikler, piyasa değerinin çok altında bir seans yakaladın!'
+    details: 'Sistem saniyenin binde biri hızında çalışır. Butona ilk basan kişi o anki güncel fiyatı dondurur (kilitler) ve fırsatı kapatır. Tebrikler, piyasa değerinin çok altında bir fırsat yakaladın!'
   },
   {
     id: 4,
-    title: 'Stüdyoda Öde',
+    title: 'İşletmede Öde',
     icon: 'storefront',
-    description: 'Kredi kartı girmek yok! Sana verilen kod ile stüdyoya git.',
-    details: 'Rezervasyon onaylandığında ekranda eşsiz bir kod (Örn: HOT-8X2A) göreceksin. Sadece stüdyoya git, resepsiyona kodunu söyle ve o an kilitlediğin indirimli fiyat üzerinden ödemeni nakit veya kartla yerinde yap.'
+    description: 'Kredi kartı girmek yok! Sana verilen kod ile işletmeye git.',
+    details: 'Rezervasyon onaylandığında ekranda eşsiz bir kod (Örn: HOT-8X2A) göreceksin. Sadece işletmeye git, resepsiyona kodunu söyle ve o an kilitlediğin indirimli fiyat üzerinden ödemeni nakit veya kartla yerinde yap.'
   }
 ]
 
 const faqs = [
   {
     question: 'Fiyat ne kadar düşebilir? Sıfıra iner mi?',
-    answer: 'Hayır, her seansın stüdyo tarafından belirlenmiş bir "Taban Fiyatı" (Floor Price) vardır. Fiyat bu rakamın altına asla düşmez. Taban fiyata ulaşmadan önce seansı kapmak tamamen senin hızına ve stratejine bağlı!'
+    answer: 'Hayır, her fırsatın işletme tarafından belirlenmiş bir "Taban Fiyatı" (Floor Price) vardır. Fiyat bu rakamın altına asla düşmez. Taban fiyata ulaşmadan önce fırsatı kapmak tamamen senin hızına ve stratejine bağlı!'
   },
   {
     question: 'Ödeme için kredi kartı girmem gerekiyor mu?',
-    answer: 'Kesinlikle hayır! HotHour güven üzerine kuruludur. Kredi kartı bilgini istemeyiz. Seansı uygulamadan rezerve edersin, ödemeyi ise stüdyoya gittiğinde fiziksel olarak yaparsın (Yerinde Ödeme).'
+    answer: 'Kesinlikle hayır! HotHour güven üzerine kuruludur. Kredi kartı bilgini istemeyiz. Fırsatı uygulamadan rezerve edersin, ödemeyi ise işletmeye gittiğinde fiziksel olarak yaparsın (Yerinde Ödeme).'
   },
   {
     question: 'Turbo Mod (🔥 Sıcak Saat) nedir?',
-    answer: 'Seansın başlamasına çok az bir zaman (genellikle son 2 saat) kala devreye giren özel bir moddur. Bu modda fiyatlar normalden çok daha hızlı ve agresif bir şekilde düşmeye başlar. Ekranın kırmızıya döndüğünü gördüğünde elini çabuk tutmalısın!'
+    answer: 'Fırsatın başlamasına çok az bir zaman (genellikle son 2 saat) kala devreye giren özel bir moddur. Bu modda fiyatlar normalden çok daha hızlı ve agresif bir şekilde düşmeye başlar. Ekranın kırmızıya döndüğünü gördüğünde elini çabuk tutmalısın!'
   },
   {
-    question: 'Aynı seansa başka biriyle aynı anda basarsak ne olur?',
-    answer: 'HotHour altyapısı "Yarış Durumu"na (Race Condition) karşı özel olarak korunmaktadır. "Hemen Kap" butonuna salise farkıyla bile olsa ilk basan kişi fiyatı kilitler ve seansı alır. Diğer kullanıcı "Seans başkası tarafından kapıldı" uyarısı görür.'
+    question: 'Aynı fırsata başka biriyle aynı anda basarsak ne olur?',
+    answer: 'HotHour altyapısı "Yarış Durumu"na (Race Condition) karşı özel olarak korunmaktadır. "Hemen Kap" butonuna salise farkıyla bile olsa ilk basan kişi fiyatı kilitler ve fırsatı alır. Diğer kullanıcı "Fırsat başkası tarafından kapıldı" uyarısı görür.'
   },
   {
     question: 'Rezervasyonumu iptal edebilir miyim?',
-    answer: 'Uygulama üzerinden seansa belirli bir süre kalana kadar iptal edebilirsin. Lütfen stüdyoların emeğine saygı göstererek gidemeyeceğin seansları erkenden iptal et ki o boşluktan başkası faydalanabilsin.'
+    answer: 'Uygulama üzerinden fırsata belirli bir süre kalana kadar iptal edebilirsin. Lütfen işletmelerin emeğine saygı göstererek gidemeyeceğin fırsatları erkenden iptal et ki o boşluktan başkası faydalanabilsin.'
   }
 ]
 
@@ -99,7 +99,7 @@ const toggleFaq = (index) => {
         </h1>
         
         <p class="text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8 md:mb-10">
-          HotHour'da zaman paradır! Seçtiğin pilates seansının saati yaklaştıkça fiyatı sürekli düşer. Yeterince beklersen harika bir indirim yakalarsın, çok beklersen başkası kapar. İşte oyunun kuralları:
+          HotHour'da zaman paradır! Seçtiğin hizmetin saati yaklaştıkça fiyatı sürekli düşer. Yeterince beklersen harika bir indirim yakalarsın, çok beklersen başkası kapar. İşte oyunun kuralları:
         </p>
 
         <button 
@@ -107,7 +107,7 @@ const toggleFaq = (index) => {
           class="mx-auto block bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-neon-blue transition-all active:scale-95 inline-flex items-center gap-2"
         >
           <span class="material-symbols-outlined">gavel</span>
-          Şimdi Oturum Bul
+          Şimdi Fırsat Bul
         </button>
       </div>
     </section>
@@ -157,7 +157,7 @@ const toggleFaq = (index) => {
     <section class="hh-section max-w-4xl py-8 md:py-12 border-t border-slate-800">
       <div class="mb-8 md:mb-12">
         <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Fiyatlandırma Örneği</h2>
-        <p class="text-slate-400 text-sm md:text-base">6000₺ değerindeki bir Reformer Pilates seansının fiyat yolculuğu:</p>
+        <p class="text-slate-400 text-sm md:text-base">6000₺ değerindeki bir hizmetin/fırsatın fiyat yolculuğu:</p>
       </div>
 
       <!-- Timeline Chart -->
@@ -213,9 +213,9 @@ const toggleFaq = (index) => {
         </div>
 
         <div class="mt-6 md:mt-8 p-4 bg-white/5 border border-white/10 rounded-lg">
-          <p class="text-xs md:text-sm text-slate-300 flex items-start gap-2">
+            <p class="text-xs md:text-sm text-slate-300 flex items-start gap-2">
             <span class="material-symbols-outlined text-neon-blue flex-shrink-0 mt-1">info</span>
-            <span>Stüdyolar fiyatın düşüş hızını ve Turbo modun ne zaman başlayacağını kendileri belirler. Gözün sayaçta olsun!</span>
+            <span>İşletmeler fiyatın düşüş hızını ve Turbo modun ne zaman başlayacağını kendileri belirler. Gözün sayaçta olsun!</span>
           </p>
         </div>
       </div>
@@ -275,7 +275,7 @@ const toggleFaq = (index) => {
         class="inline-flex items-center gap-2 text-slate-400 hover:text-neon-blue transition-colors text-xs md:text-sm"
       >
         <span class="material-symbols-outlined">arrow_back</span>
-        Ana Sayfaya Dön
+        Fırsat Alanına Dön
       </button>
     </section>
   </div>

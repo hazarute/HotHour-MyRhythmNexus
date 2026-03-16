@@ -100,7 +100,7 @@ const formatPrice = (val) => {
       <div class="px-6 pt-6 pb-5 bg-gradient-to-r from-primary/20 to-neon-blue/10 border-b border-white/10">
         <p class="text-xs uppercase tracking-[0.18em] text-neon-blue/90 font-bold">Son Adım</p>
         <h3 class="text-2xl font-black text-white mt-1">Bu Fırsatı Yakalamaya Hazır mısın?</h3>
-        <p class="text-slate-300 text-sm mt-2">Seçtiğin oturum bu fiyatla sadece başarılı rezervasyon anında kilitlenir.</p>
+        <p class="text-slate-300 text-sm mt-2">Seçtiğin fırsat bu fiyatla sadece başarılı rezervasyon anında kilitlenir.</p>
       </div>
 
       <div class="p-6 space-y-4">
@@ -122,7 +122,7 @@ const formatPrice = (val) => {
         </div>
 
         <p v-if="shouldShowUrgencyMessage" class="text-amber-300 text-xs font-medium">
-          Bu oturum kapanmaya çok yakın. Hızlı davranmanız önerilir.
+          Bu fırsat kapanmaya çok yakın. Hızlı davranmanız önerilir.
         </p>
 
         <div class="flex items-center gap-3 pt-2">

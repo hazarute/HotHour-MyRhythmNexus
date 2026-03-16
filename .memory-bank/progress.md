@@ -1,72 +1,52 @@
 # Proje İlerlemesi & Aşama Durumu (Progress Status)
 
-**GÜNCEL DURUM:** `[BAKIM/MAINTENANCE MODU]` (Tüm aktif geliştirme fazları %100 tamamlandı)
+**GÜNCEL DURUM:** `[v1.5 ACTIVE / STABILIZATION MODE]`
 
-## Faz 1: Çekirdek Kurulum ✅
-- [x] Prisma Şemaları, DB bağlantıları
-- [x] FastAPI / Vue 3 Proje İskeleti
-
-## Faz 2: Auth & Kullanıcı Yönetimi ✅
-- [x] JWT, Login / Register, Şifre Kurtarma
-- [x] Kullanıcı Cüzdan / Bakiye Sistemi
-
-## Faz 3: Açık Artırma (HotHour) & Rezervasyon ✅
-- [x] CRUD Operasyonları (Oturum Yarat, Güncelle, İptal Et)
-- [x] Dynamic Fiyat Motoru (AP Schedule, Turbo Trigger, Zaman/Fiyat Düşürme)
-- [x] Rezervasyon DB İlişkileri, Check-in Mekanizması
-
-## Faz 4: Socket.io & Gerçek Zamanlılık ✅
-- [x] Redis Pub/Sub, Socket Emit olayları
-- [x] Yeni Fiyat / Yeni Rezerve / Satıldı statülerinin Vue sayfalarında Canlı Güncellenmesi
-
-## Faz 5: Studio (Çoklu Kiracı) Yönetimi ✅
-- [x] Prisma Studio Entegrasyonu ve Veritabanı Migrasyonu
-- [x] Geri dönük verilerin Script'ler ile güncellenmesi
-- [x] Admin Panelinin sadece atanan stüdyoyu yönetecek statüye getirilmesi
-- [x] Admin Studio Logo Upload ve Frontend JSON hata ayıklamaları
+## v1.0 Özeti
+- çekirdek auth, rezervasyon, fiyat motoru, realtime ve tenant altyapısı tamam
+- admin tenant izolasyonu ve temel işletme yönetimi mevcut
 
 ---
 
-## Faz 6: SEO Uyumu 🔍 [AKTİF]
+## Release v1.5: Çok Sektörlü Platform Genişlemesi [AKTİF]
 
-> **Bağlam:** Proje Vue 3 SPA. Tüm içerik JS ile render edilir. Ana sorun: arama motorları sayfaları doğru indeksleyemez. Çözüm: meta yönetimi, yapısal veri, teknik SEO ve uzun vadede SSG/SSR.
+### Tamamlanan Ana Başlıklar
+- [x] çok sektörlü veri modeli kuruldu
+- [x] migration uygulandı
+- [x] taxonomy servisleri ve read endpoint'leri eklendi
+- [x] public filtreleme sektör ve hizmet kategorisi destekli hale geldi
+- [x] admin fırsat formunda hizmet kategorisi seçimi eklendi
+- [x] admin studio sektör düzenleme akışı panelden kapatıldı
+- [x] admin liste ekranlarında işletme sektörü ve fırsat kategorisi ayrıştırıldı
+- [x] owner yönetimli taxonomy scriptleri eklendi
+- [x] seed akışı deterministik ve taxonomy uyumlu hale getirildi
+- [x] tenant izolasyonu için rezervasyon tarafı sıkılaştırıldı
 
-### 6.1 Temel SEO Altyapısı (Foundation) — Hızlı Kazanımlar
-- [x] `index.html` → `lang="tr"` düzeltildi
-- [x] `index.html` → `<meta name="description">`, Open Graph, Twitter Card, canonical meta etiketleri eklendi
-- [x] `public/robots.txt` oluşturuldu (admin sayfaları engellendi)
-- [x] `public/sitemap.xml` oluşturuldu (tüm statik sayfalar dahil)
-- `[ ]` Uygun `favicon.ico` ve `apple-touch-icon.png` ekle (`public/` klasörüne)
+### Açık / İzlenen Başlıklar
+- [ ] bazı detay response'larda nested relation kapsamını sade ve güvenli tutarak netleştir
+- [ ] frontend filtre boş durum ve kenar senaryolarını manuel testlerle doğrula
+- [ ] manuel testlerden gelen revizeleri işleyerek `v1.5` stabilitesini artır
 
-### 6.2 Sayfa Bazlı Dinamik Meta Yönetimi
-- [x] `@unhead/vue` kütüphanesi kuruldu (`createUnhead` API)
-- [x] `frontend/src/main.js`'e `createUnhead()` ile entegre edildi
-- [x] `HomeView.vue` — useHead() ile title + description + og + canonical
-- [x] `AllAuctionsView.vue` — useHead() ile meta
-- [x] `AuctionDetailView.vue` — auction verisine göre dinamik title/description/og/canonical
-- [x] `HowItWorksView.vue` — useHead() ile meta
-- [x] `FAQView.vue` — useHead() ile meta
-- [x] `TermsOfUseView.vue` — useHead() ile meta (noindex)
-- [x] `PrivacyPolicyView.vue` — useHead() ile meta (noindex)
+### Son Doğrulamalar
+- [x] hedefli backend regresyonları geçti
+- [x] hedefli frontend unit testleri geçti
+- [x] build alındı
+- [x] seed script syntax ve senaryo tutarlılığı doğrulandı
 
-### 6.3 Yapısal Veri (Structured Data / JSON-LD)
-- [x] `HomeView.vue` → `WebSite` + `Organization` schema eklendi
-- [x] `AuctionDetailView.vue` → `Event` schema eklendi (dinamik: stüdyo, tarih, fiyat)
-- [x] `FAQView.vue` → `FAQPage` schema eklendi
-
-### 6.4 Teknik SEO
-- [x] Her sayfa için `<link rel="canonical">` desteği (useHead ile — 6.2'de tamamlandı)
-- [x] `public/og-image.jpg` eklendi (1200×630, sosyal medya önizleme görseli)
-- [x] `index.html` lang "tr", charset ve viewport düzeltildi (6.1'de tamamlandı)
-- [x] Favicon seti eklendi: `favicon.ico`, `favicon.svg`, `favicon-96x96.png`, `apple-touch-icon.png`, `site.webmanifest`
-
-### 6.5 İleri SEO — SSG/SSR (Büyük Mimari Değişiklik — Uzun Vadeli)
-- `[ ]` `vite-plugin-ssr` veya Nuxt 3 migrasyonu değerlendir
-- `[ ]` Dinamik auction sayfaları (`/auction/:id`) için prerender stratejisi belirle
-- `[ ]` Statik sayfalar için SSG uygula (prerender at build time)
+### Şu Anki Çalışma Modu
+- lokal manuel test devam ediyor
+- canlıya çıkmak için erken
+- öncelik yeni büyük özellik değil, stabilizasyon ve revize
 
 ---
-## Bakım (Maintenance) 🛠️
-- `[ ]` Rutin hata bildirimlerini kontrol et, yalnızca mevcut stabil sistemde bugfix yap.
 
-*Sistem v1.0 stabil. Faz 6 (SEO) aktif geliştirme fazıdır.*
+## Backlog / İkincil Gündemler
+
+### SEO Uyumu
+- [ ] Eksik kalan SEO maddelerini `v1.5` stabilizasyonundan sonra yeniden ele al
+- [ ] Uzun vadede SSR/SSG değerlendirmesini sürdür
+
+### Bakım
+- [ ] Rutin hata bildirimlerini izlemeye devam et
+
+*Yeni gerçeklik kaynağı: `v1.5` çok sektörlü tenant + hizmet sınıflandırması + stabilizasyon sürecidir.*
