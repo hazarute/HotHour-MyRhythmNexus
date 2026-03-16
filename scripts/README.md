@@ -17,8 +17,9 @@
 13. **taxonomy/list_service_categories.py** - Hizmet kategorilerini listeleme
 14. **taxonomy/deactivate_service_category.py** - Hizmet kategorisi pasifleştirme
 15. **taxonomy/seed_taxonomy.py** - Varsayılan sektör ve hizmet kategorisi setini yükleme
-16. **taxonomy/backfill_taxonomy.py** - Mevcut işletme/fırsat kayıtlarını dry-run destekli eşleme
-17. **create_studio.py** - Studio oluşturma
+16. **taxonomy/delete_taxonomy.py** - seed_taxonomy.py ile oluşturulan varsayılan sektör ve hizmet kategorilerini silme
+17. **taxonomy/backfill_taxonomy.py** - Mevcut işletme/fırsat kayıtlarını interaktif veya otomatik olarak sektöre eşleme
+18. **create_studio.py** - Studio oluşturma
 
 ---
 
@@ -311,15 +312,55 @@ python scripts/taxonomy/seed_taxonomy.py --update-existing
 
 Varsayılan çok sektörlü taxonomy setini idempotent şekilde kurar. Mevcut slug'lar korunur; `--update-existing` verilirse açıklama/ad gibi metadata da güncellenir.
 
+### taxonomy/delete_taxonomy.py
+
+```bash
+# Neyin silineceğini göster (hiçbir şey silmez)
+python scripts/taxonomy/delete_taxonomy.py --dry-run
+
+# Onay sorarak siler
+python scripts/taxonomy/delete_taxonomy.py
+
+# Onay sormadan direkt siler
+python scripts/taxonomy/delete_taxonomy.py --force
+```
+
+`seed_taxonomy.py` tarafından oluşturulan varsayılan sektör ve bağlı hizmet kategorilerini veritabanından siler. FK kısıtı nedeniyle önce `ServiceCategory`'ler, ardından `Sector`'ler silinir.
+
 ### taxonomy/backfill_taxonomy.py
+
+**Mod 1 — İnteraktif (varsayılan):** Sektörü olmayan işletmeleri listeler, her biri için DB'deki sektörlerden seçtirerek atar.
 
 ```bash
 python scripts/taxonomy/backfill_taxonomy.py
-python scripts/taxonomy/backfill_taxonomy.py --apply
-python scripts/taxonomy/backfill_taxonomy.py --apply --force-categories
 ```
 
-Mevcut işletme isimleri ve fırsat başlık/açıklamalarındaki anahtar kelimelere göre öneri üretir. Varsayılan mod dry-run'dır; önce planı görür, sonra `--apply` ile uygularsınız.
+**Mod 2 — Tek işletme hedefleme (`--studio`):** İşletme adı veya ID vererek mevcut sektöre ek atama yapar ya da sektörü değiştirir.
+
+```bash
+# Ek sektör ekle (mevcut sektörler korunur)
+python scripts/taxonomy/backfill_taxonomy.py --studio "Zen Studio"
+python scripts/taxonomy/backfill_taxonomy.py --studio 42
+
+# Sektörü değiştir (eskiler silinir, yenisi atanır)
+python scripts/taxonomy/backfill_taxonomy.py --studio "Zen Studio" --replace
+```
+
+**Mod 3 — Otomatik heuristic (`--auto`):** İşletme adı ve fırsat başlığındaki anahtar kelimelere göre otomatik eşler. Varsayılan dry-run'dır.
+
+```bash
+python scripts/taxonomy/backfill_taxonomy.py --auto
+python scripts/taxonomy/backfill_taxonomy.py --auto --apply
+python scripts/taxonomy/backfill_taxonomy.py --auto --apply --force-categories
+```
+
+| Parametre | Açıklama |
+|-----------|----------|
+| `--studio <ad\|id>` | Hedef işletmenin adı veya ID'si |
+| `--replace` | `--studio` ile: mevcut sektörleri silerek yenisini atar |
+| `--auto` | Heuristic otomatik mod |
+| `--apply` | `--auto` ile: dry-run yerine değişiklikleri uygula |
+| `--force-categories` | `--auto` ile: kategorisi olanlara da yeniden eşle |
 
 ---
 
