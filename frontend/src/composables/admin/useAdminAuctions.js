@@ -111,8 +111,8 @@ export function useAdminAuctions() {
 
     const totalRevenue = computed(() => {
         return myStudioAuctions.value
-            .filter(a => a.status === 'SOLD' && (a.current_price || a.currentPrice))
-            .reduce((sum, a) => sum + Number(a.current_price || a.currentPrice), 0)
+            .filter(a => a.status === 'SOLD' && (a.locked_price || a.lockedPrice || a.current_price || a.currentPrice))
+            .reduce((sum, a) => sum + Number(a.locked_price || a.lockedPrice || a.current_price || a.currentPrice), 0)
     })
 
     const avgSoldPrice = computed(() => {
