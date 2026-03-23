@@ -188,6 +188,7 @@ onUnmounted(() => {
                             <div class="flex flex-col min-w-0">
                                 <span class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ res.user_name || 'Misafir' }}</span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ res.auction_title || 'Bilinmeyen Fırsat' }}</span>
+                                <span class="text-xs text-slate-400">{{ res.studio_name || 'Bilinmeyen İşletme' }}</span>
                                 <span class="text-xs text-slate-400 mt-1">Hizmet: {{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</span>
                             </div>
                          </div>
@@ -251,7 +252,7 @@ onUnmounted(() => {
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.auction_title || 'Bilinmeyen Fırsat' }}</div>
-                                    <div class="text-xs text-slate-400">İşletme A</div>
+                                    <div class="text-xs text-slate-400">{{ res.studio_name || 'Bilinmeyen İşletme' }}</div>
                                 </td>
                                 <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="text-sm text-slate-600 dark:text-slate-300 font-medium">{{ res.scheduled_at ? formatShortDate(res.scheduled_at) : '-' }}</div>

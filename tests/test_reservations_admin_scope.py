@@ -109,6 +109,7 @@ async def test_admin_reservations_are_scoped_to_own_studio():
         assert len(items) == 1
         assert items[0]["id"] == reservation_a.id
         assert items[0]["studio_id"] == studio_a.id
+        assert items[0]["studio_name"] == studio_a.name
 
         detail_response = await client.get(f"/api/v1/reservations/admin/{reservation_a.id}", headers=headers)
         assert detail_response.status_code == 200, detail_response.text

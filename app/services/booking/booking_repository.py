@@ -75,23 +75,53 @@ class BookingRepository:
                 res for res in reservations
                 if getattr(getattr(res, "auction", None), "studioId", None) == studio_id
             ]
-        
-        return [
-            {
+
+        studio_ids = set()
+        for res in reservations:
+            auction = getattr(res, "auction", None)
+            if auction:
+                studio_id_val = getattr(auction, "studioId", None)
+                if studio_id_val is not None:
+                    studio_ids.add(studio_id_val)
+
+        studio_name_map = {}
+        if studio_ids:
+            studios = await db.studio.find_many(where={"id": {"in": list(studio_ids)}})
+            studio_name_map = {studio.id: studio.name for studio in studios}
+
+        result = []
+        for res in reservations:
+            auction = getattr(res, "auction", None)
+            studio_id_val = getattr(auction, "studioId", None) if auction else None
+
+            studio_name = None
+            if auction is not None:
+                studio_obj = getattr(auction, "studio", None)
+                if studio_obj is not None:
+                    studio_name = getattr(studio_obj, "name", None)
+
+            if studio_name is None and studio_id_val is not None:
+                studio_name = studio_name_map.get(studio_id_val)
+
+            if studio_name is None:
+                studio_name = "Bilinmeyen İşletme"
+
+            result.append({
                 "id": res.id,
                 "auction_id": res.auctionId,
                 "user_id": res.userId,
                 "user_name": res.user.fullName if res.user else "Unknown User",
-                "auction_title": res.auction.title if res.auction else "Unknown Auction",
-                "scheduled_at": getattr(res.auction, "scheduledAt", None) if res.auction else None,
-                "studio_id": getattr(res.auction, "studioId", None) if res.auction else None,
+                "auction_title": auction.title if auction else "Unknown Auction",
+                "scheduled_at": getattr(auction, "scheduledAt", None) if auction else None,
+                "studio_id": studio_id_val,
+                "studio_name": studio_name,
                 "locked_price": str(res.lockedPrice),
                 "booking_code": res.bookingCode,
                 "status": getattr(res.status, 'name', str(res.status)) if res.status else ReservationStatus.CONFIRMED.value,
                 "created_at": res.reservedAt.isoformat() if res.reservedAt else None,
-            }
-            for res in reservations
-        ]
+            })
+
+        return result
 
     async def get_reservation_with_details(self, reservation_id: int, studio_id: int | None = None) -> Optional[Dict]:
         reservations = await db.reservation.find_many(
