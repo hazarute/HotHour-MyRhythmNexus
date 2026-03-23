@@ -522,3 +522,73 @@ async def test_get_auction_detail_includes_service_category_and_studio_sectors()
     assert received_dt.replace(tzinfo=timezone.utc) == expected_dt.replace(tzinfo=timezone.utc)
 
 
+@pytest.mark.asyncio
+async def test_list_auctions_include_computed_scheduled_at():
+    # Given: 1 auction with scheduledAt and 1 without scheduledAt
+    now = datetime.now(timezone.utc)
+    studio = await create_studio_in_db("List Studio")
+    fitness_sector = await db.db.sector.create(
+        data={"name": "Fitness", "slug": f"fitness-{uuid.uuid4().hex[:6]}", "isActive": True}
+    )
+    category = await db.db.servicecategory.create(
+        data={"name": "Zone", "slug": f"zone-{uuid.uuid4().hex[:6]}", "isActive": True, "sectorId": fitness_sector.id}
+    )
+
+    first = await db.db.auction.create(
+        data={
+            "title": "Scheduled Auction",
+            "description": "With scheduled_at",
+            "allowedGender": "ANY",
+            "startPrice": "100.00",
+            "floorPrice": "50.00",
+            "currentPrice": "100.00",
+            "startTime": now - timedelta(minutes=15),
+            "endTime": now + timedelta(hours=1),
+            "scheduledAt": now + timedelta(hours=2),
+            "dropIntervalMins": 30,
+            "dropAmount": "5.00",
+            "turboEnabled": False,
+            "turboTriggerMins": 120,
+            "turboDropAmount": "0.00",
+            "turboIntervalMins": 10,
+            "status": "ACTIVE",
+            "studioId": studio.id,
+            "serviceCategoryId": category.id,
+        }
+    )
+    second = await db.db.auction.create(
+        data={
+            "title": "Fallback Auction",
+            "description": "No scheduled_at",
+            "allowedGender": "ANY",
+            "startPrice": "100.00",
+            "floorPrice": "50.00",
+            "currentPrice": "100.00",
+            "startTime": now - timedelta(minutes=15),
+            "endTime": now + timedelta(hours=1),
+            "dropIntervalMins": 30,
+            "dropAmount": "5.00",
+            "turboEnabled": False,
+            "turboTriggerMins": 120,
+            "turboDropAmount": "0.00",
+            "turboIntervalMins": 10,
+            "status": "ACTIVE",
+            "studioId": studio.id,
+            "serviceCategoryId": category.id,
+        }
+    )
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/auctions/", params={"include_computed": "true"})
+
+    assert response.status_code == 200, response.text
+    items = response.json()
+    item_map = {i["id"]: i for i in items}
+
+    assert item_map[first.id]["scheduled_at"] is not None
+    assert item_map[first.id]["scheduled_at"] != ""
+    assert item_map[second.id]["scheduled_at"] is not None
+    assert item_map[second.id]["scheduled_at"] == item_map[second.id]["end_time"]
+
+
