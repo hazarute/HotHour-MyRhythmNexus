@@ -1,21 +1,24 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.auction.auction_service import auction_service
-from app.core.socket import sio
-from app.core.db import db
+from app.services.booking.booking_service import booking_service
 
 scheduler = AsyncIOScheduler()
 
 async def update_auctions_job():
     """
-    Periodic job to update auction statuses and broadcast changes via WebSocket.
-    Delegates to auction_service.check_pending_auctions() which handles all
-    lifecycle transitions (DRAFT->ACTIVE, ACTIVE->EXPIRED/SOLD, price sync).
+    Her 60 saniyede çalışan periyodik iş:
+    1. DRAFT/ACTIVE ilan durumlarını kontrol eder ve fiyatları senkronize eder.
+    2. Hizmet saatinden 30 dk. sonra hâlâ PENDING olan rezervasyonları iptal eder.
     """
     try:
         await auction_service.check_pending_auctions()
+        await booking_service.auto_cancel_overdue_pending_reservations()
     except Exception as e:
-        print(f"Scheduler Error: {e}")
+        print(f"[Scheduler] Error: {e}")
 
 def start_scheduler():
-    scheduler.add_job(update_auctions_job, "interval", seconds=60)  # Run every minute
+    scheduler.add_job(update_auctions_job, "interval", seconds=60)
     scheduler.start()
+
+def stop_scheduler():
+    scheduler.shutdown()

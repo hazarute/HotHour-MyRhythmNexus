@@ -7,39 +7,16 @@ from app.core.config import settings
 from app.core.db import connect_db, disconnect_db
 from app.core.socket import sio
 from app.api import auth
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.services.auction_service import auction_service
-from app.services.booking_service import booking_service
+from app.core.scheduler import start_scheduler, stop_scheduler
 import socketio
-
-scheduler = AsyncIOScheduler()
-
-async def update_auctions_job():
-    """
-    Periodic job to update auction statuses.
-    Only checks DRAFT and ACTIVE auctions to reduce server load.
-    """
-    try:
-        # Fetch status candidates (DRAFT and ACTIVE only)
-        count = await auction_service.check_pending_auctions()
-        auto_cancelled = await booking_service.auto_cancel_overdue_pending_reservations()
-        # print(f"Checked {count} pending auctions for status updates.")
-    except Exception as e:
-        print(f"Scheduler Error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Connect to DB
     await connect_db()
-    
-    # Simple Background Scheduler
-    scheduler.add_job(update_auctions_job, 'interval', seconds=60)
-    scheduler.start()
-    
+    start_scheduler()
     yield
-    # Shutdown: Disconnect DB
     await disconnect_db()
-    scheduler.shutdown()
+    stop_scheduler()
 
 def create_application() -> FastAPI:
     # Ensure uploads directory exists
