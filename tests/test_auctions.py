@@ -511,3 +511,14 @@ async def test_get_auction_detail_includes_service_category_and_studio_sectors()
     assert payload["studio"]["id"] == studio.id
     assert len(payload["studio"]["sectors"]) == 1
     assert payload["studio"]["sectors"][0]["sector"]["id"] == wellness.id
+    assert payload["scheduled_at"] is not None
+
+    # scheduled_at should approximate the value set on creation (UTC datetime semantics)
+    scheduled_at_received = payload["scheduled_at"]
+    if scheduled_at_received.endswith("Z"):
+        scheduled_at_received = scheduled_at_received.replace("Z", "+00:00")
+    received_dt = datetime.fromisoformat(scheduled_at_received)
+    expected_dt = (now + timedelta(hours=2)).astimezone(timezone.utc)
+    assert received_dt.replace(tzinfo=timezone.utc) == expected_dt.replace(tzinfo=timezone.utc)
+
+
