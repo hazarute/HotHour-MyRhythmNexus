@@ -66,6 +66,11 @@ class BookingLifecycleManager:
         return {"auction": auction, "user": user}
 
     async def auto_cancel_overdue_pending_reservations(self) -> int:
+        """
+        Hizmet saatinden GRACE_MINUTES dakika sonra hâlâ PENDING_ON_SITE durumunda
+        olan rezervasyonları otomatik iptal eder (no-show / gelmedi).
+        """
+        GRACE_MINUTES = 30
         now = now_tr()
         
         reservations = await db.reservation.find_many(
@@ -84,9 +89,17 @@ class BookingLifecycleManager:
             end_time = to_tr_aware(getattr(auction, "endTime", None))
             service_time = scheduled_at or end_time
 
-            if not service_time or now < service_time:
+            if not service_time:
                 continue
 
+            from datetime import timedelta
+            deadline = service_time + timedelta(minutes=GRACE_MINUTES)
+            if now < deadline:
+                continue
+
+            print(f"[AutoCancel] Reservation {reservation.id} cancelled: "
+                  f"service_time={service_time.isoformat()}, "
+                  f"deadline={deadline.isoformat()}, now={now.isoformat()}")
             await self.cancel_reservation(reservation.id, cancel_source="AUTO_NO_SHOW")
             cancelled_count += 1
 
