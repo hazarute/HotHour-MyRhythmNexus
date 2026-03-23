@@ -195,8 +195,8 @@ const getServiceTimeText = (auction) => {
                         </div>
                         <div class="flex items-center justify-between text-sm">
                             <div class="flex flex-col">
-                                <span class="text-xs text-slate-400">Güncel Fiyat</span>
-                                <span class="font-bold text-slate-900 dark:text-white">{{ formatCurrency(auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice) }}</span>
+                                <span class="text-xs text-slate-400">{{ auction.status === 'SOLD' ? 'Kilitlenen Fiyat' : 'Güncel Fiyat' }}</span>
+                                <span class="font-bold text-slate-900 dark:text-white">{{ formatCurrency(auction.status === 'SOLD' ? (auction.locked_price || auction.current_price || auction.currentPrice) : (auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice)) }}</span>
                             </div>
                             <div class="flex flex-col items-end">
                                 <span class="text-xs text-slate-400">Kalan Süre</span>
@@ -285,8 +285,9 @@ const getServiceTimeText = (auction) => {
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-slate-900 dark:text-white font-bold">{{ formatCurrency(auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice) }}</span>
+                                    <span class="text-slate-900 dark:text-white font-bold">{{ formatCurrency(auction.status === 'SOLD' ? (auction.locked_price || auction.current_price || auction.currentPrice) : (auction.current_price || auction.currentPrice || auction.start_price || auction.startPrice)) }}</span>
                                     <span v-if="auction.status === 'ACTIVE'" class="text-xs text-red-400"> Düşüyor</span>
+                                    <span v-if="auction.status === 'SOLD'" class="text-xs text-emerald-400">Kilitlendi</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">

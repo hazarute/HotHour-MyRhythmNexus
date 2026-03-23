@@ -175,6 +175,7 @@ class AuctionService:
                 "computedPrice": str(price),
                 "priceDetails": details,
                 "currentPrice": mapping.get("currentPrice"),
+                "locked_price": getattr(getattr(item, "reservation", None), "lockedPrice", None),
                 "created_at": getattr(item, "createdAt", None),
                 "updated_at": getattr(item, "updatedAt", None),
                 "studioId": getattr(item, "studioId", None),

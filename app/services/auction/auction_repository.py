@@ -14,7 +14,8 @@ DEFAULT_INCLUDES = {
     },
     "serviceCategory": {
         "include": {"sector": True}
-    }
+    },
+    "reservation": True,
 }
 
 

@@ -63,10 +63,7 @@ class AuctionResponse(AuctionBase):
     studio: Optional[StudioResponse] = None
     serviceCategoryId: Optional[int] = None
     serviceCategory: Optional[ServiceCategoryResponse] = None
-    
-    # Allow camelCase aliasing for frontend ease if needed, but standard is keep consistency
-    # For now, let's add current_price to AuctionBase so it gets picked up from DB model
-
+    locked_price: Optional[Decimal] = None
 
     class Config:
         from_attributes = True
