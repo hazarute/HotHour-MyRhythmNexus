@@ -328,9 +328,9 @@ onUnmounted(() => {
                         Geri
                     </button>
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest"
-                         :class="isTurbo ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'">
-                        <span class="w-2 h-2 rounded-full animate-ping" :class="isTurbo ? 'bg-red-500' : 'bg-neon-blue'"></span>
-                        Canlı İhale
+                         :class="statusValue === 'SOLD' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : (isTurbo ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30')">
+                        <span class="w-2 h-2 rounded-full" :class="statusValue === 'SOLD' ? 'bg-emerald-400' : (isTurbo ? 'bg-red-500 animate-ping' : 'bg-neon-blue animate-ping')"></span>
+                        {{ statusValue === 'SOLD' ? 'Satıldı' : 'Canlı İhale' }}
                     </div>
                 </div>
 

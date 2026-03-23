@@ -32,6 +32,7 @@ const canBookByGender = computed(() => {
     return userGender === allowedGender.value
 })
 const isAuctionActive = computed(() => getAuctionStatus(props.auction) === 'ACTIVE')
+const isSold = computed(() => getAuctionStatus(props.auction) === 'SOLD')
 const bookingDisabled = computed(() => !isAuctionActive.value || !canBookByRole.value || !canBookByGender.value || bookingLoading.value)
 
 const formatPrice = (p) => {
@@ -40,6 +41,7 @@ const formatPrice = (p) => {
 }
 
 const goToDetail = () => {
+    if (isSold.value) return
     router.push({ name: 'auction-detail', params: { id: props.auction.id } })
 }
 
@@ -77,6 +79,9 @@ const confirmBooking = async () => {
 }
 
 const currentPrice = computed(() => {
+    if (isSold.value) {
+        return Number(props.auction?.locked_price || getAuctionCurrentPrice(props.auction))
+    }
     return getAuctionCurrentPrice(props.auction)
 })
 
@@ -116,8 +121,8 @@ const studioName = computed(() => {
 
 <template>
     <div 
-        class="glass-card rounded-2xl overflow-hidden group transition-all duration-300 relative flex flex-col cursor-pointer"
-        :class="isTurbo ? 'border-neon-orange shadow-neon-blue hover:shadow-neon-blue hover:scale-[1.01]' : 'hover:border-neon-blue/50'"
+        class="glass-card rounded-2xl overflow-hidden group transition-all duration-300 relative flex flex-col"
+        :class="[isTurbo ? 'border-neon-orange shadow-neon-blue hover:shadow-neon-blue hover:scale-[1.01]' : (!isSold ? 'hover:border-neon-blue/50' : ''), isSold ? 'cursor-default' : 'cursor-pointer']"
     @click="goToDetail"
   >
         <div v-if="isTurbo" class="absolute inset-0 pointer-events-none rounded-2xl ring-2 ring-neon-orange/50 animate-pulse"></div>
@@ -169,14 +174,15 @@ const studioName = computed(() => {
             <div class="flex justify-between items-end mb-4">
                 <div class="flex flex-col">
                     <span class="text-slate-500 text-xs line-through">{{ formatPrice(startPrice) }}</span>
-                                        <span class="font-bold text-2xl flex items-center gap-1" :class="isTurbo ? 'text-neon-orange' : 'text-white'">
+                                        <span class="font-bold text-2xl flex items-center gap-1" :class="isTurbo ? 'text-neon-orange' : (isSold ? 'text-emerald-400' : 'text-white')">
                         {{ formatPrice(currentPrice) }}
-                        <span class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+                        <span v-if="!isSold" class="material-symbols-outlined text-neon-orange text-sm animate-bounce">arrow_downward</span>
+                        <span v-else class="material-symbols-outlined text-emerald-400 text-sm">lock</span>
                     </span>
                 </div>
                 <div class="text-right">
-                                        <p class="text-xs font-mono" :class="isTurbo ? 'text-neon-orange animate-pulse' : 'text-neon-orange'">
-                                            {{ isTurbo ? 'Turbo fiyat akışı' : 'Fiyat düşüyor' }}
+                                        <p class="text-xs font-mono" :class="isSold ? 'text-emerald-400' : (isTurbo ? 'text-neon-orange animate-pulse' : 'text-neon-orange')">
+                                            {{ isSold ? 'Kilitlendi' : (isTurbo ? 'Turbo fiyat akışı' : 'Fiyat düşüyor') }}
                                         </p>
                 </div>
             </div>
