@@ -54,6 +54,12 @@ class AuctionLifecycleManager:
         auction_id = getattr(auction, "id", None)
 
         if auction_id is not None and (current_price is None or Decimal(str(current_price)) != Decimal(str(computed_price))):
+            # Race condition guard: in-memory status may be stale (e.g. booking just occurred).
+            # Re-confirm from DB that the auction is still ACTIVE before writing.
+            fresh = await db.auction.find_unique(where={"id": auction_id})
+            if fresh is None or getattr(fresh, "status", None) != AuctionStatus.ACTIVE.value:
+                return auction
+
             auction = await db.auction.update(
                 where={"id": auction_id},
                 data={"currentPrice": computed_price},

@@ -4,7 +4,7 @@ import pytest
 import pytest_asyncio
 from decimal import Decimal
 from datetime import datetime, timedelta, timezone
-from app.services.OLD_auction_service import auction_service
+from app.services.auction.auction_service import auction_service
 from app.core import db
 
 # All tests in this file run on the session event loop to share the same
