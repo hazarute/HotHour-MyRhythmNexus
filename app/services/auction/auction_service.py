@@ -163,6 +163,7 @@ class AuctionService:
                 "floor_price": mapping.get("floorPrice"),
                 "start_time": mapping.get("startTime"),
                 "end_time": mapping.get("endTime"),
+                "scheduled_at": getattr(item, "scheduledAt", None) or mapping.get("endTime"),
                 "drop_interval_mins": mapping.get("dropIntervalMins"),
                 "drop_amount": mapping.get("dropAmount"),
                 "turbo_enabled": mapping.get("turboEnabled"),
