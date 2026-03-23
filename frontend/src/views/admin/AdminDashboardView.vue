@@ -40,6 +40,20 @@ const getServiceCategoryLabel = (auction) => {
     if (categoryName) return categoryName
     return 'Kategori atanmadı'
 }
+
+const getServiceTimeText = (auction) => {
+    const scheduledAt = auction?.scheduled_at || auction?.scheduledAt
+    if (scheduledAt) return formatDate(scheduledAt)
+
+    const startTime = auction?.start_time || auction?.startTime
+    const endTime = auction?.end_time || auction?.endTime
+
+    if (startTime && endTime) {
+        return `${formatDate(startTime)} - ${formatDate(endTime)}`
+    }
+    if (startTime) return formatDate(startTime)
+    return '-'
+}
 </script>
 
 <template>
@@ -205,6 +219,9 @@ const getServiceCategoryLabel = (auction) => {
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
                                 {{ getServiceCategoryLabel(auction) }}
                             </span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-[#28314b] dark:text-slate-200 dark:border-slate-600">
+                                Hizmet Zamanı: {{ getServiceTimeText(auction) }}
+                            </span>
                         </div>
                      </div>
                 </div>
@@ -216,6 +233,7 @@ const getServiceCategoryLabel = (auction) => {
                             <th class="px-6 py-4 font-semibold w-32">Durum</th>
                             <th class="px-6 py-4 font-semibold">Fırsat Adı</th>
                             <th class="px-6 py-4 font-semibold w-40">Katılımcı Koşulu</th>
+                            <th class="px-6 py-4 font-semibold w-52">Hizmet Zamanı</th>
                             <th class="px-6 py-4 font-semibold w-36">Başlangıç</th>
                             <th class="px-6 py-4 font-semibold w-36">Bitiş</th>
                             <th class="px-6 py-4 font-semibold">Güncel Fiyat</th>
@@ -256,6 +274,11 @@ const getServiceCategoryLabel = (auction) => {
                                         : 'bg-neon-blue/10 text-neon-blue border-neon-blue/30'"
                                 >
                                     {{ getAllowedGenderLabel(auction) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-xs text-slate-600 dark:text-slate-300 font-mono">
+                                    {{ getServiceTimeText(auction) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
