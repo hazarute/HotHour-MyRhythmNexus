@@ -44,15 +44,7 @@ const getServiceCategoryLabel = (auction) => {
 const getServiceTimeText = (auction) => {
     const scheduledAt = auction?.scheduled_at || auction?.scheduledAt
     if (scheduledAt) return formatDate(scheduledAt)
-
-    const startTime = auction?.start_time || auction?.startTime
-    const endTime = auction?.end_time || auction?.endTime
-
-    if (startTime && endTime) {
-        return `${formatDate(startTime)} - ${formatDate(endTime)}`
-    }
-    if (startTime) return formatDate(startTime)
-    return '-'
+    return '-' // sadece Hizmet Zamanı (scheduled_at) gösterilsin
 }
 </script>
 
