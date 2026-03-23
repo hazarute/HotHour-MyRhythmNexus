@@ -188,6 +188,14 @@ const onPriceUpdate = (data) => {
 const onAuctionBooked = (data) => {
     if (data.auction_id == route.params.id && auction.value) {
         auction.value.status = 'SOLD'
+        const lockedPrice = data.locked_price || data.lockedPrice
+        if (lockedPrice !== undefined && lockedPrice !== null) {
+            auction.value.locked_price = lockedPrice
+            auction.value.lockedPrice = lockedPrice
+            auction.value.current_price = lockedPrice
+            auction.value.currentPrice = lockedPrice
+            auction.value.computedPrice = lockedPrice
+        }
     }
 }
 

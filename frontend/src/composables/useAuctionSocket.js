@@ -55,6 +55,12 @@ export function useAuctionSocket(auctionStore) {
       store.pendingBookingAuctionId &&
       String(store.pendingBookingAuctionId) === String(data.auction_id)
     ) return
+
+    const lockedPrice = data.locked_price || data.lockedPrice
+    if (lockedPrice !== undefined && lockedPrice !== null) {
+      store.updateLockedPrice(data.auction_id, lockedPrice)
+    }
+
     store.updateAuctionStatus(data.auction_id, 'SOLD')
   }
 

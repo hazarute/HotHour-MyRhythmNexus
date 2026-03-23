@@ -123,7 +123,7 @@ async def emit_booking_confirmed(
     await sio.emit("booking_confirmed", payload, room=user_room)
 
 
-async def emit_auction_booked(auction_id: int, booking_code: str) -> None:
+async def emit_auction_booked(auction_id: int, booking_code: str, locked_price: str | None = None) -> None:
     """
     Notify ALL auction subscribers (public broadcast) that the auction has been taken.
     Other users watching the same auction will know it's no longer available.
@@ -132,6 +132,7 @@ async def emit_auction_booked(auction_id: int, booking_code: str) -> None:
         {
             "auction_id": int,
             "booking_code": str,   # abbreviated/public reference
+            "locked_price": str | None,
             "timestamp": str
         }
     """
@@ -139,6 +140,7 @@ async def emit_auction_booked(auction_id: int, booking_code: str) -> None:
     payload = {
         "auction_id": auction_id,
         "booking_code": booking_code,
+        "locked_price": locked_price,
         "timestamp": _now_iso(),
     }
     await sio.emit("auction_booked", payload, room=room)

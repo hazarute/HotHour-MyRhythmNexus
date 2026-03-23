@@ -149,19 +149,46 @@ export const useAuctionStore = defineStore('auction', () => {
         }
     }
 
-    function updatePrice(auctionId, newPrice) {
-        // Update in list
+    function updatePrice(auctionId, newPrice, { force = false } = {}) {
+        // Cancel updates for sold/cancelled auctions unless forced.
         const index = auctions.value.findIndex(a => a.id == auctionId)
         if (index !== -1) {
+            const status = auctions.value[index].status
+            if (!force && (status === 'SOLD' || status === 'CANCELLED')) {
+                return
+            }
             auctions.value[index].currentPrice = newPrice
             auctions.value[index].current_price = newPrice
             auctions.value[index].computedPrice = newPrice
         }
-        // Update current view if matches
+
         if (currentAuction.value && currentAuction.value.id == auctionId) {
+            if (!force && (currentAuction.value.status === 'SOLD' || currentAuction.value.status === 'CANCELLED')) {
+                return
+            }
             currentAuction.value.currentPrice = newPrice
             currentAuction.value.current_price = newPrice
             currentAuction.value.computedPrice = newPrice
+        }
+    }
+
+    function updateLockedPrice(auctionId, lockedPrice) {
+        const index = auctions.value.findIndex(a => a.id == auctionId)
+        if (index !== -1) {
+            auctions.value[index].locked_price = lockedPrice
+            auctions.value[index].lockedPrice = lockedPrice
+            // ensure current price matches locked price for sold item
+            auctions.value[index].currentPrice = lockedPrice
+            auctions.value[index].current_price = lockedPrice
+            auctions.value[index].computedPrice = lockedPrice
+        }
+
+        if (currentAuction.value && currentAuction.value.id == auctionId) {
+            currentAuction.value.locked_price = lockedPrice
+            currentAuction.value.lockedPrice = lockedPrice
+            currentAuction.value.currentPrice = lockedPrice
+            currentAuction.value.current_price = lockedPrice
+            currentAuction.value.computedPrice = lockedPrice
         }
     }
 
@@ -394,6 +421,7 @@ export const useAuctionStore = defineStore('auction', () => {
         deleteAuction,
         bookAuction,
         updatePrice,
+        updateLockedPrice,
         updateAuctionStatus,
         updateAuctionTurboStartedAt,
         handleAuctionCreated,

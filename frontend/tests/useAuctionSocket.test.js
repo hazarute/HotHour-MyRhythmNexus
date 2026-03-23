@@ -15,6 +15,7 @@ const { mockSocketStore, mockAuctionStore } = vi.hoisted(() => {
     auctions: [{ id: 1, status: 'ACTIVE' }, { id: 2, status: 'ACTIVE' }],
     fetchAuctions: vi.fn().mockResolvedValue(undefined),
     updatePrice: vi.fn(),
+    updateLockedPrice: vi.fn(),
     updateAuctionStatus: vi.fn(),
     updateAuctionTurboStartedAt: vi.fn(),
     handleAuctionCreated: vi.fn(),
@@ -206,7 +207,8 @@ describe('useAuctionSocket', () => {
       await nextTick()
       mockAuctionStore.pendingBookingAuctionId = null
       const calls = mockSocketStore.on.mock.calls.filter(([e]) => e === 'auction_booked')
-      calls[0][1]({ auction_id: 5 })
+      calls[0][1]({ auction_id: 5, locked_price: 5128.98 })
+      expect(mockAuctionStore.updateLockedPrice).toHaveBeenCalledWith(5, 5128.98)
       expect(mockAuctionStore.updateAuctionStatus).toHaveBeenCalledWith(5, 'SOLD')
     })
   })

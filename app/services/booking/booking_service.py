@@ -96,6 +96,7 @@ class BookingService:
             await socket_service.emit_auction_booked(
                 auction_id=auction_id,
                 booking_code=reservation.bookingCode,
+                locked_price=str(reservation.lockedPrice),
             )
             await socket_service.emit_reservation_created(
                 reservation_id=reservation.id,
