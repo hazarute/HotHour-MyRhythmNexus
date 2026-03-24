@@ -94,6 +94,8 @@ const showSuccessModal = ref(false)
 const showBookingConfirmModal = ref(false)
 const reservation = ref(null)
 const bookingLoading = ref(false)
+const bookingEligibilityError = ref(null)
+const eligibilityCheckLoading = ref(false)
 const nowMs = ref(Date.now())
 const participantConditionFx = ref(false)
 let participantConditionFxTimer = null
@@ -235,6 +237,18 @@ const handleBook = async () => {
     if (!canCurrentUserBookByRole.value) return
 
     if (!canCurrentUserBookByGender.value) return
+
+    bookingEligibilityError.value = null
+    eligibilityCheckLoading.value = true
+    try {
+        const restriction = await auctionStore.checkEligibility(auction.value.id)
+        if (restriction) {
+            bookingEligibilityError.value = restriction
+            return
+        }
+    } finally {
+        eligibilityCheckLoading.value = false
+    }
 
     showBookingConfirmModal.value = true
 }
@@ -429,7 +443,7 @@ onUnmounted(() => {
                 <div class="w-full">
                     <HemenKapButton
                         variant="detail"
-                        :loading="bookingLoading"
+                        :loading="bookingLoading || eligibilityCheckLoading"
                         :disabled="bookingDisabled"
                         :is-active="statusValue === 'ACTIVE'"
                         :animate-icon="isTurbo"
@@ -439,6 +453,34 @@ onUnmounted(() => {
                         @disabled-click="onDisabledBookClick"
                         class="w-full py-5 text-xl font-black uppercase tracking-widest rounded-2xl transform transition-all hover:scale-[1.02] active:scale-[0.98]"
                     />
+
+                    <Transition
+                        enter-active-class="transition-all duration-300 ease-out"
+                        enter-from-class="opacity-0 -translate-y-2"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition-all duration-200 ease-in"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-2"
+                    >
+                        <div
+                            v-if="bookingEligibilityError"
+                            class="mt-3 p-4 rounded-2xl border border-red-500/40 bg-red-950/30 backdrop-blur-sm text-left"
+                        >
+                            <div class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-red-400 text-xl shrink-0 mt-0.5">block</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-black text-red-300 uppercase tracking-widest">Rezervasyon Yapılamıyor</p>
+                                    <p class="text-xs text-red-200/80 mt-1 leading-relaxed">{{ bookingEligibilityError }}</p>
+                                </div>
+                                <button
+                                    @click.stop="bookingEligibilityError = null"
+                                    class="shrink-0 text-red-500/50 hover:text-red-400 transition-colors"
+                                >
+                                    <span class="material-symbols-outlined text-lg">close</span>
+                                </button>
+                            </div>
+                        </div>
+                    </Transition>
                 </div>
 
                 <div class="w-full mt-4 text-center">

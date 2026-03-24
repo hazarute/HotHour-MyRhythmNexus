@@ -403,6 +403,30 @@ export const useAuctionStore = defineStore('auction', () => {
         }
     }
 
+    async function checkEligibility(auctionId) {
+        const authStore = useAuthStore()
+        if (!authStore.isAuthenticated) return null
+        try {
+            let response
+            if (typeof authStore.fetchWithAuth === 'function') {
+                response = await authStore.fetchWithAuth(`/api/v1/reservations/eligible/${auctionId}`)
+            } else {
+                const primaryBase = getPrimaryApiBase()
+                if (!primaryBase) return null
+                response = await fetch(`${primaryBase}/api/v1/reservations/eligible/${auctionId}`, {
+                    headers: { 'Authorization': `Bearer ${authStore.token}` }
+                })
+            }
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                return data.detail || 'Rezervasyon yapılamıyor.'
+            }
+            return null
+        } catch {
+            return null
+        }
+    }
+
     return {
         auctions,
         currentAuction,
@@ -420,6 +444,7 @@ export const useAuctionStore = defineStore('auction', () => {
         cancelAuction,
         deleteAuction,
         bookAuction,
+        checkEligibility,
         updatePrice,
         updateLockedPrice,
         updateAuctionStatus,

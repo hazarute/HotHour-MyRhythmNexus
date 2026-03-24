@@ -22,6 +22,8 @@ const authStore = useAuthStore()
 const auctionStore = useAuctionStore()
 const showBookingConfirmModal = ref(false)
 const bookingLoading = ref(false)
+const bookingEligibilityError = ref(null)
+const eligibilityCheckLoading = ref(false)
 
 const allowedGender = computed(() => String(props.auction?.allowed_gender || props.auction?.allowedGender || 'ANY').toUpperCase())
 const canBookByRole = computed(() => !(authStore.isAuthenticated && authStore.isAdmin))
@@ -45,7 +47,7 @@ const goToDetail = () => {
     router.push({ name: 'auction-detail', params: { id: props.auction.id } })
 }
 
-const handleHemenKap = () => {
+const handleHemenKap = async () => {
     if (!isAuctionActive.value) return
 
     if (!canBookByRole.value) return
@@ -60,6 +62,18 @@ const handleHemenKap = () => {
             query: { redirect: router.resolve(targetRoute).href }
         })
         return
+    }
+
+    bookingEligibilityError.value = null
+    eligibilityCheckLoading.value = true
+    try {
+        const restriction = await auctionStore.checkEligibility(props.auction.id)
+        if (restriction) {
+            bookingEligibilityError.value = restriction
+            return
+        }
+    } finally {
+        eligibilityCheckLoading.value = false
     }
 
     showBookingConfirmModal.value = true
@@ -189,12 +203,41 @@ const studioName = computed(() => {
 
                         <HemenKapButton
                             variant="card"
-                            :loading="bookingLoading"
+                            :loading="bookingLoading || eligibilityCheckLoading"
                             :card-label="isAuctionActive ? (isTurbo ? 'Hemen Kap ⚡' : 'Hemen Kap') : 'TÜKENDİ'"
                             :show-trailing-icon="!isTurbo"
                             :disabled="bookingDisabled"
                             @click="handleHemenKap"
                         />
+
+                        <Transition
+                            enter-active-class="transition-all duration-300 ease-out"
+                            enter-from-class="opacity-0 -translate-y-1"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition-all duration-200 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 -translate-y-1"
+                        >
+                            <div
+                                v-if="bookingEligibilityError"
+                                class="mt-3 p-3 rounded-xl border border-red-500/40 bg-red-950/30 backdrop-blur-sm"
+                                @click.stop
+                            >
+                                <div class="flex items-start gap-2">
+                                    <span class="material-symbols-outlined text-red-400 text-base shrink-0 mt-0.5">block</span>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[10px] font-black text-red-300 uppercase tracking-widest">Rezervasyon Yapılamıyor</p>
+                                        <p class="text-[11px] text-red-200/80 mt-0.5 leading-relaxed">{{ bookingEligibilityError }}</p>
+                                    </div>
+                                    <button
+                                        @click.stop="bookingEligibilityError = null"
+                                        class="shrink-0 text-red-500/50 hover:text-red-400 transition-colors"
+                                    >
+                                        <span class="material-symbols-outlined text-base">close</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </Transition>
         </div>
     </div>
   </div>

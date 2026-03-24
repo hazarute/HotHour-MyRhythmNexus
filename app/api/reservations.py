@@ -15,7 +15,9 @@ from app.services.booking_service import (
     GenderNotEligibleError,
     BookingError,
     ReservationAccessDeniedError,
+    RecentCancellationRestrictionError,
 )
+from app.services.booking.booking_lifecycle import BookingLifecycleManager
 from app.services.notification_service import notification_service
 
 router = APIRouter(prefix="/api/v1/reservations", tags=["reservations"])
@@ -92,6 +94,36 @@ async def book_auction(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.get("/eligible/{auction_id}", status_code=status.HTTP_200_OK)
+async def check_booking_eligibility(
+    auction_id: int,
+    current_user = Depends(get_current_user)
+):
+    """
+    Kullanıcının belirtilen fırsat için rezervasyon yapıp yapamayacağını önceden kontrol eder.
+    Yalnızca 10-günlük iptal kısıtlamasını kontrol eder (diğer hatalar asıl booking'de yakalanır).
+
+    Returns:
+    - 200: {"eligible": true}
+    - 400: {"detail": "..."} — kısıtlama var
+    - 401: Giriş yapılmamış
+    """
+    try:
+        await BookingLifecycleManager.validate_booking_eligibility(
+            auction_id=auction_id,
+            user_id=current_user.id
+        )
+        return {"eligible": True}
+    except RecentCancellationRestrictionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception:
+        # Diğer hatalar (fırsat bulunamadı, cinsiyet kısıtı vb.) asıl booking adımında ele alınır
+        return {"eligible": True}
 
 
 @router.post("/{booking_code}/trigger-manual", response_model=ReservationResponse)
