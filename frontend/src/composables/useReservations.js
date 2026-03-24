@@ -142,7 +142,7 @@ export function useReservations() {
 
       cancellationFeedback.value = {
         type: 'success',
-        message: 'Rezervasyonunuz iptal edildi. Bu seans hakkınızı yeniden kazanamazsınız.'
+        message: 'Rezervasyonunuz iptal edildi. Bu işletmede aynı hizmet kategorisinden 10 gün süreyle yeni rezervasyon yapamazsınız.'
       }
       cancellationFeedbackReservationId.value = reservationId
       confirmCancelReservationId.value = null

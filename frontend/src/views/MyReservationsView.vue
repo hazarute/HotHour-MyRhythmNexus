@@ -143,6 +143,9 @@ onMounted(() => {
                                         <p class="text-xs text-red-100/90 mt-1 leading-relaxed">
                                             Bu rezervasyonu iptal ettiğiniz anda giriş kodunuz kalıcı olarak geçersiz olur ve aynı hizmeti bu fiyattan tekrar talep edemezsiniz.
                                         </p>
+                                        <p class="text-xs text-red-300 mt-2 leading-relaxed font-semibold">
+                                            ⚠ İptal sonrası bu işletmede aynı hizmet kategorisinden <span class="font-black">10 gün boyunca</span> yeni rezervasyon yapamazsınız.
+                                        </p>
                                     </div>
                                 </div>
 

@@ -200,6 +200,10 @@ model Reservation {
   
   status        PaymentStatus @default(PENDING_ON_SITE)
   reservedAt    DateTime      @default(now())
+
+  // Cancellation tracking (abuse prevention)
+  cancelledAt   DateTime?
+  cancelSource  String?       // USER | ADMIN | AUTO_NO_SHOW | SYSTEM
   
   // Relations
   auction       Auction @relation(fields: [auctionId], references: [id])

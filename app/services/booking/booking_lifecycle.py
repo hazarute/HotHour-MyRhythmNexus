@@ -13,6 +13,7 @@ from app.services.booking.booking_exceptions import (
     AdminCannotBookError,
     GenderNotEligibleError,
     ReservationAccessDeniedError,
+    RecentCancellationRestrictionError,
 )
 
 class BookingLifecycleManager:
@@ -62,7 +63,37 @@ class BookingLifecycleManager:
             if allowed_gender == Gender.FEMALE.value:
                 raise GenderNotEligibleError("Bu oturum yalnızca kadın kullanıcılar içindir.")
             raise GenderNotEligibleError("Bu oturum yalnızca erkek kullanıcılar içindir.")
-            
+
+        # --- Kötüye Kullanım Koruması ---
+        # Kullanıcı aynı stüdyo + hizmet kategorisinde son 10 gün içinde kendi isteğiyle
+        # bir rezervasyon iptal ettiyse yeni rezervasyonu engelle.
+        studio_id = getattr(auction, 'studioId', None)
+        category_id = getattr(auction, 'serviceCategoryId', None)
+        if studio_id is not None and category_id is not None:
+            from datetime import timedelta
+            ten_days_ago = now_tr() - timedelta(days=10)
+            # 1. Adım: Aynı stüdyo + kategori kombinasyonundaki tüm fırsat ID'lerini bul
+            matching_auctions = await db.auction.find_many(
+                where={"studioId": studio_id, "serviceCategoryId": category_id},
+            )
+            matching_auction_ids = [getattr(a, 'id') for a in matching_auctions]
+            # 2. Adım: Kullanıcının bu fırsatlardan herhangi birini son 10 günde USER olarak iptal edip etmediğini kontrol et
+            if matching_auction_ids:
+                recent_cancels = await db.reservation.find_many(
+                    where={
+                        "userId": user_id,
+                        "cancelSource": "USER",
+                        "cancelledAt": {"gte": ten_days_ago},
+                        "auctionId": {"in": matching_auction_ids},
+                    },
+                    take=1,
+                )
+                if recent_cancels:
+                    raise RecentCancellationRestrictionError(
+                        "Bu hizmet kategorisinden son 10 gün içinde bir rezervasyonu iptal ettiniz. "
+                        "10 gün sonra aynı kategoriden tekrar rezervasyon yapabilirsiniz."
+                    )
+
         return {"auction": auction, "user": user}
 
     async def auto_cancel_overdue_pending_reservations(self) -> int:
@@ -131,7 +162,11 @@ class BookingLifecycleManager:
         
         await db.reservation.update(
             where={"id": reservation_id},
-            data={"status": ReservationStatus.CANCELLED.value}
+            data={
+                "status": ReservationStatus.CANCELLED.value,
+                "cancelledAt": now_tr(),
+                "cancelSource": str(cancel_source or "SYSTEM").upper(),
+            }
         )
 
         if auction and str(getattr(auction, "status", "")).upper() != AuctionStatus.CANCELLED.value:

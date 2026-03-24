@@ -66,9 +66,23 @@ if _use_fake:
 
         def _matches_where(self, item, where):
             for key, value in where.items():
-                if isinstance(value, dict) and "in" in value:
-                    if item.get(key) not in value.get("in", []):
-                        return False
+                if isinstance(value, dict):
+                    item_val = item.get(key)
+                    if "in" in value:
+                        if item_val not in value["in"]:
+                            return False
+                    if "gte" in value:
+                        if item_val is None or item_val < value["gte"]:
+                            return False
+                    if "lte" in value:
+                        if item_val is None or item_val > value["lte"]:
+                            return False
+                    if "gt" in value:
+                        if item_val is None or item_val <= value["gt"]:
+                            return False
+                    if "lt" in value:
+                        if item_val is None or item_val >= value["lt"]:
+                            return False
                 else:
                     if item.get(key) != value:
                         return False
@@ -186,10 +200,7 @@ if _use_fake:
         async def find_many(self, *, where=None, include=None, order=None, take=None):
             records = list(self._data.values())
             if where:
-                records = [
-                    item for item in records
-                    if all(item.get(key) == value for key, value in where.items())
-                ]
+                records = [item for item in records if self._matches_where(item, where)]
 
             if order and order.get("createdAt") == "desc":
                 records.sort(key=lambda item: item.get("createdAt") or datetime.min.replace(tzinfo=TR_TIMEZONE), reverse=True)

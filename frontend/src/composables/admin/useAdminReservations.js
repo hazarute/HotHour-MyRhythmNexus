@@ -159,7 +159,7 @@ export function useAdminReservations() {
     }
 
     const handleCancel = async (reservationId) => {
-        if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?')) return
+        if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?\n\nNot: Yönetici tarafından yapılan iptallar müşterinin yeni rezervasyon haklarını etkilemez.')) return
         
         try {
             await adminFetch(`/api/v1/reservations/admin/${reservationId}/cancel`, { method: 'POST' }, authStore)

@@ -30,3 +30,8 @@ class GenderNotEligibleError(BookingError):
 class ReservationAccessDeniedError(BookingError, PermissionError):
     """Raised when an admin tries to manage a reservation outside their studio scope."""
     pass
+
+
+class RecentCancellationRestrictionError(BookingError):
+    """Raised when user tries to book the same studio+category within 10 days of a self-cancellation."""
+    pass

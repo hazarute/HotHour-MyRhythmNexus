@@ -212,6 +212,33 @@ describe('useReservations', () => {
       expect(wrapper.vm.cancellationFeedback.message).toBeTruthy()
     })
 
+    it('başarılı iptal success mesajı 10 gün kısıtını içerir', async () => {
+      global.fetch.mockResolvedValueOnce({ ok: true })
+      global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ reservations: [] }) })
+
+      const wrapper = mount(Dummy)
+      wrapper.vm.openCancelConfirmation(42)
+      await wrapper.vm.cancelReservation(42)
+
+      const msg = wrapper.vm.cancellationFeedback.message
+      expect(msg).toContain('10 gün')
+    })
+
+    it('backend 400 + RecentCancellationRestriction mesajı error feedback olarak gösterilir', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ detail: 'Bu hizmet kategorisinden son 10 gün içinde bir rezervasyonu iptal ettiniz.' })
+      })
+
+      const wrapper = mount(Dummy)
+      wrapper.vm.openCancelConfirmation(42)
+      await wrapper.vm.cancelReservation(42)
+
+      expect(wrapper.vm.cancellationFeedback.type).toBe('error')
+      expect(wrapper.vm.cancellationFeedback.message).toContain('10 gün')
+    })
+
     it('iptal hatası durumunda error feedback set edilir', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,

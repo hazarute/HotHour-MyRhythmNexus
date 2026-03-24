@@ -41,7 +41,7 @@ const handleCheckIn = async () => {
 }
 
 const handleCancel = async () => {
-    if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?')) return
+    if (!confirm('Bu rezervasyonu iptal etmek istiyor musunuz?\n\nNot: Yönetici tarafından yapılan iptallar müşterinin yeni rezervasyon haklarını etkilemez.')) return
     const id = reservation.value.id
     try {
         await adminFetch(`/api/v1/reservations/admin/${id}/cancel`, { method: 'POST' }, authStore)
