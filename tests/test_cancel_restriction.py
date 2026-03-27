@@ -48,10 +48,20 @@ async def _create_studio():
     return await db.db.studio.create(data={"name": f"Studio-{uuid.uuid4().hex[:6]}"})
 
 
-async def _create_service_category(studio_id: int = None):
+async def _create_sector():
+    return await db.db.sector.create(
+        data={"name": f"Sector-{uuid.uuid4().hex[:6]}", "slug": f"sector-{uuid.uuid4().hex[:6]}", "isActive": True}
+    )
+
+
+async def _create_service_category(studio_id: int = None, sector_id: int | None = None):
     """Sector gerektirmeyen basit bir hizmet kategorisi oluşturur."""
     return await db.db.servicecategory.create(
-        data={"name": f"Cat-{uuid.uuid4().hex[:6]}", "slug": f"cat-{uuid.uuid4().hex[:6]}"}
+        data={
+            "name": f"Cat-{uuid.uuid4().hex[:6]}",
+            "slug": f"cat-{uuid.uuid4().hex[:6]}",
+            "sectorId": sector_id,
+        }
     )
 
 
@@ -244,6 +254,52 @@ async def test_admin_cancel_does_not_trigger_user_restriction():
         )
 
     assert rebook_resp.status_code == 201, rebook_resp.text
+
+
+@pytest.mark.asyncio
+async def test_user_book_then_rebook_same_sector_is_blocked():
+    """
+    Kullanıcı bir sektörde rezervasyon yaptıysa, 10 gün boyunca aynı sektördeki
+    başka fırsatlara tekrar rezervasyon yapamamalı.
+    """
+    email = f"sectorblock+{uuid.uuid4().hex[:8]}@test.com"
+    phone = f"+9055{uuid.uuid4().hex[:7]}"
+    password = "Pass123!"
+
+    user = await _create_user(email=email, phone=phone, password=password)
+    studio_a = await _create_studio()
+    studio_b = await _create_studio()
+    sector_x = await _create_sector()
+    sector_y = await _create_sector()
+    cat_a = await _create_service_category(sector_id=sector_x.id)
+    cat_b = await _create_service_category(sector_id=sector_x.id)
+    cat_c = await _create_service_category(sector_id=sector_y.id)
+
+    auction_a = await _create_active_auction(studio_id=studio_a.id, service_category_id=cat_a.id, title="Sector X Auction 1")
+    auction_b = await _create_active_auction(studio_id=studio_b.id, service_category_id=cat_b.id, title="Sector X Auction 2")
+    auction_c = await _create_active_auction(studio_id=studio_b.id, service_category_id=cat_c.id, title="Sector Y Auction")
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        first_booking = await _login_and_book(client, email, password, auction_a.id, user.id)
+        assert first_booking["response"].status_code == 201, first_booking["response"].text
+
+        same_sector_resp = await client.post(
+            "/api/v1/reservations/book",
+            json={"auction_id": auction_b.id, "user_id": user.id},
+            headers=first_booking["headers"],
+        )
+        assert same_sector_resp.status_code == 400, same_sector_resp.text
+        assert "10 gun" in same_sector_resp.json()["detail"].lower() or "10 gün" in same_sector_resp.json()["detail"].lower()
+        assert "sektor" in same_sector_resp.json()["detail"].lower() or "sektör" in same_sector_resp.json()["detail"].lower()
+
+        different_sector_resp = await client.post(
+            "/api/v1/reservations/book",
+            json={"auction_id": auction_c.id, "user_id": user.id},
+            headers=first_booking["headers"],
+        )
+
+    assert different_sector_resp.status_code == 201, different_sector_resp.text
 
 
 @pytest.mark.asyncio

@@ -2,7 +2,7 @@
 
 **Proje Adı:** HotHour (MyRhythmNexus)
 **Güncel Faz:** `v1.5 aktif` 
-**Çalışma Modu:** köklü değişiklikler sonrası lokal manuel test + stabilizasyon + revize döngüsü. Canlıya almak için erken.
+**Çalışma Modu:** proje `v1.0`dan beri Railway üzerinde canlı; `v1.5` geçişi kesintisiz tamamlandı. Tek geliştirici tarafından manuel test, canlı kullanım gözlemi ve geri bildirimlerle sürekli küçük revizyonlar yapılıyor.
 
 ## Temel Konsept
 HotHour, boş kalan hizmet kapasitesini Dutch Auction modeliyle değerlendiren çok kiracılı rezervasyon platformudur.
@@ -22,10 +22,10 @@ HotHour, boş kalan hizmet kapasitesini Dutch Auction modeliyle değerlendiren �
 - Admin yalnızca kendi tenant verisini yönetir.
 
 ## Şu Anki Öncelik
-- `v1.5` mimarisini stabil hale getirmek
-- manuel lokal testlerden gelen geri bildirimlerle revize etmek
-- mevcut akışlarda regresyon bırakmamak
+- canlida calisan `v1.5` akislarini guvenli sekilde surdurmek
+- manuel test ve canli kullanim geri bildirimleriyle davranissal zayifliklari kapatmak
+- mevcut akislarda regresyon birakmayan kucuk ama etkili guncellemeler yapmak
 
 ## İkincil Gündemler
 - SEO backlog'ta tutulur
-- canlıya alma kararı stabilizasyon tamamlanmadan verilmez
+- yayindaki urune zarar vermeden kademeli revizyon disiplini korunur

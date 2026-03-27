@@ -35,3 +35,8 @@ class ReservationAccessDeniedError(BookingError, PermissionError):
 class RecentCancellationRestrictionError(BookingError):
     """Raised when user tries to book the same studio+category within 10 days of a self-cancellation."""
     pass
+
+
+class RecentSectorBookingRestrictionError(BookingError):
+    """Raised when user tries to book any auction in the same sector within 10 days of a prior booking."""
+    pass

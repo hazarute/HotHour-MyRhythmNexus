@@ -16,6 +16,7 @@ from app.services.booking_service import (
     BookingError,
     ReservationAccessDeniedError,
     RecentCancellationRestrictionError,
+    RecentSectorBookingRestrictionError,
 )
 from app.services.booking.booking_lifecycle import BookingLifecycleManager
 from app.services.notification_service import notification_service
@@ -116,7 +117,7 @@ async def check_booking_eligibility(
             user_id=current_user.id
         )
         return {"eligible": True}
-    except RecentCancellationRestrictionError as e:
+    except (RecentCancellationRestrictionError, RecentSectorBookingRestrictionError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

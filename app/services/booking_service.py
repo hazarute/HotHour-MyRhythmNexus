@@ -19,6 +19,7 @@ from app.services.booking.booking_exceptions import (
     GenderNotEligibleError,
     ReservationAccessDeniedError,
     RecentCancellationRestrictionError,
+    RecentSectorBookingRestrictionError,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "GenderNotEligibleError",
     "ReservationAccessDeniedError",
     "RecentCancellationRestrictionError",
+    "RecentSectorBookingRestrictionError",
 ]

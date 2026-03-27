@@ -14,6 +14,7 @@ from app.services.booking.booking_exceptions import (
     GenderNotEligibleError,
     ReservationAccessDeniedError,
     RecentCancellationRestrictionError,
+    RecentSectorBookingRestrictionError,
 )
 
 class BookingLifecycleManager:
@@ -30,6 +31,53 @@ class BookingLifecycleManager:
         auction = getattr(reservation, "auction", None)
         if getattr(auction, "studioId", None) != studio_id:
             raise ReservationAccessDeniedError("Bu rezervasyon üzerinde işlem yapma yetkiniz yok")
+
+    @staticmethod
+    async def _get_service_category_sector_id(category_id: int | None) -> int | None:
+        if category_id is None:
+            return None
+
+        service_category = await db.servicecategory.find_unique(where={"id": category_id})
+        if not service_category:
+            return None
+
+        return getattr(service_category, "sectorId", None)
+
+    @staticmethod
+    async def _ensure_no_recent_sector_booking(user_id: int, sector_id: int | None, current_auction_id: int):
+        if sector_id is None:
+            return
+
+        from datetime import timedelta
+
+        ten_days_ago = now_tr() - timedelta(days=10)
+        sector_categories = await db.servicecategory.find_many(where={"sectorId": sector_id})
+        sector_category_ids = [getattr(category, "id", None) for category in sector_categories if getattr(category, "id", None) is not None]
+        if not sector_category_ids:
+            return
+
+        sector_auctions = await db.auction.find_many(where={"serviceCategoryId": {"in": sector_category_ids}})
+        sector_auction_ids = [
+            getattr(auction, "id", None)
+            for auction in sector_auctions
+            if getattr(auction, "id", None) is not None and getattr(auction, "id", None) != current_auction_id
+        ]
+        if not sector_auction_ids:
+            return
+
+        recent_bookings = await db.reservation.find_many(
+            where={
+                "userId": user_id,
+                "reservedAt": {"gte": ten_days_ago},
+                "auctionId": {"in": sector_auction_ids},
+            },
+            take=1,
+        )
+        if recent_bookings:
+            raise RecentSectorBookingRestrictionError(
+                "Bu sektorde son 10 gun icinde bir firsat rezerve ettiniz. "
+                "10 gun dolmadan ayni sektorden tekrar rezervasyon yapamazsiniz."
+            )
 
     @staticmethod
     async def validate_booking_eligibility(auction_id: int, user_id: int) -> dict:
@@ -93,6 +141,13 @@ class BookingLifecycleManager:
                         "Bu hizmet kategorisinden son 10 gün içinde bir rezervasyonu iptal ettiniz. "
                         "10 gün sonra aynı kategoriden tekrar rezervasyon yapabilirsiniz."
                     )
+
+        sector_id = await BookingLifecycleManager._get_service_category_sector_id(category_id)
+        await BookingLifecycleManager._ensure_no_recent_sector_booking(
+            user_id=user_id,
+            sector_id=sector_id,
+            current_auction_id=auction_id,
+        )
 
         return {"auction": auction, "user": user}
 
