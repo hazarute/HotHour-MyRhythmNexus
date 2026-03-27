@@ -20,6 +20,10 @@ from app.services.booking_service import (
 )
 from app.services.booking.booking_lifecycle import BookingLifecycleManager
 from app.services.notification_service import notification_service
+from app.services.reservation_service import (
+    get_reservation_or_403,
+    get_reservation_by_code_or_403,
+)
 
 router = APIRouter(prefix="/api/v1/reservations", tags=["reservations"])
 
@@ -140,20 +144,7 @@ async def trigger_manual_booking(
     - 200: Reservation found
     - 404: Booking code not found
     """
-    reservation = await booking_service.get_reservation_by_code(booking_code)
-    if not reservation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking code {booking_code} not found"
-        )
-    
-    # Verify ownership
-    if reservation["user_id"] != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own reservations"
-        )
-    
+    reservation = await get_reservation_by_code_or_403(booking_code, current_user)
     return reservation
 
 
@@ -170,20 +161,7 @@ async def get_reservation(
     - 404: Reservation not found
     - 403: Unauthorized (not your reservation)
     """
-    reservation = await booking_service.get_reservation(reservation_id)
-    if not reservation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reservation {reservation_id} not found"
-        )
-    
-    # Verify ownership
-    if reservation["user_id"] != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own reservations"
-        )
-    
+    reservation = await get_reservation_or_403(reservation_id, current_user)
     return reservation
 
 
@@ -332,20 +310,7 @@ async def cancel_reservation(
     - 404: Reservation not found
     - 403: Unauthorized (not your reservation)
     """
-    reservation = await booking_service.get_reservation(reservation_id)
-    if not reservation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Reservation {reservation_id} not found"
-        )
-    
-    # Verify ownership
-    if reservation["user_id"] != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only cancel your own reservations"
-        )
-    
+    await get_reservation_or_403(reservation_id, current_user)
     await booking_service.cancel_reservation(reservation_id, cancel_source="USER")
 
 
