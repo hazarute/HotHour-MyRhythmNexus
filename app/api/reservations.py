@@ -24,6 +24,7 @@ from app.services.reservation_service import (
     get_reservation_or_403,
     get_reservation_by_code_or_403,
 )
+from app.core.http_helpers import raise_mapped_http
 
 router = APIRouter(prefix="/api/v1/reservations", tags=["reservations"])
 
@@ -64,41 +65,8 @@ async def book_auction(
             user_id=data.user_id
         )
         return reservation
-    except AuctionNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Auction {data.auction_id} not found"
-        )
-    except AuctionNotActiveError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Auction {data.auction_id} is not active"
-        )
-    except AuctionAlreadyBookedError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This auction is already booked. Another user booked it first (or race condition)."
-        )
-    except UserNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {data.user_id} not found"
-        )
-    except AdminCannotBookError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
-    except GenderNotEligibleError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
-    except BookingError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    except Exception as e:
+        raise_mapped_http(e)
 
 
 @router.get("/eligible/{auction_id}", status_code=status.HTTP_200_OK)
