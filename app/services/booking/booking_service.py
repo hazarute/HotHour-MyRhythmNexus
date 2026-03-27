@@ -27,8 +27,18 @@ class BookingService:
     async def get_reservation_by_code(self, booking_code: str) -> Optional[Dict]:
         return await booking_repository.get_reservation_by_code(booking_code)
     
-    async def get_user_reservations(self, user_id: int) -> list[Dict]:
-        return await booking_repository.get_user_reservations(user_id)
+    async def get_user_reservations(self, user_id: int, base_url: str | None = None) -> list[Dict]:
+        reservations = await booking_repository.get_user_reservations(user_id)
+
+        if base_url:
+            for res in reservations:
+                studio = res.get("studio")
+                if isinstance(studio, dict):
+                    logo = studio.get("logoUrl")
+                    if logo and str(logo).startswith("/uploads/"):
+                        studio["logoUrl"] = f"{base_url}{logo}"
+                        res["studio"] = studio
+        return reservations
 
     async def get_all_reservations(self, studio_id: int | None = None) -> list[Dict]:
         return await booking_repository.get_all_reservations(studio_id)

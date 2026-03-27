@@ -276,19 +276,8 @@ async def get_my_reservations(request: Request, current_user = Depends(get_curre
     Returns:
     - 200: List of reservations
     """
-    reservations = await booking_service.get_user_reservations(current_user.id)
-    # Normalize nested studio.logoUrl to absolute when needed
-    try:
-        base = str(request.base_url).rstrip('/')
-        for r in reservations:
-            studio = r.get('studio') if isinstance(r, dict) else None
-            if studio and isinstance(studio, dict):
-                logo = studio.get('logoUrl')
-                if logo and str(logo).startswith('/uploads/'):
-                    studio['logoUrl'] = f"{base}{logo}"
-                    r['studio'] = studio
-    except Exception:
-        pass
+    base = str(request.base_url).rstrip('/')
+    reservations = await booking_service.get_user_reservations(current_user.id, base_url=base)
 
     return {
         "user_id": current_user.id,
