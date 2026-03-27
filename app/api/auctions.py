@@ -143,7 +143,7 @@ async def list_auctions(
             mapped.append({
                 "id": a.id,
                 "title": a.title,
-                "description": a.description,
+                "description": getattr(a, "description", None),
                 "allowed_gender": getattr(a, "allowedGender", "ANY"),
                 "start_price": a.startPrice,
                 "floor_price": a.floorPrice,

@@ -125,7 +125,7 @@ async def test_duplicate_booking_returns_conflict():
         )
 
     assert second.status_code == 409, second.text
-    assert "already booked" in second.json()["detail"].lower()
+    assert "reserved" in second.json()["detail"].lower()
 
 
 @pytest.mark.asyncio

@@ -7,13 +7,6 @@ from app.models.reservation import ReservationCreate, ReservationResponse
 from app.core.deps import get_current_user, get_current_admin_user
 from app.services.booking_service import (
     booking_service,
-    AuctionNotFoundError,
-    AuctionNotActiveError,
-    AuctionAlreadyBookedError,
-    UserNotFoundError,
-    AdminCannotBookError,
-    GenderNotEligibleError,
-    BookingError,
     ReservationAccessDeniedError,
     RecentCancellationRestrictionError,
     RecentSectorBookingRestrictionError,
@@ -94,9 +87,12 @@ async def check_booking_eligibility(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-    except Exception:
-        # Diğer hatalar (fırsat bulunamadı, cinsiyet kısıtı vb.) asıl booking adımında ele alınır
-        return {"eligible": True}
+    except Exception as e:
+        # Surface other known service errors instead of silently swallowing them.
+        # Use centralized mapper to convert service exceptions to HTTP responses.
+        from app.core.http_helpers import raise_mapped_http
+
+        raise_mapped_http(e)
 
 
 @router.post("/{booking_code}/trigger-manual", response_model=ReservationResponse)
