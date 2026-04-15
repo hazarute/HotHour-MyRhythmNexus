@@ -160,17 +160,49 @@ async def create_offers(dry_run: bool = True):
             print(f"[{idx}] {item['data']['title']} -> start={item['data']['start_time'].isoformat()} end={item['data']['end_time'].isoformat()} scheduled_at={item['data']['scheduled_at'].isoformat()}")
         return
 
+    # --- Idempotency: avoid creating duplicates if auctions with same title+start_time already exist
     await connect_db()
     try:
+        # load existing auctions (include computed so start_time is present)
+        existing = await auction_service.list_auctions(include_computed=True)
+
+        def _to_aware(dt_val):
+            if dt_val is None:
+                return None
+            if isinstance(dt_val, str):
+                try:
+                    dt = datetime.fromisoformat(dt_val)
+                except Exception:
+                    return None
+            else:
+                dt = dt_val
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+
+        existing_index = set()
+        for idx, ex in enumerate(existing):
+            t = ex.get("title")
+            s = _to_aware(ex.get("start_time"))
+            if t and s:
+                existing_index.add((t, s.isoformat()))
+
         created_ids = []
         for item in planned:
+            title = item["data"]["title"]
+            start_iso = _to_aware(item["data"]["start_time"]).isoformat()
+            if (title, start_iso) in existing_index:
+                print(f"Skipping duplicate (already exists): {title} start={start_iso}")
+                continue
+
             try:
                 created = await auction_service.create_auction(item["data"], studio_id=item["studio_id"])
                 created_id = getattr(created, "id", None)
                 created_ids.append(created_id)
-                print(f"Created auction id={created_id} title={item['data']['title']}")
+                print(f"Created auction id={created_id} title={title}")
             except Exception as e:
-                print(f"Error creating auction {item['data']['title']}: {e}")
+                print(f"Error creating auction {title}: {e}")
+
         print(f"Done. Created {len(created_ids)} auctions: {created_ids}")
     finally:
         await disconnect_db()
