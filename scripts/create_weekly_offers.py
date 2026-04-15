@@ -29,6 +29,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from app.core.db import connect_db, disconnect_db
+from app.core.timezone import TR_TIMEZONE
 from app.services.auction.auction_service import auction_service
 
 
@@ -109,21 +110,22 @@ def next_weekday(base: datetime, weekday: int) -> datetime:
 
 
 def build_times_for_week(start_wed: datetime) -> Dict[str, datetime]:
-    # start_wed is a date at midnight UTC for a Wednesday; set start at 03:00
-    start_time = start_wed.replace(hour=3, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    # start_wed is a date at midnight in TR timezone for a Wednesday; set start at 03:00 TR
+    start_time = start_wed.replace(hour=3, minute=0, second=0, microsecond=0, tzinfo=TR_TIMEZONE)
     # Sunday is weekday 6
     days_to_sun = (6 - start_wed.weekday()) % 7
-    end_day = (start_wed + timedelta(days=days_to_sun)).replace(hour=22, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    end_day = (start_wed + timedelta(days=days_to_sun)).replace(hour=22, minute=0, second=0, microsecond=0, tzinfo=TR_TIMEZONE)
     # Service scheduled_at: following Tuesday at 18:00
     # Find next Tuesday (weekday=1) after end_day
     search_base = end_day + timedelta(days=1)
     days_to_tue = (1 - search_base.weekday() + 7) % 7
-    service_at = (search_base + timedelta(days=days_to_tue)).replace(hour=18, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    service_at = (search_base + timedelta(days=days_to_tue)).replace(hour=18, minute=0, second=0, microsecond=0, tzinfo=TR_TIMEZONE)
     return {"start_time": start_time, "end_time": end_day, "scheduled_at": service_at}
 
 
 async def create_offers(dry_run: bool = True):
-    now = datetime.now(timezone.utc)
+    # use Turkey timezone as the reference so "next Wednesday 03:00" means TR 03:00
+    now = datetime.now(TR_TIMEZONE)
     # get next Wednesday (weekday=2)
     wed = next_weekday(now, 2)
     times = build_times_for_week(wed)
@@ -176,9 +178,10 @@ async def create_offers(dry_run: bool = True):
                     return None
             else:
                 dt = dt_val
+            # normalize everything to TR timezone for comparison
             if dt.tzinfo is None:
-                return dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc)
+                return dt.replace(tzinfo=TR_TIMEZONE)
+            return dt.astimezone(TR_TIMEZONE)
 
         existing_index = set()
         for idx, ex in enumerate(existing):
