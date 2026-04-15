@@ -8,12 +8,20 @@ Run this on Railway where `DATABASE_URL` is configured.
 """
 from __future__ import annotations
 
+import os
+import sys
 import argparse
 import asyncio
 import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
+
+# Ensure project root is on sys.path so `from app...` imports work when running
+# the script from a container where the CWD may be /app or similar.
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 from app.core.db import connect_db, disconnect_db
 from app.services.auction.auction_service import auction_service
