@@ -13,7 +13,7 @@ import sys
 import argparse
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -45,7 +45,8 @@ async def main(argv=None):
     args = parser.parse_args(argv)
 
     statuses = {s.strip() for s in args.status.split(",") if s.strip()}
-    cutoff = datetime.utcnow() - timedelta(days=args.days_back)
+    # Use timezone-aware cutoff in UTC to avoid comparing naive vs aware datetimes
+    cutoff = datetime.now(timezone.utc) - timedelta(days=args.days_back)
 
     await connect_db()
     try:
@@ -66,6 +67,13 @@ async def main(argv=None):
                     created_dt = None
             else:
                 created_dt = created
+
+            # Normalize to timezone-aware UTC for safe comparison
+            if isinstance(created_dt, datetime):
+                if created_dt.tzinfo is None:
+                    created_dt = created_dt.replace(tzinfo=timezone.utc)
+                else:
+                    created_dt = created_dt.astimezone(timezone.utc)
 
             if created_dt and created_dt < cutoff:
                 continue
