@@ -1,3 +1,4 @@
+import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.auction.auction_service import auction_service
 from app.services.booking.booking_service import booking_service
@@ -39,14 +40,15 @@ def start_scheduler():
     scheduler.add_job(update_auctions_job, "interval", seconds=60)
 
     # Weekly job: every Wednesday at 03:00 Turkey time
-    scheduler.add_job(
-        create_weekly_offers_job,
-        "cron",
-        day_of_week="wed",
-        hour=3,
-        minute=0,
-        timezone=TR_TIMEZONE,
-    )
+    if os.environ.get("DISABLE_WEEKLY_OFFERS", "").lower() != "true":
+        scheduler.add_job(
+            create_weekly_offers_job,
+            "cron",
+            day_of_week="wed",
+            hour=3,
+            minute=0,
+            timezone=TR_TIMEZONE,
+        )
 
     scheduler.start()
 
